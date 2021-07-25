@@ -200,7 +200,7 @@ class VAEXperiment(pl.LightningModule):
                             drop_last=True)
 
         elif self.params['dataset'] == 'dsprites':
-            root = os.path.join('../Data/', 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
+            root = os.path.join('../../Data/', 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
             if not os.path.exists(root):
                 import subprocess
                 print('Now download dsprites-dataset')
@@ -236,7 +236,7 @@ class VAEXperiment(pl.LightningModule):
             self.num_val_imgs = len(self.sample_dataloader)
             return self.sample_dataloader
         elif self.params['dataset'] == 'dsprites':
-            root = os.path.join('../Data', 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
+            root = os.path.join('../../Data', 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
             data = np.load(root, encoding='bytes')
             data = torch.from_numpy(data['imgs']).unsqueeze(1).float()
             self.num_val_imgs = data.len()

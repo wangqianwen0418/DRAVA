@@ -6,7 +6,7 @@ model_params:
 
 exp_params:
   dataset: celeba
-  data_path: "../Data/"
+  data_path: "../../Data/"
   submodel: 'discriminator'
   retain_first_backpass: True
   img_size: 64

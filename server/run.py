@@ -29,6 +29,7 @@ tt_logger = TestTubeLogger(
     save_dir=config['logging_params']['save_dir'],
     name=config['logging_params']['name'],
     debug=False,
+    version = 0,
     create_git_tag=False,
 )
 
@@ -43,8 +44,7 @@ experiment = VAEXperiment(model,
                           config['exp_params'])
 
 checkpoint_callback = ModelCheckpoint(
-    # filepath=f"{tt_logger.save_dir}",
-    filepath = f"{tt_logger.save_dir}{tt_logger.name}/version_{tt_logger.version}/",
+    filepath = f"{tt_logger.save_dir}{tt_logger.name}/version_{tt_logger.version}/checkpoints",
     verbose=True,
     save_top_k=-1, # save at each epoch
     monitor='val_loss',
