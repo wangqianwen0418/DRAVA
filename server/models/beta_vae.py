@@ -169,22 +169,6 @@ class BetaVAE(BaseVAE):
         samples = self.decode(z)
         return samples
 
-    def simu_sample(self, n_col: int, curr_device: int, **kwargs) -> Tensor:
-        """
-        at each row, change the the value of one latent dimension
-        """
-        z = []
-        for i in range(self.latent_dim):
-            z_ = torch.randn(n_col, self.latent_dim)
-            mask = torch.tensor([j for j in range(n_col)])
-            z_[mask, i] = torch.tensor([j/n_col for j in range(n_col)]).float()
-            z.append(z_)
-        z = torch.stack(z)
-        z = z.to(curr_device)
-
-        samples = self.decode(z)
-        return samples
-
 
     def generate(self, x: Tensor, **kwargs) -> Tensor:
         """

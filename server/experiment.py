@@ -11,6 +11,7 @@ from torchvision import transforms
 import torchvision.utils as vutils
 from torchvision.datasets import CelebA
 from torch.utils.data import Dataset, DataLoader
+import json
 
 
 class CustomTensorDataset(Dataset):
@@ -35,6 +36,9 @@ class VAEXperiment(pl.LightningModule):
         self.params = params
         self.curr_device = torch.cuda.current_device()
         self.hold_graph = False
+
+        self.bin_size = 11
+        self.latent_hist = torch.zeros(self.model.latent_dim, self.bin_size).to(self.curr_device)
         try:
             self.hold_graph = self.params['retain_first_backpass']
         except:
@@ -74,6 +78,18 @@ class VAEXperiment(pl.LightningModule):
         self.sample_images()
         return {'val_loss': avg_loss, 'log': tensorboard_logs}
     
+    # def test_step(self, batch, batch_idx, optimizer_idx = 0):
+    #     real_img, labels = batch
+    #     self.curr_device = real_img.device
+
+    #     results = self.forward(real_img, labels = labels)
+    #     loss = self.model.loss_function(*results,
+    #                                         M_N = self.params['batch_size']/ self.num_val_imgs,
+    #                                         optimizer_idx = optimizer_idx,
+    #                                         batch_idx = batch_idx)
+
+    #     return loss
+
     def test_step(self, batch, batch_idx, optimizer_idx = 0):
         real_img, labels = batch
         self.curr_device = real_img.device
@@ -84,23 +100,59 @@ class VAEXperiment(pl.LightningModule):
                                             optimizer_idx = optimizer_idx,
                                             batch_idx = batch_idx)
 
+        self.count_latent_dist(batch)
         return loss
 
     def test_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
         # self.save_latent_vectors()
         self.save_simu_images()
+
+        with open(f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/hist.json", 'w') as f:
+            json.dump(self.latent_hist.tolist(), f)
+
         return {'test_loss': avg_loss}
 
+    def count_latent_dist(self, batch):
+        real_img, labels = batch
+        self.curr_device = real_img.device
+
+        [recons, test_input, mu, log_var] = self.forward(real_img, labels = labels)
+        latent_hist = [ torch.histc( mu[:, i], bins= self.bin_size, min=-2.5, max= 2.5) for i in range(self.model.latent_dim)]
+        latent_hist = torch.stack(latent_hist) # latent_dim * bin_size
+        latent_hist = latent_hist.to(self.curr_device)
+        self.latent_hist = latent_hist + self.latent_hist
+
+
     def save_simu_images(self):
-        n_col = 10
-        samples = self.model.simu_sample(n_col,
-                                        self.curr_device)
+        """
+        return an image grid,
+        each row is a hidden dimension, all images in this row have same values for other dims but differnt values at this dim  
+        """
+        nrow = 11 # number of images at each row
+
+        z = []
+        for i in range(self.model.latent_dim):
+            # z_ = torch.randn( self.model.latent_dim)
+            z_ = torch.zeros( self.model.latent_dim)
+            z_ = [z_ for i in range(nrow)]
+            z_ = torch.stack(z_, dim =0)
+            mask = torch.tensor([j for j in range(nrow)])
+            z_[mask, i] = torch.tensor([-2.5 + j/(nrow-1)* 5 for j in range(nrow)]).float()
+            # sorted, _ = torch.sort(torch.randn( nrow))
+            # z_[mask, i] =  sorted
+
+            z.append(z_)
+        z = torch.stack(z)
+        z = z.to(self.curr_device)
+
+        samples = self.model.decode(z)
+
         vutils.save_image(samples.cpu().data,
-                            f"{self.logger.save_dir}/exp_data/imgs/"
-                            f"{self.logger.name}_simu_samples.png",
+                            f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
+                            f"{self.logger.name}_simu_samples_{self.current_epoch}.png",
                             normalize=True,
-                            nrow=n_col)
+                            nrow=nrow)
    
     def save_latent_vectors(self):
         test_input, test_label = next(iter(self.test_sample_dataloader))
@@ -143,14 +195,7 @@ class VAEXperiment(pl.LightningModule):
                           nrow=12)
 
         try:
-            samples = self.model.sample(144,
-                                        self.curr_device,
-                                        labels = test_label)
-            vutils.save_image(samples.cpu().data,
-                              f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
-                              f"{self.logger.name}_{self.current_epoch}_samples.png",
-                              normalize=True,
-                              nrow=12)
+            self.save_simu_images()
         except:
             pass
 

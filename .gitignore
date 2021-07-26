@@ -1,7 +1,7 @@
 
 data/
 logs/
-nohup.out
+*.out
 VanillaVAE/version_0/
 
 __pycache__/

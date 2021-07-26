@@ -18,7 +18,7 @@ exp_params:
   scheduler_gamma_2: 0.95
 
 trainer_params:
-  gpus: [3]
+  gpus: 0
   max_nb_epochs: 30
   max_epochs: 50
 
