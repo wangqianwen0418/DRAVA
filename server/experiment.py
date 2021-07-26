@@ -88,9 +88,19 @@ class VAEXperiment(pl.LightningModule):
 
     def test_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
-        self.save_latent_vectors()
+        # self.save_latent_vectors()
+        self.save_simu_images()
         return {'test_loss': avg_loss}
 
+    def save_simu_images(self):
+        n_col = 10
+        samples = self.model.simu_sample(n_col,
+                                        self.curr_device)
+        vutils.save_image(samples.cpu().data,
+                            f"{self.logger.save_dir}/exp_data/imgs/"
+                            f"{self.logger.name}_simu_samples.png",
+                            normalize=True,
+                            nrow=n_col)
    
     def save_latent_vectors(self):
         test_input, test_label = next(iter(self.test_sample_dataloader))

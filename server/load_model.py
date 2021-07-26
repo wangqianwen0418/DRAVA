@@ -31,7 +31,8 @@ cudnn.benchmark = False
 model = vae_models[config['model_params']['name']](**config['model_params'])
 
 
-checkpoint = torch.load('logs/BetaVAE_B/version_6/checkpoints/_ckpt_epoch_3.ckpt')
+# checkpoint = torch.load('logs/BetaVAE_B/version_6/checkpoints/_ckpt_epoch_3.ckpt')
+checkpoint = torch.load('logs/BetaVAE_B/version_0/checkpoints/_ckpt_epoch_9.ckpt')
 new_state_dict = {}
 for k in checkpoint['state_dict']:
     new_k = k.replace('model.', '')
