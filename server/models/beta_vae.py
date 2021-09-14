@@ -27,6 +27,7 @@ class BetaVAE(BaseVAE):
         self.loss_type = loss_type
         self.C_max = torch.Tensor([max_capacity])
         self.C_stop_iter = Capacity_max_iter
+        out_channels = in_channels
 
         modules = []
         if hidden_dims is None:
@@ -81,7 +82,7 @@ class BetaVAE(BaseVAE):
                                                output_padding=1),
                             nn.BatchNorm2d(hidden_dims[-1]),
                             nn.LeakyReLU(),
-                            nn.Conv2d(hidden_dims[-1], out_channels= 3,
+                            nn.Conv2d(hidden_dims[-1], out_channels= out_channels,
                                       kernel_size= 3, padding= 1),
                             nn.Tanh())
 

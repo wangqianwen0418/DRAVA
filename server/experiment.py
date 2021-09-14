@@ -48,7 +48,12 @@ class VAEXperiment(pl.LightningModule):
         return self.model(input, **kwargs)
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
-        real_img, labels = batch
+        labels = ''
+        if self.params['dataset'] == 'dsprites':
+            real_img = batch
+            real_img = real_img.float()
+        else:
+            real_img, labels = batch
         self.curr_device = real_img.device
 
         results = self.forward(real_img, labels = labels)
@@ -61,7 +66,14 @@ class VAEXperiment(pl.LightningModule):
 
         return train_loss
 
+    def training_end(self, outputs):
+        
+        self.save_simu_images()
+        return {'loss': outputs['loss']}
+
     def validation_step(self, batch, batch_idx, optimizer_idx = 0):
+        if self.params['dataset'] == 'dsprites':
+            return {}
         real_img, labels = batch
         self.curr_device = real_img.device
         results = self.forward(real_img, labels = labels)
@@ -73,6 +85,8 @@ class VAEXperiment(pl.LightningModule):
         return val_loss
 
     def validation_end(self, outputs):
+        if self.params['dataset'] == 'dsprites':
+            return {}
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
         tensorboard_logs = {'avg_val_loss': avg_loss}
         self.sample_images()
@@ -106,14 +120,18 @@ class VAEXperiment(pl.LightningModule):
     def test_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
         # self.save_latent_vectors()
-        self.save_simu_images()
+        # self.save_simu_images()
+        self.get_samples() 
 
-        with open(f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/hist.json", 'w') as f:
-            json.dump(self.latent_hist.tolist(), f)
+        # with open(f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/hist.json", 'w') as f:
+        #     json.dump(self.latent_hist.tolist(), f)
 
         return {'test_loss': avg_loss}
 
     def count_latent_dist(self, batch):
+        """
+        count the value distribution at each latent dimension
+        """
         real_img, labels = batch
         self.curr_device = real_img.device
 
@@ -122,6 +140,24 @@ class VAEXperiment(pl.LightningModule):
         latent_hist = torch.stack(latent_hist) # latent_dim * bin_size
         latent_hist = latent_hist.to(self.curr_device)
         self.latent_hist = latent_hist + self.latent_hist
+
+    def get_samples(self):
+        """
+        get real samples to demonstrate the latent dim value distribution 
+        """
+        test_input, test_label = next(iter(self.test_sample_dataloader))
+        test_input = test_input.to(self.curr_device)
+        test_label = test_label.to(self.curr_device)
+
+        [recons, test_input, mu, log_var] = self.forward(test_input, labels = test_label)
+        with open(f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/sample.json", 'w') as f:
+            json.dump(mu.tolist(), f)
+
+        vutils.save_image(test_input.data,
+                            f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
+                            f"samples.png",
+                            normalize=True,
+                            nrow=10)
 
 
     def save_simu_images(self):
@@ -138,7 +174,7 @@ class VAEXperiment(pl.LightningModule):
             z_ = [z_ for i in range(nrow)]
             z_ = torch.stack(z_, dim =0)
             mask = torch.tensor([j for j in range(nrow)])
-            z_[mask, i] = torch.tensor([-2.5 + j/(nrow-1)* 5 for j in range(nrow)]).float()
+            z_[mask, i] = torch.tensor([-3 + j/(nrow-1)* 6 for j in range(nrow)]).float()
             # sorted, _ = torch.sort(torch.randn( nrow))
             # z_[mask, i] =  sorted
 
@@ -149,7 +185,7 @@ class VAEXperiment(pl.LightningModule):
         samples = self.model.decode(z)
 
         vutils.save_image(samples.cpu().data,
-                            f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
+                            f"{self.logger.save_dir}{self.logger.name}/{self.params['dataset']}/version_{self.logger.version}/"
                             f"{self.logger.name}_simu_samples_{self.current_epoch}.png",
                             normalize=True,
                             nrow=nrow)
@@ -255,6 +291,7 @@ class VAEXperiment(pl.LightningModule):
                             drop_last=True)
 
         elif self.params['dataset'] == 'dsprites':
+            print('start train data loading')
             root = os.path.join('../../Data/', 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
             if not os.path.exists(root):
                 import subprocess
@@ -262,15 +299,17 @@ class VAEXperiment(pl.LightningModule):
                 subprocess.call(['./download_dsprites.sh'])
                 print('Finished')
             data = np.load(root, encoding='bytes')
-            data = torch.from_numpy(data['imgs']).unsqueeze(1).float()
+            data = torch.from_numpy(data['imgs']).unsqueeze(1)
+            print('train data loading')
             train_kwargs = {'data_tensor':data}
             dset = CustomTensorDataset
             train_data = dset(**train_kwargs)
-            self.num_train_imgs = train_data.len()
+            self.num_train_imgs = len(train_data)
             train_loader = DataLoader(train_data,
                                     batch_size=self.params['batch_size'],
                                     shuffle=True,
                                     drop_last=True)
+            print('end train data loading')
             return train_loader
         else:
             raise ValueError('Undefined dataset type')
@@ -291,15 +330,20 @@ class VAEXperiment(pl.LightningModule):
             self.num_val_imgs = len(self.sample_dataloader)
             return self.sample_dataloader
         elif self.params['dataset'] == 'dsprites':
-            root = os.path.join('../../Data', 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
-            data = np.load(root, encoding='bytes')
-            data = torch.from_numpy(data['imgs']).unsqueeze(1).float()
-            self.num_val_imgs = data.len()
-            val_loader = DataLoader(data,
-                                    batch_size=self.params['batch_size'],
-                                    shuffle=True,
-                                    drop_last=True)
-            return val_loader
+            print('start val data loading')
+            # root = os.path.join('../../Data', 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
+            # data = np.load(root, encoding='bytes')
+            # data = torch.from_numpy(data['imgs']).unsqueeze(1)
+            # self.num_val_imgs = len(data)
+            # print('val data loading')
+            # val_loader = DataLoader(self.train_data,
+            #                         batch_size=self.params['batch_size'],
+            #                         shuffle=True,
+            #                         drop_last=True)
+            # self.num_val_imgs = len(self.train_data)
+            # print('finish val data loading')
+            # return val_loader
+            return self.train_dataloader()
         else:
             raise ValueError('Undefined dataset type')
 
@@ -318,6 +362,9 @@ class VAEXperiment(pl.LightningModule):
                                                  drop_last=False)
             self.num_test_imgs = len(self.test_sample_dataloader)
             return self.test_sample_dataloader
+
+        elif self.params['dataset'] == 'dsprites':
+            return self.val_dataloader()
         else:
             raise ValueError('Undefined dataset type')
 
@@ -333,6 +380,7 @@ class VAEXperiment(pl.LightningModule):
                                             transforms.Resize(self.params['img_size']),
                                             transforms.ToTensor(),
                                             SetRange])
+        
         else:
             raise ValueError('Undefined dataset type')
         return transform
