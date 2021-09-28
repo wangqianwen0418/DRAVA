@@ -132,14 +132,19 @@ class VAEXperiment(pl.LightningModule):
 
         # with open(f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/hist.json", 'w') as f:
         #     json.dump(self.latent_hist.tolist(), f)
-
         return {'test_loss': avg_loss}
 
     def count_latent_dist(self, batch):
         """
         count the value distribution at each latent dimension
         """
-        real_img, labels = batch
+        
+        if self.params['dataset'] == 'dsprites' or self.params['dataset']=='sunspots':
+            real_img = batch
+            real_img = real_img.float()
+            labels = '' # dummy labels
+        else:
+            real_img, labels = batch
         self.curr_device = real_img.device
 
         [recons, test_input, mu, log_var] = self.forward(real_img, labels = labels)
@@ -152,9 +157,15 @@ class VAEXperiment(pl.LightningModule):
         """
         get real samples to demonstrate the latent dim value distribution 
         """
-        test_input, test_label = next(iter(self.test_sample_dataloader))
+        if self.params['dataset'] == 'dsprites' or self.params['dataset']=='sunspots':
+            test_input = next(iter(self.sample_dataloader))
+            test_input = test_input.float()
+            test_label = '' # dummy labels
+        else:   
+            test_input, test_label = next(iter(self.sample_dataloader))
+            test_label = test_label.to(self.curr_device)
         test_input = test_input.to(self.curr_device)
-        test_label = test_label.to(self.curr_device)
+        
 
         [recons, test_input, mu, log_var] = self.forward(test_input, labels = test_label)
         with open(f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/sample.json", 'w') as f:
