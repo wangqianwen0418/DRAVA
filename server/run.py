@@ -26,10 +26,9 @@ with open(args.filename, 'r') as file:
 
 
 tt_logger = TestTubeLogger(
-    save_dir=config['logging_params']['save_dir'],
+    save_dir=f"{config['logging_params']['save_dir']}/{config['exp_params']['dataset']}/",
     name=config['logging_params']['name'],
     debug=False,
-    version = 0,
     create_git_tag=False,
 )
 
@@ -43,14 +42,14 @@ model = vae_models[config['model_params']['name']](**config['model_params'])
 experiment = VAEXperiment(model,
                           config['exp_params'])
 
-checkpoint_callback = ModelCheckpoint(
-    filepath = f"{tt_logger.save_dir}{tt_logger.name}/{config['exp_params']['dataset']}/version_{tt_logger.version}/checkpoints",
-    verbose=True,
-    save_top_k=0, # save at each epoch
-    monitor='val_loss',
-    mode='min',
-    prefix=''
-)
+# checkpoint_callback = ModelCheckpoint(
+#     filepath = f"{tt_logger.save_dir}/{tt_logger.name}/version_{tt_logger.version}/checkpoints",
+#     verbose=True,
+#     save_top_k=0, # save at each epoch
+#     monitor='loss',
+#     mode='min',
+#     prefix=''
+# )
 
 runner = Trainer(default_save_path=f"{tt_logger.save_dir}",
                  min_nb_epochs=1,
@@ -59,7 +58,7 @@ runner = Trainer(default_save_path=f"{tt_logger.save_dir}",
                  train_percent_check=1.,
                  val_percent_check=1.,
                  num_sanity_val_steps=5,
-                 checkpoint_callback=checkpoint_callback,
+                #  checkpoint_callback=checkpoint_callback,
                  early_stop_callback = False,
                  **config['trainer_params'])
 

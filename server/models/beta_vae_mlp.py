@@ -3,7 +3,7 @@ from models import BaseVAE
 from torch import nn
 from torch.nn import functional as F
 from .types_ import *
-
+from torch.distributions.bernoulli import Bernoulli
 
 class BetaVAEMLP(BaseVAE):
 
@@ -37,11 +37,11 @@ class BetaVAEMLP(BaseVAE):
 
         # Build Encoder
         for h_dim in hidden_dims:
-            modules.append(
-                    nn.Linear(in_channels, h_dim)
-            )
+            modules.append(nn.Linear(in_channels, h_dim))
+            modules.append(nn.BatchNorm1d(num_features=h_dim))
+            modules.append(nn.ReLU())
             in_channels = h_dim
-        modules.append(nn.ReLU())
+
         self.encoder = nn.Sequential(*modules)
         self.fc_mu = nn.Linear(hidden_dims[-1], latent_dim)
         self.fc_var = nn.Linear(hidden_dims[-1], latent_dim)
@@ -58,12 +58,15 @@ class BetaVAEMLP(BaseVAE):
             modules.append(
                nn.Linear(hidden_dims[i],hidden_dims[i + 1])
             )
+            modules.append(nn.BatchNorm1d(num_features=hidden_dims[i + 1]))
+            modules.append(nn.Tanh())
 
         self.decoder = nn.Sequential(*modules)
 
         self.final_layer = nn.Sequential(
-                            nn.Linear(hidden_dims[-1], out_channels),
-                            nn.Tanh())
+                            nn.Linear(hidden_dims[-1], out_channels), 
+                            nn.Tanh()
+                        )
 
     def encode(self, input: Tensor) -> List[Tensor]:
         """
@@ -85,6 +88,7 @@ class BetaVAEMLP(BaseVAE):
         result = self.decoder_input(z)
         result = self.decoder(result)
         result = self.final_layer(result)
+        # result = torch.bernoulli(result)
         result = result.view(-1, 1, 64, 64)
 
         return result
@@ -119,6 +123,9 @@ class BetaVAEMLP(BaseVAE):
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
         recons_loss =F.mse_loss(recons, input)
+        # print(mu, 'mu')
+        # print(log_var, 'log var')
+        # print(recons, 'recons')
 
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 
@@ -130,6 +137,10 @@ class BetaVAEMLP(BaseVAE):
             loss = recons_loss + self.gamma * kld_weight* (kld_loss - C).abs()
         else:
             raise ValueError('Undefined loss type.')
+
+        # assert not torch.isnan(recons_loss), 'recons loss can not be a NAN'
+        # assert not torch.isnan(kld_loss), 'kld loss can not be a NAN'
+        # assert not torch.isnan(loss), 'loss can not be a NAN'
 
         return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss}
 
