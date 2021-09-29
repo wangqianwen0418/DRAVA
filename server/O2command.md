@@ -1,13 +1,22 @@
 
-### O2 commands
-check gpu resources: `sinfo  --Format=nodehost,available,memory,statelong,gres:20 -p gpu`
-load cuda: `module load gcc/6.2.0 cuda/10.2`
-request interactive session: `srun --pty -t 2:0:0 --mem=2G -p interactive bash`
-or request GPU resources: `srun -n 1 --pty -c 2 -t 4:00:00 -p gpu --gres=gpu:1 --mem=5G bash` 
+## GPU resources at O2
+check gpu resources: `sinfo  --Format=nodehost,available,memory,statelong,gres:20 -p gpu`  
+load cuda: `module load gcc/6.2.0 cuda/10.2`  
+request interactive session: `srun --pty -t 2:0:0 --mem=5G -p interactive bash`  
+or request GPU resources: `srun -n 1 --pty -c 2 -t 14:00:00 -p gpu --gres=gpu:1 --mem=5G bash`   
 
-load conda: `module load conda2/4.2.13`
-activate conda: `conda activate vae_env`
+## create virtual pythone environment for the first time
+`conda create --name vae_env python=3.7`  
+`conda activate vae_env`
+`pip install -r requirements.txt`
 
+## run conda on O2
+load conda: `module load conda2/4.2.13`  
+activate conda: 
+```
+conda deactivate
+conda activate vae_env
+```
 
-### old doc of pytorch lighting 
+## old doc of pytorch lighting 
 https://pytorch-lightning.readthedocs.io/en/0.6.0/

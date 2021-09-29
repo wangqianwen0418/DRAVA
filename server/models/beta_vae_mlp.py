@@ -17,7 +17,7 @@ class BetaVAEMLP(BaseVAE):
                  gamma:float = 1000.,
                  max_capacity: int = 25, # works similar to the beta in original beta vae
                  Capacity_max_iter: int = 1e5,
-                 loss_type:str = 'B',
+                 loss_type:str = 'H',
                  **kwargs) -> None:
         super(BetaVAEMLP, self).__init__()
 
@@ -30,15 +30,13 @@ class BetaVAEMLP(BaseVAE):
         out_channels = in_channels
 
         modules = []
-        if hidden_dims is None:
-            hidden_dims = [1200, 1200]
 
         modules.append(nn.Flatten())
 
         # Build Encoder
         for h_dim in hidden_dims:
             modules.append(nn.Linear(in_channels, h_dim))
-            modules.append(nn.BatchNorm1d(num_features=h_dim))
+            modules.append(nn.BatchNorm1d(h_dim))
             modules.append(nn.ReLU())
             in_channels = h_dim
 
@@ -58,14 +56,15 @@ class BetaVAEMLP(BaseVAE):
             modules.append(
                nn.Linear(hidden_dims[i],hidden_dims[i + 1])
             )
-            modules.append(nn.BatchNorm1d(num_features=hidden_dims[i + 1]))
+            modules.append(nn.BatchNorm1d(hidden_dims[i + 1]))
             modules.append(nn.Tanh())
 
         self.decoder = nn.Sequential(*modules)
 
         self.final_layer = nn.Sequential(
                             nn.Linear(hidden_dims[-1], out_channels), 
-                            nn.Tanh()
+                            nn.BatchNorm1d(out_channels),
+                            nn.Sigmoid()
                         )
 
     def encode(self, input: Tensor) -> List[Tensor]:
@@ -86,6 +85,7 @@ class BetaVAEMLP(BaseVAE):
 
     def decode(self, z: Tensor) -> Tensor:
         result = self.decoder_input(z)
+        result = result.view(-1, 1200) # TODO
         result = self.decoder(result)
         result = self.final_layer(result)
         # result = torch.bernoulli(result)

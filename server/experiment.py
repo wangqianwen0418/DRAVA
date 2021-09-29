@@ -25,15 +25,16 @@ class CustomTensorDataset(Dataset):
         return self.data_tensor.size(0)
 
 # extend the pytorch lightning module
-class VAEXperiment(pl.LightningModule):
+class VAEModule(pl.LightningModule):
 
     def __init__(self,
                  vae_model: BaseVAE,
                  params: dict) -> None:
-        super(VAEXperiment, self).__init__()
+        super(VAEModule, self).__init__()
 
         self.model = vae_model
         self.params = params
+
         self.curr_device = torch.cuda.current_device()
         self.hold_graph = False
 
@@ -47,11 +48,12 @@ class VAEXperiment(pl.LightningModule):
     def forward(self, input: Tensor, **kwargs) -> Tensor:
         return self.model(input, **kwargs)
 
+
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
-        labels = ''
-        if self.params['dataset'] == 'dsprites' or self.params['dataset']=='sunspots':
+        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
             real_img = batch
             real_img = real_img.float()
+            labels = '' # dummay labels for no-label dataset
         else:
             real_img, labels = batch
         self.curr_device = real_img.device
@@ -68,14 +70,13 @@ class VAEXperiment(pl.LightningModule):
 
     def training_end(self, outputs):
         
-        self.save_simu_images()
         return {'loss': outputs['loss']}
 
     def validation_step(self, batch, batch_idx, optimizer_idx = 0):
-        labels = ''
-        if self.params['dataset'] == 'dsprites' or self.params['dataset']=='sunspots':
+        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
             real_img = batch
             real_img = real_img.float()
+            labels = '' # dummay labels for no-label dataset
         else:
             real_img, labels = batch
         self.curr_device = real_img.device
@@ -91,26 +92,18 @@ class VAEXperiment(pl.LightningModule):
         
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
         tensorboard_logs = {'avg_val_loss': avg_loss}
-        self.sample_images()
+        
+        self.save_simu_images()
+        self.save_paired_samples()
+
         return {'val_loss': avg_loss, 'log': tensorboard_logs}
-    
-    # def test_step(self, batch, batch_idx, optimizer_idx = 0):
-    #     real_img, labels = batch
-    #     self.curr_device = real_img.device
 
-    #     results = self.forward(real_img, labels = labels)
-    #     loss = self.model.loss_function(*results,
-    #                                         M_N = self.params['batch_size']/ self.num_val_imgs,
-    #                                         optimizer_idx = optimizer_idx,
-    #                                         batch_idx = batch_idx)
-
-    #     return loss
 
     def test_step(self, batch, batch_idx, optimizer_idx = 0):
-        labels = ''
-        if self.params['dataset'] == 'dsprites' or self.params['dataset']=='sunspots':
+        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
             real_img = batch
             real_img = real_img.float()
+            labels = '' # dummy labels
         else:
             real_img, labels = batch
         self.curr_device = real_img.device
@@ -121,17 +114,16 @@ class VAEXperiment(pl.LightningModule):
                                             optimizer_idx = optimizer_idx,
                                             batch_idx = batch_idx)
 
+        self.log({key: val.item() for key, val in loss.items()})
+
         self.count_latent_dist(batch)
         return loss
 
     def test_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
-        # self.save_latent_vectors()
-        # self.save_simu_images()
-        self.get_samples() 
 
-        # with open(f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/hist.json", 'w') as f:
-        #     json.dump(self.latent_hist.tolist(), f)
+        self.save_real_samples() 
+
         return {'test_loss': avg_loss}
 
     def count_latent_dist(self, batch):
@@ -139,7 +131,7 @@ class VAEXperiment(pl.LightningModule):
         count the value distribution at each latent dimension
         """
         
-        if self.params['dataset'] == 'dsprites' or self.params['dataset']=='sunspots':
+        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
             real_img = batch
             real_img = real_img.float()
             labels = '' # dummy labels
@@ -153,11 +145,11 @@ class VAEXperiment(pl.LightningModule):
         latent_hist = latent_hist.to(self.curr_device)
         self.latent_hist = latent_hist + self.latent_hist
 
-    def get_samples(self):
+    def save_real_samples(self):
         """
-        get real samples to demonstrate the latent dim value distribution 
+        save real input samples to demonstrate the latent dim value distribution 
         """
-        if self.params['dataset'] == 'dsprites' or self.params['dataset']=='sunspots':
+        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
             test_input = next(iter(self.sample_dataloader))
             test_input = test_input.float()
             test_label = '' # dummy labels
@@ -173,7 +165,7 @@ class VAEXperiment(pl.LightningModule):
 
         vutils.save_image(test_input.data,
                             f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
-                            f"samples.png",
+                            f"real_samples.png",
                             normalize=True,
                             nrow=10)
 
@@ -181,7 +173,8 @@ class VAEXperiment(pl.LightningModule):
     def save_simu_images(self):
         """
         return an image grid,
-        each row is a hidden dimension, all images in this row have same values for other dims but differnt values at this dim  
+        each row is a hidden dimension, 
+        all images in this row have same values for other dims but differnt values at this dim  
         """
         nrow = 11 # number of images at each row
 
@@ -197,7 +190,7 @@ class VAEXperiment(pl.LightningModule):
             # z_[mask, i] =  sorted
 
             z.append(z_)
-        z = torch.stack(z)
+        z = torch.stack(z, dim=1)
         z = z.to(self.curr_device)
 
         samples = self.model.decode(z)
@@ -209,7 +202,7 @@ class VAEXperiment(pl.LightningModule):
                             nrow=nrow)
    
     def save_latent_vectors(self):
-        if self.params['dataset'] == 'dsprites' or self.params['dataset']=='sunspots':
+        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
             test_input = next(iter(self.sample_dataloader))
             test_input = test_input.float()
             test_label = '' # dummy labels
@@ -235,9 +228,12 @@ class VAEXperiment(pl.LightningModule):
         torch.save(mu, f"{self.logger.save_dir}/exp_data/latent.pt")
 
 
-    def sample_images(self):
-        # Get sample reconstruction image
-        if self.params['dataset'] == 'dsprites' or self.params['dataset']=='sunspots':
+    def save_paired_samples(self):
+        """
+        run at the end of each epoch,
+        save input sample images and their reconstructed images
+        """
+        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
             test_input = next(iter(self.sample_dataloader))
             test_input = test_input.float()
             test_label = '' # dummy labels
@@ -247,15 +243,18 @@ class VAEXperiment(pl.LightningModule):
         test_input = test_input.to(self.curr_device)
         
         recons = self.model.generate(test_input, labels = test_label)
-        vutils.save_image(recons.data,
-                          f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
-                          f"recons_{self.logger.name}_{self.current_epoch}.png",
-                          normalize=True,
-                          nrow=12)
 
+        # input images
         vutils.save_image(test_input.data,
                           f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
                           f"real_img_{self.logger.name}_{self.current_epoch}.png",
+                          normalize=True,
+                          nrow=12)
+        
+        # reconstructed images
+        vutils.save_image(recons.data,
+                          f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
+                          f"recons_{self.logger.name}_{self.current_epoch}.png",
                           normalize=True,
                           nrow=12)
 
@@ -324,9 +323,9 @@ class VAEXperiment(pl.LightningModule):
                             shuffle = True,
                             drop_last=True)
 
-        elif self.params['dataset'] == 'dsprites' or self.params['dataset']=='sunspots':
+        elif self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
             print('start train data loading')
-            root = os.path.join('./data/', f"{self.params['dataset']}/{self.params['dataset']}.npz")
+            root = os.path.join('./data/', f"{self.params['dataset']}.npz")
             if not os.path.exists(root):
                 import subprocess
                 print('Now download dsprites-dataset')
@@ -363,17 +362,8 @@ class VAEXperiment(pl.LightningModule):
                                                  drop_last=True)
             self.num_val_imgs = len(self.sample_dataloader)
             return self.sample_dataloader
-        elif self.params['dataset'] == 'dsprites' or self.params['dataset']=='sunspots':
+        elif self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
             print('start val data loading')
-            # root = os.path.join('../../Data', 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
-            # data = np.load(root, encoding='bytes')
-            # data = torch.from_numpy(data['imgs']).unsqueeze(1)
-            # self.num_val_imgs = len(data)
-            # print('val data loading')
-            # val_loader = DataLoader(self.train_data,
-            #                         batch_size=self.params['batch_size'],
-            #                         shuffle=True,
-            #                         drop_last=True)
             self.sample_dataloader = self.train_dataloader()
             self.num_val_imgs = self.num_train_imgs
             return self.train_dataloader()
@@ -394,7 +384,7 @@ class VAEXperiment(pl.LightningModule):
             self.num_test_imgs = len(self.test_sample_dataloader)
             return self.test_sample_dataloader
 
-        elif self.params['dataset'] == 'dsprites' or self.params['dataset']=='sunspots':
+        elif self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
             return self.val_dataloader()
         else:
             raise ValueError('Undefined dataset type')

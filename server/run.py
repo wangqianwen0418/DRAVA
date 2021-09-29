@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 
 from models import *
-from experiment import VAEXperiment
+from experiment import VAEModule
 import torch.backends.cudnn as cudnn
 from pytorch_lightning import Trainer
 from pytorch_lightning.logging import TestTubeLogger
@@ -38,9 +38,12 @@ np.random.seed(config['logging_params']['manual_seed'])
 cudnn.deterministic = True
 cudnn.benchmark = False
 
+# save config file for this experiment
+# with open('config.yml', 'w') as outfile:
+#             yaml.dump(config, outfile, default_flow_style=False)
+
 model = vae_models[config['model_params']['name']](**config['model_params'])
-myModule = VAEXperiment(model,
-                            config['exp_params'])
+myModule = VAEModule(model,config['exp_params'])
 
 runner = Trainer(default_save_path=f"{tt_logger.save_dir}",
                     min_nb_epochs=1,
@@ -49,20 +52,9 @@ runner = Trainer(default_save_path=f"{tt_logger.save_dir}",
                     train_percent_check=1.,
                     val_percent_check=1.,
                     num_sanity_val_steps=5,
-                    #  checkpoint_callback=checkpoint_callback,
+                    check_val_every_n_epoch=10,
                     early_stop_callback = False,
                     **config['trainer_params'])
-
-IS_TRAIN = False
-# train model
-if IS_TRAIN:
-
-    print(f"======= Training {config['model_params']['name']} =======")
-    runner.fit(myModule)
-else:
-    ver_num = 0
-    checkpoint_name = '_ckpt_epoch_72.ckpt'
-    ckp_path = f"{tt_logger.save_dir}/{tt_logger.name}/version_{ver_num}/checkpoints/{checkpoint_name}"
-    checkpoint = torch.load(ckp_path)
-    myModule.load_state_dict(checkpoint['state_dict'])
-    runner.test(myModule)
+                    
+print(f"======= Training {config['model_params']['name']} =======")
+runner.fit(myModule)

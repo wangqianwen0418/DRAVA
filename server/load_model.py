@@ -4,12 +4,12 @@ import argparse
 import numpy as np
 
 from models import *
-from experiment import VAEXperiment
+from experiment import VAEModule
 import torch.backends.cudnn as cudnn
 from pytorch_lightning import Trainer
 from pytorch_lightning.logging import TestTubeLogger
 
-version = 0
+VER_NUM = 0
 
 parser = argparse.ArgumentParser(description='Generic runner for VAE models')
 parser.add_argument('--config',  '-c',
@@ -32,28 +32,29 @@ cudnn.benchmark = False
 
 model = vae_models[config['model_params']['name']](**config['model_params'])
 
+tt_logger = TestTubeLogger(
+    save_dir=f"{config['logging_params']['save_dir']}/{config['exp_params']['dataset']}/",
+    name=config['logging_params']['name'],
+    debug=True,
+    create_git_tag=False,
+    version = VER_NUM,
+)
 
-# checkpoint = torch.load('logs/BetaVAE_B/version_6/checkpoints/_ckpt_epoch_3.ckpt')
-# checkpoint = torch.load('logs/BetaVAE_B/version_0/checkpoints/_ckpt_epoch_9.ckpt')
-checkpoint = torch.load( f"logs/{config['logging_params']['name']}/version_{version}/checkpoints/_ckpt_epoch_28.ckpt" )
+
+# load state dict from check point
+checkpoint_name = '_ckpt_epoch_72.ckpt'
+ckp_path = f"{tt_logger.save_dir}/{tt_logger.name}/version_{VER_NUM}/checkpoints/{checkpoint_name}"
+checkpoint = torch.load( ckp_path )
 new_state_dict = {}
 for k in checkpoint['state_dict']:
     new_k = k.replace('model.', '')
     new_state_dict[new_k] = checkpoint['state_dict'][k]
 model.load_state_dict(new_state_dict)
 
-# model.simu_sample(10, torch.cuda.current_device())
 
-net = VAEXperiment(model, config['exp_params'])
+net = VAEModule(model, config['exp_params'])
 net.freeze()
 
-tt_logger = TestTubeLogger(
-    save_dir=config['logging_params']['save_dir'],
-    name=config['logging_params']['name'],
-    debug=True,
-    create_git_tag=False,
-    version = version,
-)
 
 
 runner = Trainer(default_save_path=f"{tt_logger.save_dir}",

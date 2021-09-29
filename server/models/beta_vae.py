@@ -30,8 +30,6 @@ class BetaVAE(BaseVAE):
         out_channels = in_channels
 
         modules = []
-        if hidden_dims is None:
-            hidden_dims = [32, 64, 128, 256, 512]
 
         # Build Encoder
         for h_dim in hidden_dims:
@@ -45,14 +43,14 @@ class BetaVAE(BaseVAE):
             in_channels = h_dim
 
         self.encoder = nn.Sequential(*modules)
-        self.fc_mu = nn.Linear(hidden_dims[-1]*4, latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1]*4, latent_dim)
+        self.fc_mu = nn.Linear(hidden_dims[-1] * int((64/2**len(hidden_dims))**2), latent_dim)
+        self.fc_var = nn.Linear(hidden_dims[-1] * int((64/2**len(hidden_dims))**2), latent_dim)
 
 
         # Build Decoder
         modules = []
 
-        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 4)
+        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * int((64/2**len(hidden_dims))**2))
 
         hidden_dims.reverse()
 
@@ -84,7 +82,7 @@ class BetaVAE(BaseVAE):
                             nn.LeakyReLU(),
                             nn.Conv2d(hidden_dims[-1], out_channels= out_channels,
                                       kernel_size= 3, padding= 1),
-                            nn.Sigmoid())
+                            nn.ReLU())
 
     def encode(self, input: Tensor) -> List[Tensor]:
         """
@@ -105,7 +103,7 @@ class BetaVAE(BaseVAE):
 
     def decode(self, z: Tensor) -> Tensor:
         result = self.decoder_input(z)
-        result = result.view(-1, 512, 2, 2)
+        result = result.view(-1, 512, 2, 2) # TO-DO
         result = self.decoder(result)
         result = self.final_layer(result)
         return result
