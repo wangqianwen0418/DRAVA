@@ -120,7 +120,7 @@ class VAEModule(pl.LightningModule):
     def test_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
 
-        self.save_real_samples() 
+        self.save_sample_dist() 
         print('test_loss', avg_loss)
 
         return {'test_loss': avg_loss}
@@ -144,7 +144,7 @@ class VAEModule(pl.LightningModule):
         latent_hist = latent_hist.to(self.curr_device)
         self.latent_hist = latent_hist + self.latent_hist
 
-    def save_real_samples(self):
+    def save_sample_dist(self):
         """
         save real input samples to demonstrate the latent dim value distribution 
         """
@@ -169,6 +169,9 @@ class VAEModule(pl.LightningModule):
                             f"{filepath}/real_samples.png",
                             normalize=True,
                             nrow=10)
+
+        with open(f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/hist.json", 'w') as f:
+            json.dump(self.latent_hist.tolist(), f)
 
 
     def save_simu_images(self):
