@@ -114,8 +114,6 @@ class VAEModule(pl.LightningModule):
                                             optimizer_idx = optimizer_idx,
                                             batch_idx = batch_idx)
 
-        self.log({key: val.item() for key, val in loss.items()})
-
         self.count_latent_dist(batch)
         return loss
 
@@ -123,6 +121,7 @@ class VAEModule(pl.LightningModule):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
 
         self.save_real_samples() 
+        print('test_loss', avg_loss)
 
         return {'test_loss': avg_loss}
 
@@ -163,9 +162,11 @@ class VAEModule(pl.LightningModule):
         with open(f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/sample.json", 'w') as f:
             json.dump(mu.tolist(), f)
 
+        filepath = f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/imgs"
+        if not(os.path.isdir(filepath)):
+            os.mkdir(filepath)
         vutils.save_image(test_input.data,
-                            f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
-                            f"real_samples.png",
+                            f"{filepath}/real_samples.png",
                             normalize=True,
                             nrow=10)
 
@@ -195,39 +196,16 @@ class VAEModule(pl.LightningModule):
 
         samples = self.model.decode(z)
 
+        
+        filepath = f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/imgs"
+        if not(os.path.isdir(filepath)):
+            os.mkdir(filepath)
         vutils.save_image(samples.cpu().data,
-                            f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
-                            f"{self.logger.name}_simu_samples_{self.current_epoch}.png",
+                            f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png",
                             normalize=True,
                             nrow=nrow)
    
-    def save_latent_vectors(self):
-        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
-            test_input = next(iter(self.sample_dataloader))
-            test_input = test_input.float()
-            test_label = '' # dummy labels
-        else:   
-            test_input, test_label = next(iter(self.sample_dataloader))
-            test_label = test_label.to(self.curr_device)
-        test_input = test_input.to(self.curr_device)
-        [recons, test_input, mu, log_var] = self.forward(test_input, labels = test_label)
-        
-
-        vutils.save_image(recons.data,
-                          f"{self.logger.save_dir}/exp_data/imgs/"
-                          f"recons_{self.logger.name}.png",
-                          normalize=True,
-                          nrow=12)
-
-        vutils.save_image(test_input.data,
-                           f"{self.logger.save_dir}/exp_data/imgs/"
-                          f"real_img_{self.logger.name}.png",
-                          normalize=True,
-                          nrow=12)
-        # save tensor
-        torch.save(mu, f"{self.logger.save_dir}/exp_data/latent.pt")
-
-
+    
     def save_paired_samples(self):
         """
         run at the end of each epoch,
@@ -243,18 +221,20 @@ class VAEModule(pl.LightningModule):
         test_input = test_input.to(self.curr_device)
         
         recons = self.model.generate(test_input, labels = test_label)
+        
+        filepath = f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/imgs"
+        if not(os.path.isdir(filepath)):
+            os.mkdir(filepath)
 
         # input images
         vutils.save_image(test_input.data,
-                          f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
-                          f"real_img_{self.logger.name}_{self.current_epoch}.png",
+                          f"{filepath}/real_img_{self.logger.name}_{self.current_epoch}.png",
                           normalize=True,
                           nrow=12)
         
         # reconstructed images
         vutils.save_image(recons.data,
-                          f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
-                          f"recons_{self.logger.name}_{self.current_epoch}.png",
+                          f"{filepath}/recons_{self.logger.name}_{self.current_epoch}.png",
                           normalize=True,
                           nrow=12)
 
