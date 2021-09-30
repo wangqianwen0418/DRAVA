@@ -121,6 +121,7 @@ class VAEModule(pl.LightningModule):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
 
         self.save_sample_dist() 
+        self.save_simu_images()
         print('test_loss', avg_loss)
 
         return {'test_loss': avg_loss}
@@ -139,7 +140,7 @@ class VAEModule(pl.LightningModule):
         self.curr_device = real_img.device
 
         [recons, test_input, mu, log_var] = self.forward(real_img, labels = labels)
-        latent_hist = [ torch.histc( mu[:, i], bins= self.bin_size, min=-2.5, max= 2.5) for i in range(self.model.latent_dim)]
+        latent_hist = [ torch.histc( mu[:, i], bins= self.bin_size, min=-3, max= 3) for i in range(self.model.latent_dim)]
         latent_hist = torch.stack(latent_hist) # latent_dim * bin_size
         latent_hist = latent_hist.to(self.curr_device)
         self.latent_hist = latent_hist + self.latent_hist
@@ -189,12 +190,10 @@ class VAEModule(pl.LightningModule):
             z_ = [z_ for i in range(nrow)]
             z_ = torch.stack(z_, dim =0)
             mask = torch.tensor([j for j in range(nrow)])
-            z_[mask, i] = torch.tensor([-3 + j/(nrow-1)* 6 for j in range(nrow)]).float()
-            # sorted, _ = torch.sort(torch.randn( nrow))
-            # z_[mask, i] =  sorted
+            z_[mask, i] = torch.tensor([- 3 + j/(nrow-1)* 6 for j in range(nrow)]).float()
 
             z.append(z_)
-        z = torch.stack(z, dim=1)
+        z = torch.stack(z)
         z = z.to(self.curr_device)
 
         samples = self.model.decode(z)

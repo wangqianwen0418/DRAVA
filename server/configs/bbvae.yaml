@@ -11,7 +11,7 @@ model_params:
 
 exp_params:
   # dataset: celeba
-  dataset: sunspots_normalized_32
+  dataset: sunspots_32_2
   data_path: "../../Data/"
   img_size: 64
   optimizer: "adam"

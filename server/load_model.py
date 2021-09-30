@@ -9,7 +9,7 @@ import torch.backends.cudnn as cudnn
 from pytorch_lightning import Trainer
 from pytorch_lightning.logging import TestTubeLogger
 
-VER_NUM = 0
+VER_NUM = 1
 
 parser = argparse.ArgumentParser(description='Generic runner for VAE models')
 parser.add_argument('--config',  '-c',
@@ -42,7 +42,7 @@ tt_logger = TestTubeLogger(
 
 
 # load state dict from check point
-checkpoint_name = '_ckpt_epoch_72.ckpt'
+checkpoint_name = '_ckpt_epoch_29.ckpt'
 ckp_path = f"{tt_logger.save_dir}/{tt_logger.name}/version_{VER_NUM}/checkpoints/{checkpoint_name}"
 checkpoint = torch.load( ckp_path )
 new_state_dict = {}
