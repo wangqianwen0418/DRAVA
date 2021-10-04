@@ -307,7 +307,7 @@ class VAEModule(pl.LightningModule):
 
         elif self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
             print('start train data loading')
-            root = os.path.join('./data/', f"{self.params['dataset']}.npz")
+            root = os.path.join(self.params['data_path'], f"{self.params['dataset']}.npz")
             if not os.path.exists(root):
                 import subprocess
                 print('Now download dsprites-dataset')
@@ -346,6 +346,7 @@ class VAEModule(pl.LightningModule):
             return self.sample_dataloader
         elif self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
             print('start val data loading')
+            # since the two datasets are small, use the train data loader for val
             self.sample_dataloader = self.train_dataloader()
             self.num_val_imgs = self.num_train_imgs
             return self.train_dataloader()
@@ -367,6 +368,7 @@ class VAEModule(pl.LightningModule):
             return self.test_sample_dataloader
 
         elif self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
+            # since the two datasets are small, use the train data loader for test
             return self.val_dataloader()
         else:
             raise ValueError('Undefined dataset type')

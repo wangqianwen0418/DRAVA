@@ -2,6 +2,7 @@
 import yaml
 import argparse
 import numpy as np
+import os
 
 from models import *
 from experiment import VAEModule
@@ -9,14 +10,18 @@ import torch.backends.cudnn as cudnn
 from pytorch_lightning import Trainer
 from pytorch_lightning.logging import TestTubeLogger
 
-VER_NUM = 1
-
 parser = argparse.ArgumentParser(description='Generic runner for VAE models')
 parser.add_argument('--config',  '-c',
                     dest="filename",
                     metavar='FILE',
                     help =  'path to the config file',
                     default='configs/vae.yaml')
+
+parser.add_argument('-v',
+                    type=int,
+                    dest='version_num',
+                    help='model version number',
+                    default='0')
 
 args = parser.parse_args()
 with open(args.filename, 'r') as file:
@@ -37,14 +42,17 @@ tt_logger = TestTubeLogger(
     name=config['logging_params']['name'],
     debug=True,
     create_git_tag=False,
-    version = VER_NUM,
+    version = args.version_num,
 )
 
 
 # load state dict from check point
-checkpoint_name = '_ckpt_epoch_29.ckpt'
-ckp_path = f"{tt_logger.save_dir}/{tt_logger.name}/version_{VER_NUM}/checkpoints/{checkpoint_name}"
-checkpoint = torch.load( ckp_path )
+
+ckp_dir = f"{tt_logger.save_dir}/{tt_logger.name}/version_{args.version_num}/checkpoints/"
+assert os.path.exists(ckp_dir), 'the checkpoint folder does not exist'
+assert len(os.listdir(ckp_dir))>0, 'the checkpoint file does not exist'
+ckp_name = [f for f in os.listdir(ckp_dir)][0]
+checkpoint = torch.load( os.path.join(ckp_dir, ckp_name) )
 new_state_dict = {}
 for k in checkpoint['state_dict']:
     new_k = k.replace('model.', '')

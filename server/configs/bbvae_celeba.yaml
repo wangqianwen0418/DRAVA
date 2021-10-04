@@ -1,8 +1,7 @@
 model_params:
   name: 'BetaVAE'
-  in_channels: 1
-  latent_dim: 7 # for dsprites
-  # latent_dim: 28 # for celeba
+  in_channels: 3
+  latent_dim: 28 # for celeba
   hidden_dims: [32, 64, 128, 256, 512]
   loss_type: 'B'
   gamma: 10.0
@@ -10,8 +9,7 @@ model_params:
   Capacity_max_iter: 10000
 
 exp_params:
-  # dataset: celeba
-  dataset: sunspots_32_2
+  dataset: celeba
   data_path: "./data/"
   img_size: 64
   optimizer: "adam"
