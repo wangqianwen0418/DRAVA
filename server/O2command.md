@@ -18,5 +18,11 @@ conda deactivate
 conda activate vae_env
 ```
 
+##
+**train**
+python run.py -c configs/<config-file-name.yaml>
+**load_model**
+python load_model.py -c configs/<config-file-name.yaml>
+
 ## old doc of pytorch lighting 
 https://pytorch-lightning.readthedocs.io/en/0.6.0/
