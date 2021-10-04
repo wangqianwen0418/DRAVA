@@ -23,10 +23,13 @@ conda activate vae_env
 the sunspots datasets
 `python run.py -c configs/bbvae.yaml`
 the celeba datasets
-`python load_model.py -c configs/bbvae_celeba.yaml -v 0`
+`python run.py -c configs/bbvae_celeba.yaml`
 
 **load_model**
-python load_model.py -c configs/<config-file-name.yaml>
+the sunspots datasets
+`python load_model.py -c configs/bbvae.yaml -v 0`
+the celeba datasets
+`python load_model.py -c configs/bbvae_celeba.yaml -v 0`
 
 ## old doc of pytorch lighting 
 https://pytorch-lightning.readthedocs.io/en/0.6.0/
