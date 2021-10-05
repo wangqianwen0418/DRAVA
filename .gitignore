@@ -1,5 +1,9 @@
 
-data/
+**/data/*
+!**/data/*.py
+
+.vscode/
+
 logs/
 *.out
 VanillaVAE/version_0/

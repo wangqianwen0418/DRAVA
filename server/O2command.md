@@ -14,8 +14,7 @@ or request GPU resources: `srun -n 1 --pty -c 2 -t 14:00:00 -p gpu --gres=gpu:1 
 load conda: `module load conda2/4.2.13`  
 activate conda: 
 ```
-conda deactivate
-conda activate vae_env
+conda deactivate && conda activate vae_env
 ```
 
 ##
