@@ -3,9 +3,9 @@ from models import BaseVAE
 from torch import nn
 from torch.nn import functional as F
 from .types_ import *
-from torch.distributions.bernoulli import Bernoulli
 
-class BetaVAEMLP(BaseVAE):
+
+class BetaVAE_GENO(BaseVAE):
 
     num_iter = 0 # Global static variable to keep track of iterations
 
@@ -18,7 +18,7 @@ class BetaVAEMLP(BaseVAE):
                  max_capacity: int = 25, # works similar to the beta in original beta vae
                  Capacity_max_iter: int = 1e5,
                  **kwargs) -> None:
-        super(BetaVAEMLP, self).__init__()
+        super(BetaVAE_GENO, self).__init__()
 
         self.latent_dim = latent_dim
         self.beta = beta
@@ -30,41 +30,58 @@ class BetaVAEMLP(BaseVAE):
 
         modules = []
 
-        modules.append(nn.Flatten())
-
         # Build Encoder
         for h_dim in hidden_dims:
-            modules.append(nn.Linear(in_channels, h_dim))
-            modules.append(nn.BatchNorm1d(h_dim))
-            modules.append(nn.ReLU())
+            modules.append(
+                nn.Sequential(
+                    nn.Conv2d(in_channels, out_channels=h_dim,
+                              kernel_size= 3, stride= 2, padding  = 1),
+                    nn.BatchNorm2d(h_dim),
+                    nn.LeakyReLU())
+            )
             in_channels = h_dim
 
         self.encoder = nn.Sequential(*modules)
-        self.fc_mu = nn.Linear(hidden_dims[-1], latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1], latent_dim)
+        self.fc_mu = nn.Linear(hidden_dims[-1] * int((64/2**len(hidden_dims))**2), latent_dim)
+        self.fc_var = nn.Linear(hidden_dims[-1] * int((64/2**len(hidden_dims))**2), latent_dim)
 
 
         # Build Decoder
         modules = []
 
-        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1])
+        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * int((64/2**len(hidden_dims))**2))
 
         hidden_dims.reverse()
 
-        for i in range(len(hidden_dims)-1):
+        for i in range(len(hidden_dims) - 1):
             modules.append(
-               nn.Linear(hidden_dims[i],hidden_dims[i + 1])
+                nn.Sequential(
+                    nn.ConvTranspose2d(hidden_dims[i],
+                                       hidden_dims[i + 1],
+                                       kernel_size=3,
+                                       stride = 2,
+                                       padding=1,
+                                       output_padding=1),
+                    nn.BatchNorm2d(hidden_dims[i + 1]),
+                    nn.LeakyReLU())
             )
-            modules.append(nn.BatchNorm1d(hidden_dims[i + 1]))
-            modules.append(nn.Tanh())
+
+
 
         self.decoder = nn.Sequential(*modules)
 
         self.final_layer = nn.Sequential(
-                            nn.Linear(hidden_dims[-1], out_channels), 
-                            nn.BatchNorm1d(out_channels),
-                            nn.Sigmoid()
-                        )
+                            nn.ConvTranspose2d(hidden_dims[-1],
+                                               hidden_dims[-1],
+                                               kernel_size=3,
+                                               stride=2,
+                                               padding=1,
+                                               output_padding=1),
+                            nn.BatchNorm2d(hidden_dims[-1]),
+                            nn.LeakyReLU(),
+                            nn.Conv2d(hidden_dims[-1], out_channels= out_channels,
+                                      kernel_size= 3, padding= 1),
+                            nn.ReLU())
 
     def encode(self, input: Tensor) -> List[Tensor]:
         """
@@ -74,6 +91,7 @@ class BetaVAEMLP(BaseVAE):
         :return: (Tensor) List of latent codes
         """
         result = self.encoder(input)
+        result = torch.flatten(result, start_dim=1)
 
         # Split the result into mu and var components
         # of the latent Gaussian distribution
@@ -84,12 +102,9 @@ class BetaVAEMLP(BaseVAE):
 
     def decode(self, z: Tensor) -> Tensor:
         result = self.decoder_input(z)
-        result = result.view(-1, 1200) # TODO
+        result = result.view(-1, 512, 2, 2) # TO-DO
         result = self.decoder(result)
         result = self.final_layer(result)
-        # result = torch.bernoulli(result)
-        result = result.view(-1, 1, 64, 64)
-
         return result
 
     def reparameterize(self, mu: Tensor, logvar: Tensor) -> Tensor:
@@ -105,10 +120,8 @@ class BetaVAEMLP(BaseVAE):
         return eps * std + mu
 
     def forward(self, input: Tensor, **kwargs) -> Tensor:
-
         mu, log_var = self.encode(input)
         z = self.reparameterize(mu, log_var)
-
         return  [self.decode(z), input, mu, log_var]
 
     def loss_function(self,
@@ -122,9 +135,6 @@ class BetaVAEMLP(BaseVAE):
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
         recons_loss =F.mse_loss(recons, input)
-        # print(mu, 'mu')
-        # print(log_var, 'log var')
-        # print(recons, 'recons')
 
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 
@@ -136,10 +146,6 @@ class BetaVAEMLP(BaseVAE):
             loss = recons_loss + self.gamma * kld_weight* (kld_loss - C).abs()
         else:
             raise ValueError('Undefined loss type.')
-
-        # assert not torch.isnan(recons_loss), 'recons loss can not be a NAN'
-        # assert not torch.isnan(kld_loss), 'kld loss can not be a NAN'
-        # assert not torch.isnan(loss), 'loss can not be a NAN'
 
         return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss}
 

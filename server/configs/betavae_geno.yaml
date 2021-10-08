@@ -1,5 +1,5 @@
 model_params:
-  name: 'BetaVAE'
+  name: 'BetaVAE_GENO'
   in_channels: 1
   latent_dim: 7 # for dsprites
   # latent_dim: 28 # for celeba
@@ -22,10 +22,10 @@ exp_params:
 
 trainer_params:
   gpus: 1
-  max_nb_epochs: 100
-  max_epochs: 100
+  max_nb_epochs: 500
+  max_epochs: 500
 
 logging_params:
   save_dir: "logs"
-  name: "BetaVAE_B"
+  name: "BetaVAE_GENO"
   manual_seed: 1265

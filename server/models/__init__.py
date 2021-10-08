@@ -22,6 +22,7 @@ from .vq_vae import *
 from .betatc_vae import *
 from .dip_vae import *
 from .beta_vae_mlp import *
+from .beta_vae_geno import *
 
 
 # Aliases
@@ -40,6 +41,7 @@ vae_models = {'HVAE':HVAE,
               'DIPVAE':DIPVAE,
               'BetaVAE':BetaVAE,
               'BetaVAEMLP':BetaVAEMLP,
+              'BetaVAE_GENO':BetaVAE_GENO,
               'InfoVAE':InfoVAE,
               'WAE_MMD':WAE_MMD,
               'VampVAE': VampVAE,
