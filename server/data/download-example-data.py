@@ -230,3 +230,6 @@ if __name__ == "__main__":
 
     # GM12878 DNase-seq read-depth normalized signal
     download_encode_file("ENCFF158GBQ.bigWig")
+    #
+    download_file('https://s3.amazonaws.com/gosling-lang.org/data/HFFc6_H3K4me3.bigWig', 'HFFc6_H3K4me3.bigWig', dir='geno_data')
+    download_file('https://s3.amazonaws.com/gosling-lang.org/data/HFFc6_Atacseq.mRp.clN.bigWig', 'HFFc6_ATAC.bigWig', dir='geno_data')
