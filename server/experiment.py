@@ -45,12 +45,19 @@ class VAEModule(pl.LightningModule):
         except:
             pass
 
+    def is_np_dataset(self, dataset_name):
+        # numpy datasets have different data loaders
+        if 'sunspot' in dataset_name or dataset_name in ['dsprites', 'HFFc6_ATAC']:
+            return True
+        else:
+            return False
+    
     def forward(self, input: Tensor, **kwargs) -> Tensor:
         return self.model(input, **kwargs)
 
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
-        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
+        if self.is_np_dataset(self.params['dataset']):
             real_img = batch
             real_img = real_img.float()
             labels = '' # dummay labels for no-label dataset
@@ -73,7 +80,7 @@ class VAEModule(pl.LightningModule):
         return {'loss': outputs['loss']}
 
     def validation_step(self, batch, batch_idx, optimizer_idx = 0):
-        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
+        if self.is_np_dataset(self.params['dataset']):
             real_img = batch
             real_img = real_img.float()
             labels = '' # dummay labels for no-label dataset
@@ -96,11 +103,13 @@ class VAEModule(pl.LightningModule):
         self.save_simu_images()
         self.save_paired_samples()
 
+        print('val_loss: ', avg_loss.item())
+
         return {'val_loss': avg_loss, 'log': tensorboard_logs}
 
 
     def test_step(self, batch, batch_idx, optimizer_idx = 0):
-        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
+        if self.is_np_dataset(self.params['dataset']):
             real_img = batch
             real_img = real_img.float()
             labels = '' # dummy labels
@@ -131,7 +140,7 @@ class VAEModule(pl.LightningModule):
         count the value distribution at each latent dimension
         """
         
-        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
+        if self.is_np_dataset(self.params['dataset']):
             real_img = batch
             real_img = real_img.float()
             labels = '' # dummy labels
@@ -149,7 +158,7 @@ class VAEModule(pl.LightningModule):
         """
         save real input samples to demonstrate the latent dim value distribution 
         """
-        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
+        if self.is_np_dataset(self.params['dataset']):
             test_input = next(iter(self.sample_dataloader))
             test_input = test_input.float()
             test_label = '' # dummy labels
@@ -213,7 +222,7 @@ class VAEModule(pl.LightningModule):
         run at the end of each epoch,
         save input sample images and their reconstructed images
         """
-        if self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
+        if self.is_np_dataset(self.params['dataset']):
             test_input = next(iter(self.sample_dataloader))
             test_input = test_input.float()
             test_label = '' # dummy labels
@@ -305,7 +314,7 @@ class VAEModule(pl.LightningModule):
                             shuffle = True,
                             drop_last=True)
 
-        elif self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
+        elif self.is_np_dataset(self.params['dataset']):
             print('start train data loading')
             root = os.path.join(self.params['data_path'], f"{self.params['dataset']}.npz")
             if not os.path.exists(root):
@@ -344,7 +353,7 @@ class VAEModule(pl.LightningModule):
                                                  drop_last=True)
             self.num_val_imgs = len(self.sample_dataloader)
             return self.sample_dataloader
-        elif self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
+        elif self.is_np_dataset(self.params['dataset']):
             print('start val data loading')
             # since the two datasets are small, use the train data loader for val
             self.sample_dataloader = self.train_dataloader()
@@ -367,7 +376,7 @@ class VAEModule(pl.LightningModule):
             self.num_test_imgs = len(self.test_sample_dataloader)
             return self.test_sample_dataloader
 
-        elif self.params['dataset'] == 'dsprites' or 'sunspots' in self.params['dataset']:
+        elif self.is_np_dataset(self.params['dataset']):
             # since the two datasets are small, use the train data loader for test
             return self.val_dataloader()
         else:
