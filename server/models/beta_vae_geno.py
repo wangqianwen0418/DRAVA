@@ -23,7 +23,7 @@ class BetaVAE_GENO(BaseVAE):
         self.latent_dim = latent_dim
         self.beta = beta
         self.gamma = gamma
-        self.loss_type = loss_type
+        self.loss_type = kwargs.get('loss_type', 'B')
         self.C_max = torch.Tensor([max_capacity])
         self.C_stop_iter = Capacity_max_iter
         out_channels = in_channels
@@ -134,20 +134,24 @@ class BetaVAE_GENO(BaseVAE):
         log_var = args[3]
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
-        recons_loss =F.mse_loss(recons, input)
+        recons_loss =F.mse_loss(recons, input) * 256
 
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 
         if self.loss_type == 'H': # https://openreview.net/forum?id=Sy2fzU9gl
-            loss = recons_loss + self.beta * kld_weight * kld_loss
+
+            weighted_kld_loss = self.beta * kld_weight * kld_loss
+            loss = recons_loss + weighted_kld_loss
+
         elif self.loss_type == 'B': # https://arxiv.org/pdf/1804.03599.pdf
             self.C_max = self.C_max.to(input.device)
             C = torch.clamp(self.C_max/self.C_stop_iter * self.num_iter, 0, self.C_max.data[0])
-            loss = recons_loss + self.gamma * kld_weight* (kld_loss - C).abs()
+            weighted_kld_loss = self.gamma * kld_weight* (kld_loss - C).abs()
+            loss = recons_loss + weighted_kld_loss
         else:
             raise ValueError('Undefined loss type.')
 
-        return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss}
+        return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss, 'weighted_KLD': weighted_kld_loss}
 
     def sample(self,
                num_samples:int,
