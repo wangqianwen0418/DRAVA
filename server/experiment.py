@@ -35,6 +35,7 @@ class VAEModule(pl.LightningModule):
         self.model = vae_model
         self.params = params
 
+
         self.curr_device = torch.cuda.current_device()
         self.hold_graph = False
 
@@ -47,7 +48,7 @@ class VAEModule(pl.LightningModule):
 
     def is_np_dataset(self, dataset_name):
         # numpy datasets have different data loaders
-        if 'sunspot' in dataset_name or dataset_name in ['dsprites', 'HFFc6_ATAC']:
+        if 'sunspot' in dataset_name or dataset_name in ['dsprites', 'HFFc6_ATAC', 'ENCFF158GBQ']:
             return True
         else:
             return False
@@ -129,7 +130,8 @@ class VAEModule(pl.LightningModule):
     def test_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
 
-        self.save_sample_dist() 
+        self.save_sample_dist(save_vector=True) 
+        self.save_latent_hist()
         self.save_simu_images()
         print('test_loss', avg_loss)
 
@@ -154,7 +156,7 @@ class VAEModule(pl.LightningModule):
         latent_hist = latent_hist.to(self.curr_device)
         self.latent_hist = latent_hist + self.latent_hist
 
-    def save_sample_dist(self):
+    def save_sample_dist(self, save_vector=False):
         """
         save real input samples to demonstrate the latent dim value distribution 
         """
@@ -180,6 +182,13 @@ class VAEModule(pl.LightningModule):
                             normalize=True,
                             nrow=10)
 
+        if save_vector:
+            torch.save(mu, f"{filepath}/real_samples_vector.pt")
+
+    def save_latent_hist(self):
+        """
+        save the value distribution of training images in each hidden dimension
+        """   
         with open(f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/hist.json", 'w') as f:
             json.dump(self.latent_hist.tolist(), f)
 
