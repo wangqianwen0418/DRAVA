@@ -2,8 +2,11 @@
 ## GPU resources at O2
 check gpu resources: `sinfo  --Format=nodehost,available,memory,statelong,gres:20 -p gpu`  
 load cuda: `module load gcc/6.2.0 cuda/10.2`  
-request interactive session: `srun --pty -t 2:0:0 --mem=5G -p interactive bash`  
-or request GPU resources: `srun -n 1 --pty -c 2 -t 14:00:00 -p gpu --gres=gpu:1 --mem=5G bash`   
+
+check docs about [enabling X11 forwarding](https://harvardmed.atlassian.net/wiki/spaces/O2/pages/1588662332/Using+X11+Applications+Remotely)
+request interactive session with port forwarding: `srun --pty -t 2:0:0 --mem=5G -p interactive --x11 --tunnel 3000:3000 bash`  
+or  
+request GPU resources: `srun -n 1 --pty -c 2 -t 14:00:00 -p gpu --gres=gpu:1 --mem=5G bash`   
 
 ## create virtual pythone environment for the first time
 `conda create --name vae_env python=3.7`  
