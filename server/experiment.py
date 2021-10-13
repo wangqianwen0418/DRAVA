@@ -132,7 +132,7 @@ class VAEModule(pl.LightningModule):
 
         self.save_sample_dist(save_vector=True) 
         self.save_latent_hist()
-        self.save_simu_images()
+        self.save_simu_images(as_individual=True)
         print('test_loss', avg_loss)
 
         return {'test_loss': avg_loss}
@@ -182,8 +182,21 @@ class VAEModule(pl.LightningModule):
                             normalize=True,
                             nrow=10)
 
+        # save sample images as individual images rather than a grid
+        img_idx = 0
+        for img in test_input.data:
+            if not(os.path.isdir(f"{filepath}/sample_imgs")):
+                os.mkdir(filepath)
+            vutils.save_image(img, f"{filepath}/sample_imgs/{img_idx}.png",)
+            img_idx += 1
+
+
         if save_vector:
-            torch.save(mu, f"{filepath}/real_samples_vector.pt")
+            # # save as pt
+            # torch.save(mu, f"{filepath}/real_samples_vector.pt")
+            # save vector as json
+            with open(f"{filepath}/real_samples_vector.json", "w") as f:
+                json.dump(mu.tolist(), f)
 
     def save_latent_hist(self):
         """
@@ -193,7 +206,7 @@ class VAEModule(pl.LightningModule):
             json.dump(self.latent_hist.tolist(), f)
 
 
-    def save_simu_images(self):
+    def save_simu_images(self, as_individual=False):
         """
         return an image grid,
         each row is a hidden dimension, 
@@ -216,14 +229,23 @@ class VAEModule(pl.LightningModule):
 
         samples = self.model.decode(z)
 
-        
         filepath = f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/imgs"
         if not(os.path.isdir(filepath)):
             os.mkdir(filepath)
-        vutils.save_image(samples.cpu().data,
-                            f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png",
-                            normalize=True,
-                            nrow=nrow)
+        
+        if as_individual:
+            if not(os.path.isdir(f"{filepath}/simu")):
+                os.mkdir(filepath)
+            img_idx = 0
+            for img in samples.cpu().data:
+                q, mod = divmod(img_idx, nrow)
+                vutils.save_image(img, f"{filepath}/simu/{q}_{mod}.png",)
+                img_idx += 1
+        else:
+            vutils.save_image(samples.cpu().data,
+                                f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png",
+                                normalize=True,
+                                nrow=nrow)
    
     
     def save_paired_samples(self):
