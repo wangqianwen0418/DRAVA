@@ -1,9 +1,13 @@
 .latentImage {
     display: inline-block;
-    border: 1px solid gray;
+    border: 3px solid gray;
 }
 
 .dimHeader {
     width: 80px;
     display: inline-block;
+}
+
+.isSelected {
+    border: 3px solid pink;
 }
