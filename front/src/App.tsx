@@ -19,7 +19,7 @@ export default class App extends React.Component <{}, State> {
   constructor(prop: {}){
     super(prop)
     this.state = {
-      filters: Array.from(Array(11).keys()).map(_=>[])
+      filters: Array.from(Array(latentDim).keys()).map(_=>Array.from(Array(11).keys()))
     }
     this.setFilters = this.setFilters.bind(this)
   }
