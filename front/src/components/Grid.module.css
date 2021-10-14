@@ -2,11 +2,13 @@
     display: inline-block;
     border: 1px solid gray;
     opacity: 0.5;
+    cursor: pointer;
 }
 
 .dimHeader {
     width: 80px;
     display: inline-block;
+    cursor: pointer;
 }
 
 .isSelected {
