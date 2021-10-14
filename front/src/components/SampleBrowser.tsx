@@ -1,17 +1,12 @@
 import React from 'react';
 import sampleVectors from 'assets/real_samples_vector.json'
+import {withinRange, getRange} from 'helpers';
 
 interface Props {
     filters: number[][];
 }
 
-const getRange = (i:number):[number, number]=>{
-    return [-3.3 + i * 0.6, -3.3 + (1+ i)*0.6]
-}
 
-const withinRange = (v: number, ranges:number[][]):boolean =>{
-    return ranges.some(range=> (v >= range[0] && v <= range[1]))
-}
 
 export default class SampleBrowser extends React.Component <Props, {}> {
     render(){
@@ -24,7 +19,7 @@ export default class SampleBrowser extends React.Component <Props, {}> {
             })
             if (inRange) samples.push(sampleIdx);
         })
-        console.info(samples)
+        
         return <div className='sampleBrowser'>
             <h4>Data Samples</h4>
             {samples.map(sampleIdx=>{
