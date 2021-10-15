@@ -15,11 +15,12 @@ import json
 
 
 class CustomTensorDataset(Dataset):
-    def __init__(self, data_tensor):
+    def __init__(self, data_tensor, labels):
         self.data_tensor = data_tensor
+        self.labels = labels
 
     def __getitem__(self, index):
-        return self.data_tensor[index]
+        return self.data_tensor[index], self.labels[index]
 
     def __len__(self):
         return self.data_tensor.size(0)
@@ -58,12 +59,11 @@ class VAEModule(pl.LightningModule):
 
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
+        real_img, labels = batch
+
         if self.is_np_dataset(self.params['dataset']):
-            real_img = batch
             real_img = real_img.float()
-            labels = '' # dummay labels for no-label dataset
-        else:
-            real_img, labels = batch
+
         self.curr_device = real_img.device
 
         results = self.forward(real_img, labels = labels)
@@ -81,12 +81,11 @@ class VAEModule(pl.LightningModule):
         return {'loss': outputs['loss']}
 
     def validation_step(self, batch, batch_idx, optimizer_idx = 0):
-        if self.is_np_dataset(self.params['dataset']):
-            real_img = batch
+        real_img, labels = batch
+
+        if self.is_np_dataset(self.params['dataset']):           
             real_img = real_img.float()
-            labels = '' # dummay labels for no-label dataset
-        else:
-            real_img, labels = batch
+            
         self.curr_device = real_img.device
         results = self.forward(real_img, labels = labels)
         val_loss = self.model.loss_function(*results,
@@ -110,12 +109,12 @@ class VAEModule(pl.LightningModule):
 
 
     def test_step(self, batch, batch_idx, optimizer_idx = 0):
-        if self.is_np_dataset(self.params['dataset']):
-            real_img = batch
+        
+        real_img, labels = batch
+
+        if self.is_np_dataset(self.params['dataset']):            
             real_img = real_img.float()
-            labels = '' # dummy labels
-        else:
-            real_img, labels = batch
+        
         self.curr_device = real_img.device
 
         results = self.forward(real_img, labels = labels)
@@ -141,13 +140,10 @@ class VAEModule(pl.LightningModule):
         """
         count the value distribution at each latent dimension
         """
-        
+        real_img, labels = batch
         if self.is_np_dataset(self.params['dataset']):
-            real_img = batch
             real_img = real_img.float()
-            labels = '' # dummy labels
-        else:
-            real_img, labels = batch
+            
         self.curr_device = real_img.device
 
         [recons, test_input, mu, log_var] = self.forward(real_img, labels = labels)
@@ -160,14 +156,13 @@ class VAEModule(pl.LightningModule):
         """
         save real input samples to demonstrate the latent dim value distribution 
         """
+        test_input, test_label = next(iter(self.sample_dataloader))
         if self.is_np_dataset(self.params['dataset']):
-            test_input = next(iter(self.sample_dataloader))
             test_input = test_input.float()
-            test_label = '' # dummy labels
-        else:   
-            test_input, test_label = next(iter(self.sample_dataloader))
-            test_label = test_label.to(self.curr_device)
+        
+            
         test_input = test_input.to(self.curr_device)
+        test_label = test_label.to(self.curr_device)
         
 
         [recons, test_input, mu, log_var] = self.forward(test_input, labels = test_label)
@@ -216,8 +211,8 @@ class VAEModule(pl.LightningModule):
 
         z = []
         for i in range(self.model.latent_dim):
-            # z_ = torch.randn( self.model.latent_dim)
-            z_ = torch.zeros( self.model.latent_dim)
+            z_ = torch.randn( self.model.latent_dim)
+            # z_ = torch.zeros( self.model.latent_dim)
             z_ = [z_ for i in range(nrow)]
             z_ = torch.stack(z_, dim =0)
             mask = torch.tensor([j for j in range(nrow)])
@@ -241,25 +236,23 @@ class VAEModule(pl.LightningModule):
                 q, mod = divmod(img_idx, nrow)
                 vutils.save_image(img, f"{filepath}/simu/{q}_{mod}.png",)
                 img_idx += 1
-        else:
-            vutils.save_image(samples.cpu().data,
-                                f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png",
-                                normalize=True,
-                                nrow=nrow)
-   
+        
+        vutils.save_image(samples.cpu().data,
+                            f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png",
+                            normalize=True,
+                            nrow=nrow)
+
     
     def save_paired_samples(self):
         """
         run at the end of each epoch,
         save input sample images and their reconstructed images
         """
-        if self.is_np_dataset(self.params['dataset']):
-            test_input = next(iter(self.sample_dataloader))
+        test_input, test_label = next(iter(self.sample_dataloader))
+        if self.is_np_dataset(self.params['dataset']):          
             test_input = test_input.float()
-            test_label = '' # dummy labels
-        else:   
-            test_input, test_label = next(iter(self.sample_dataloader))
-            test_label = test_label.to(self.curr_device)
+            
+        test_label = test_label.to(self.curr_device)
         test_input = test_input.to(self.curr_device)
         
         recons = self.model.generate(test_input, labels = test_label)
@@ -354,9 +347,10 @@ class VAEModule(pl.LightningModule):
                 subprocess.call(['./download_dsprites.sh'])
                 print('Finished')
             data = np.load(root, encoding='bytes')
-            tensor = torch.from_numpy(data['imgs']).unsqueeze(1)
-            print('train data loading')
-            train_kwargs = {'data_tensor':tensor}
+            tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
+            labels = torch.from_numpy(data['labels'])
+
+            train_kwargs = {'data_tensor':tensor, 'labels': labels}
             dset = CustomTensorDataset
             train_data = dset(**train_kwargs)
             self.num_train_imgs = len(train_data)
