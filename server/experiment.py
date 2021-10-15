@@ -85,7 +85,7 @@ class VAEModule(pl.LightningModule):
 
         if self.is_np_dataset(self.params['dataset']):           
             real_img = real_img.float()
-            
+
         self.curr_device = real_img.device
         results = self.forward(real_img, labels = labels)
         val_loss = self.model.loss_function(*results,
@@ -350,6 +350,9 @@ class VAEModule(pl.LightningModule):
             tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
             labels = torch.from_numpy(data['labels'])
 
+            transform = self.data_transforms()
+            tensor = transform(tensor)
+
             train_kwargs = {'data_tensor':tensor, 'labels': labels}
             dset = CustomTensorDataset
             train_data = dset(**train_kwargs)
@@ -409,11 +412,8 @@ class VAEModule(pl.LightningModule):
 
 
     def data_transforms(self):
-
-        SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
-        SetScale = transforms.Lambda(lambda X: X/X.sum(0).expand_as(X))
-
         if self.params['dataset'] == 'celeba':
+            SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                             transforms.CenterCrop(148),
                                             transforms.Resize(self.params['img_size']),
@@ -421,12 +421,12 @@ class VAEModule(pl.LightningModule):
                                             SetRange])
         
         else:
-            raise ValueError('Undefined dataset type')
+            transform = transforms.Compose([transforms.RandomHorizontalFlip(0.5)])
         return transform
 
     def test_data_transforms(self):
-        SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
         if self.params['dataset'] == 'celeba':
+            SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
             transform = transforms.Compose([transforms.CenterCrop(148),
                                             transforms.Resize(self.params['img_size']),
                                             transforms.ToTensor(),
