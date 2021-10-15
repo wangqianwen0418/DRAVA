@@ -1,3 +1,16 @@
 .latentImage {
     display: inline-block;
+    border: 1px solid gray;
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+.dimHeader {
+    display: inline-block;
+    cursor: pointer;
+}
+
+.isSelected {
+    border: 1px solid black;
+    opacity: 1;
 }
