@@ -1,16 +1,18 @@
 import React from 'react';
 import './App.css';
 
+import {latentDim, stepNum} from 'Const';
+import {range} from 'helpers';
+
 import Grid from 'components/Grid';
 import SampleBrowser from 'components/SampleBrowser';
 
-const latentDim = 7
-const stepNum = 11
-const images = Array.from(
-    Array(latentDim).keys()
-  ).map(row_idx=>Array.from(
-      Array(stepNum).keys()
-    ).map(col_idx=>`assets/simu/${row_idx}_${col_idx}.png`))
+
+const images = range(latentDim)
+  .map(
+    row_idx=>range(stepNum)
+      .map(col_idx=>`assets/simu/${row_idx}_${col_idx}.png`)
+    )
 
 
 interface State {
@@ -20,7 +22,7 @@ export default class App extends React.Component <{}, State> {
   constructor(prop: {}){
     super(prop)
     this.state = {
-      filters: Array.from(Array(latentDim).keys()).map(_=>Array.from(Array(stepNum).keys()))
+      filters: range(latentDim).map(_=>range(stepNum))
     }
     this.setFilters = this.setFilters.bind(this)
   }
@@ -33,8 +35,7 @@ export default class App extends React.Component <{}, State> {
       if (filters[row].length>0) {
         filters[row] = []
       } else {
-        filters[row] = Array.from(Array(stepNum).keys())
-        console.info(filters[row])
+        filters[row] = range(stepNum)
       }
     } else {
       // set filters for single grids
