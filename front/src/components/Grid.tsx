@@ -1,8 +1,9 @@
 import React from 'react';
-import hist from 'assets/hist.json'
+import sampleVectors from 'assets/real_samples_vector.json'
 
 import styles from './Grid.module.css';
 import clsx from 'clsx';
+import { getSampleHist } from 'helpers';
 
 interface Props {
     images: string[][];
@@ -15,8 +16,11 @@ export default class Grid extends React.Component <Props, States> {
     render(){
         const {filters} = this.props
         const spanWidth = 80, barHeight = 30, imgWidth = 64, barLabelHeight = 14, gap = 2
+
+        const hist = getSampleHist(sampleVectors)
         const maxV = Math.max(...hist.flat())
 
+        
         return <div className='grid'>
             <h4> Latent Space </h4>
             {this.props.images.map((row,row_idx) =>{

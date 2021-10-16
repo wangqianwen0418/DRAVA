@@ -36,11 +36,13 @@ const value2rangeIdx = (v:number):number => {
  * @returns historgram of each dimension 
  */
 export const getSampleHist = (sampleVectors: number[][]): number[][]=>{
-    let hist = range(latentDim).map(_ => range(stepNum))
+    let hist = range(latentDim).map( _ => range(stepNum, 0))
     sampleVectors.forEach(sample=>{
         sample.forEach((dimensionValue, dimIdx)=>{
             const idx = value2rangeIdx(dimensionValue)
-            hist[dimIdx][idx] += 1
+            if (idx <  stepNum) {
+                hist[dimIdx][idx] += 1
+            }
         })
     })
     return hist
