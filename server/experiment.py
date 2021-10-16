@@ -129,7 +129,7 @@ class VAEModule(pl.LightningModule):
     def test_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
 
-        self.save_sample_dist(save_vector=True) 
+        self.save_sample_dist(save_vector=True, save_label=True) 
         self.save_latent_hist()
         self.save_simu_images(as_individual=True)
         print('test_loss', avg_loss)
@@ -152,7 +152,7 @@ class VAEModule(pl.LightningModule):
         latent_hist = latent_hist.to(self.curr_device)
         self.latent_hist = latent_hist + self.latent_hist
 
-    def save_sample_dist(self, save_vector=False):
+    def save_sample_dist(self, save_vector=False, save_label=False):
         """
         save real input samples to demonstrate the latent dim value distribution 
         """
@@ -173,7 +173,7 @@ class VAEModule(pl.LightningModule):
         if not(os.path.isdir(filepath)):
             os.mkdir(filepath)
         vutils.save_image(test_input.data,
-                            f"{filepath}/real_samples.png",
+                            f"{filepath}/samples.png",
                             normalize=True,
                             nrow=10)
 
@@ -181,7 +181,7 @@ class VAEModule(pl.LightningModule):
         img_idx = 0
         for img in test_input.data:
             if not(os.path.isdir(f"{filepath}/sample_imgs")):
-                os.mkdir(filepath)
+                os.mkdir(f"{filepath}/sample_imgs")
             vutils.save_image(img, f"{filepath}/sample_imgs/{img_idx}.png",)
             img_idx += 1
 
@@ -190,8 +190,12 @@ class VAEModule(pl.LightningModule):
             # # save as pt
             # torch.save(mu, f"{filepath}/real_samples_vector.pt")
             # save vector as json
-            with open(f"{filepath}/real_samples_vector.json", "w") as f:
+            with open(f"{filepath}/samples_vector.json", "w") as f:
                 json.dump(mu.tolist(), f)
+
+        if save_label:
+            with open(f'{filepath}/sample_labels.json', 'w') as f:
+                json.dump(test_label.tolist(), f)
 
     def save_latent_hist(self):
         """
@@ -211,8 +215,8 @@ class VAEModule(pl.LightningModule):
 
         z = []
         for i in range(self.model.latent_dim):
-            z_ = torch.randn( self.model.latent_dim)
-            # z_ = torch.zeros( self.model.latent_dim)
+            # z_ = torch.randn( self.model.latent_dim)
+            z_ = torch.zeros( self.model.latent_dim)
             z_ = [z_ for i in range(nrow)]
             z_ = torch.stack(z_, dim =0)
             mask = torch.tensor([j for j in range(nrow)])
@@ -230,7 +234,7 @@ class VAEModule(pl.LightningModule):
         
         if as_individual:
             if not(os.path.isdir(f"{filepath}/simu")):
-                os.mkdir(filepath)
+                os.mkdir(f"{filepath}/simu")
             img_idx = 0
             for img in samples.cpu().data:
                 q, mod = divmod(img_idx, nrow)
@@ -350,8 +354,8 @@ class VAEModule(pl.LightningModule):
             tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
             labels = torch.from_numpy(data['labels'])
 
-            transform = self.data_transforms()
-            tensor = transform(tensor)
+            # transform = self.data_transforms()
+            # tensor = transform(tensor)
 
             train_kwargs = {'data_tensor':tensor, 'labels': labels}
             dset = CustomTensorDataset
@@ -361,6 +365,7 @@ class VAEModule(pl.LightningModule):
                                     batch_size=self.params['batch_size'],
                                     shuffle=True,
                                     drop_last=True)
+
             print('end train data loading')
             return train_loader
         else:
@@ -421,7 +426,12 @@ class VAEModule(pl.LightningModule):
                                             SetRange])
         
         else:
-            transform = transforms.Compose([transforms.RandomHorizontalFlip(0.5)])
+            # do not use transforms for tensor datasets for now
+            transform = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.RandomHorizontalFlip(0.5),
+                transforms.ToTensor()
+                ])
         return transform
 
     def test_data_transforms(self):
@@ -432,5 +442,11 @@ class VAEModule(pl.LightningModule):
                                             transforms.ToTensor(),
                                             SetRange])
         else:
-            raise ValueError('Undefined dataset type')
+            # 
+            # do not use transforms for tensor datasets for now
+            transform = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.RandomHorizontalFlip(0.5),
+                transforms.ToTensor()
+                ])
         return transform
