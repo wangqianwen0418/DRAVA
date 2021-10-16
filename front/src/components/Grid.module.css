@@ -14,3 +14,7 @@
     border: 1px solid black;
     opacity: 1;
 }
+
+.rowContainer {
+    padding-top: 10px;
+}

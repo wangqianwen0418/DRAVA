@@ -25,7 +25,7 @@ export default class SampleBrowser extends React.Component <Props, {}> {
         })
 
         return <div className={clsx(styles.sampleContainer, 'sampleBrowser' )}>
-            <h4>Data Samples</h4>
+            <h4>Data Samples [{samples.length}/{sampleVectors.length}]</h4>
             {samples.map(sampleIdx=>{
                 return <img 
                     src={`assets/sample_imgs/${sampleIdx}.png`} 
