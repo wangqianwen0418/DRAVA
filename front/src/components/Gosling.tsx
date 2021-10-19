@@ -31,7 +31,7 @@ export const GoslingVis = (props: Props) => {
             "type": "bigwig",
             "column": "position",
             "value": "peak",
-            "binSize": "8"
+            "binSize": "2"
           },
             "mark": "area",
             "x": {
@@ -55,12 +55,23 @@ export const GoslingVis = (props: Props) => {
                     ]
               },
               "mark": "rect",
-              "size": {"value": 10},
+              "size": {"value": 12},
               "x": {"field": "chromStart", "type": "genomic"},
+              "xe": {"field": "chromEnd", "type": "genomic"},
               "stroke": {"value": "orange"},
               "strokeWidth": {"value": 1}
           }
         ]
       }`
+
+    // validate the spec
+    const validity = validateGoslingSpec(JSON.parse(spec));
+
+    if(validity.state === 'error') {
+        console.warn('Gosling spec is invalid!', validity.message);
+        return <></>;
+    }
+
+    
     return <GoslingComponent spec={JSON.parse(spec)} />
 }
