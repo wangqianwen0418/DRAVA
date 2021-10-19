@@ -41,7 +41,7 @@ for i in range(sample_num):
         h = int(value_arr[j] * IMG_SIZE)
         img[IMG_SIZE - h:, j] = 0
     imgs.append(img)
-    labels.append(np.array([CHR_NUM, start, start + IMG_SIZE]))
+    labels.append(np.array([CHR_NUM, int(i * window_size * step_ratio), int(i * window_size * step_ratio + window_size)]))
 
 imgs = np.stack(imgs)
 labels = np.stack(labels)
