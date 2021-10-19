@@ -1,6 +1,6 @@
 .latentImage {
     display: inline-block;
-    border: 1px solid gray;
+    border: 1px solid orange;
     opacity: 0.5;
     cursor: pointer;
 }
@@ -11,6 +11,6 @@
 }
 
 .isSelected {
-    border: 1px solid black;
+    /* border: 1px solid black; */
     opacity: 1;
 }

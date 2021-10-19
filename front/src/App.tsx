@@ -1,8 +1,12 @@
 import React from 'react';
 import './App.css';
 
+import sampleVectors from 'assets/real_samples_vector.json'
+import {withinRange, getRange} from 'helpers';
+
 import Grid from 'components/Grid';
 import SampleBrowser from 'components/SampleBrowser';
+import { GoslingVis } from 'components/Gosling';
 
 const latentDim = 7
 const stepNum = 11
@@ -47,12 +51,29 @@ export default class App extends React.Component <{}, State> {
     }
     this.setState({filters})
   }
+  filterSamples (){
+    const {filters} = this.state
+
+    let sampleIdxs: number[] = [] // idx of images
+        sampleVectors.forEach((sampleVector, sampleIdx)=>{
+            const inRange = sampleVector.every((dimensionValue, row_idx)=>{
+                const ranges = filters[row_idx].map(i=>getRange(i))
+                return withinRange(dimensionValue, ranges)
+            })
+            if (inRange) sampleIdxs.push(sampleIdx);
+        })
+    return sampleIdxs
+  }
   render(){
     const {filters} = this.state
+
+    const sampleIdxs = this.filterSamples()
+
     return (
       <div className="App">
         <Grid images= {images} setFilters = {this.setFilters} filters={filters}/>
-        <SampleBrowser filters={filters}/>
+        <GoslingVis sampleIdxs={sampleIdxs}/>
+        <SampleBrowser sampleIdxs={sampleIdxs}/>
       </div>
     );
   }
