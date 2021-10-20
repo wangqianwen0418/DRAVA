@@ -1,5 +1,5 @@
 import React from 'react';
-import sampleVectors from 'assets/real_samples_vector.json'
+import sampleVectors from 'assets/samples_vector.json'
 
 import styles from './Grid.module.css';
 import clsx from 'clsx';
