@@ -15,11 +15,12 @@ import json
 
 
 class CustomTensorDataset(Dataset):
-    def __init__(self, data_tensor):
+    def __init__(self, data_tensor, labels):
         self.data_tensor = data_tensor
+        self.labels = labels
 
     def __getitem__(self, index):
-        return self.data_tensor[index]
+        return self.data_tensor[index], self.labels[index]
 
     def __len__(self):
         return self.data_tensor.size(0)
@@ -58,12 +59,11 @@ class VAEModule(pl.LightningModule):
 
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
+        real_img, labels = batch
+
         if self.is_np_dataset(self.params['dataset']):
-            real_img = batch
             real_img = real_img.float()
-            labels = '' # dummay labels for no-label dataset
-        else:
-            real_img, labels = batch
+
         self.curr_device = real_img.device
 
         results = self.forward(real_img, labels = labels)
@@ -81,12 +81,11 @@ class VAEModule(pl.LightningModule):
         return {'loss': outputs['loss']}
 
     def validation_step(self, batch, batch_idx, optimizer_idx = 0):
-        if self.is_np_dataset(self.params['dataset']):
-            real_img = batch
+        real_img, labels = batch
+
+        if self.is_np_dataset(self.params['dataset']):           
             real_img = real_img.float()
-            labels = '' # dummay labels for no-label dataset
-        else:
-            real_img, labels = batch
+
         self.curr_device = real_img.device
         results = self.forward(real_img, labels = labels)
         val_loss = self.model.loss_function(*results,
@@ -110,12 +109,12 @@ class VAEModule(pl.LightningModule):
 
 
     def test_step(self, batch, batch_idx, optimizer_idx = 0):
-        if self.is_np_dataset(self.params['dataset']):
-            real_img = batch
+        
+        real_img, labels = batch
+
+        if self.is_np_dataset(self.params['dataset']):            
             real_img = real_img.float()
-            labels = '' # dummy labels
-        else:
-            real_img, labels = batch
+        
         self.curr_device = real_img.device
 
         results = self.forward(real_img, labels = labels)
@@ -130,7 +129,7 @@ class VAEModule(pl.LightningModule):
     def test_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
 
-        self.save_sample_dist(save_vector=True) 
+        self.save_sample_dist(save_vector=True, save_label=True) 
         self.save_latent_hist()
         self.save_simu_images(as_individual=True)
         print('test_loss', avg_loss)
@@ -141,13 +140,10 @@ class VAEModule(pl.LightningModule):
         """
         count the value distribution at each latent dimension
         """
-        
+        real_img, labels = batch
         if self.is_np_dataset(self.params['dataset']):
-            real_img = batch
             real_img = real_img.float()
-            labels = '' # dummy labels
-        else:
-            real_img, labels = batch
+            
         self.curr_device = real_img.device
 
         [recons, test_input, mu, log_var] = self.forward(real_img, labels = labels)
@@ -156,18 +152,17 @@ class VAEModule(pl.LightningModule):
         latent_hist = latent_hist.to(self.curr_device)
         self.latent_hist = latent_hist + self.latent_hist
 
-    def save_sample_dist(self, save_vector=False):
+    def save_sample_dist(self, save_vector=False, save_label=False):
         """
         save real input samples to demonstrate the latent dim value distribution 
         """
+        test_input, test_label = next(iter(self.sample_dataloader))
         if self.is_np_dataset(self.params['dataset']):
-            test_input = next(iter(self.sample_dataloader))
             test_input = test_input.float()
-            test_label = '' # dummy labels
-        else:   
-            test_input, test_label = next(iter(self.sample_dataloader))
-            test_label = test_label.to(self.curr_device)
+        
+            
         test_input = test_input.to(self.curr_device)
+        test_label = test_label.to(self.curr_device)
         
 
         [recons, test_input, mu, log_var] = self.forward(test_input, labels = test_label)
@@ -178,7 +173,7 @@ class VAEModule(pl.LightningModule):
         if not(os.path.isdir(filepath)):
             os.mkdir(filepath)
         vutils.save_image(test_input.data,
-                            f"{filepath}/real_samples.png",
+                            f"{filepath}/samples.png",
                             normalize=True,
                             nrow=10)
 
@@ -186,7 +181,7 @@ class VAEModule(pl.LightningModule):
         img_idx = 0
         for img in test_input.data:
             if not(os.path.isdir(f"{filepath}/sample_imgs")):
-                os.mkdir(filepath)
+                os.mkdir(f"{filepath}/sample_imgs")
             vutils.save_image(img, f"{filepath}/sample_imgs/{img_idx}.png",)
             img_idx += 1
 
@@ -195,8 +190,12 @@ class VAEModule(pl.LightningModule):
             # # save as pt
             # torch.save(mu, f"{filepath}/real_samples_vector.pt")
             # save vector as json
-            with open(f"{filepath}/real_samples_vector.json", "w") as f:
+            with open(f"{filepath}/samples_vector.json", "w") as f:
                 json.dump(mu.tolist(), f)
+
+        if save_label:
+            with open(f'{filepath}/sample_labels.json', 'w') as f:
+                json.dump(test_label.tolist(), f)
 
     def save_latent_hist(self):
         """
@@ -235,31 +234,29 @@ class VAEModule(pl.LightningModule):
         
         if as_individual:
             if not(os.path.isdir(f"{filepath}/simu")):
-                os.mkdir(filepath)
+                os.mkdir(f"{filepath}/simu")
             img_idx = 0
             for img in samples.cpu().data:
                 q, mod = divmod(img_idx, nrow)
                 vutils.save_image(img, f"{filepath}/simu/{q}_{mod}.png",)
                 img_idx += 1
-        else:
-            vutils.save_image(samples.cpu().data,
-                                f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png",
-                                normalize=True,
-                                nrow=nrow)
-   
+        
+        vutils.save_image(samples.cpu().data,
+                            f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png",
+                            normalize=True,
+                            nrow=nrow)
+
     
     def save_paired_samples(self):
         """
         run at the end of each epoch,
         save input sample images and their reconstructed images
         """
-        if self.is_np_dataset(self.params['dataset']):
-            test_input = next(iter(self.sample_dataloader))
+        test_input, test_label = next(iter(self.sample_dataloader))
+        if self.is_np_dataset(self.params['dataset']):          
             test_input = test_input.float()
-            test_label = '' # dummy labels
-        else:   
-            test_input, test_label = next(iter(self.sample_dataloader))
-            test_label = test_label.to(self.curr_device)
+            
+        test_label = test_label.to(self.curr_device)
         test_input = test_input.to(self.curr_device)
         
         recons = self.model.generate(test_input, labels = test_label)
@@ -354,9 +351,13 @@ class VAEModule(pl.LightningModule):
                 subprocess.call(['./download_dsprites.sh'])
                 print('Finished')
             data = np.load(root, encoding='bytes')
-            tensor = torch.from_numpy(data['imgs']).unsqueeze(1)
-            print('train data loading')
-            train_kwargs = {'data_tensor':tensor}
+            tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
+            labels = torch.from_numpy(data['labels'])
+
+            # transform = self.data_transforms()
+            # tensor = transform(tensor)
+
+            train_kwargs = {'data_tensor':tensor, 'labels': labels}
             dset = CustomTensorDataset
             train_data = dset(**train_kwargs)
             self.num_train_imgs = len(train_data)
@@ -364,6 +365,7 @@ class VAEModule(pl.LightningModule):
                                     batch_size=self.params['batch_size'],
                                     shuffle=True,
                                     drop_last=True)
+
             print('end train data loading')
             return train_loader
         else:
@@ -415,11 +417,8 @@ class VAEModule(pl.LightningModule):
 
 
     def data_transforms(self):
-
-        SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
-        SetScale = transforms.Lambda(lambda X: X/X.sum(0).expand_as(X))
-
         if self.params['dataset'] == 'celeba':
+            SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                             transforms.CenterCrop(148),
                                             transforms.Resize(self.params['img_size']),
@@ -427,16 +426,27 @@ class VAEModule(pl.LightningModule):
                                             SetRange])
         
         else:
-            raise ValueError('Undefined dataset type')
+            # do not use transforms for tensor datasets for now
+            transform = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.RandomHorizontalFlip(0.5),
+                transforms.ToTensor()
+                ])
         return transform
 
     def test_data_transforms(self):
-        SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
         if self.params['dataset'] == 'celeba':
+            SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
             transform = transforms.Compose([transforms.CenterCrop(148),
                                             transforms.Resize(self.params['img_size']),
                                             transforms.ToTensor(),
                                             SetRange])
         else:
-            raise ValueError('Undefined dataset type')
+            # 
+            # do not use transforms for tensor datasets for now
+            transform = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.RandomHorizontalFlip(0.5),
+                transforms.ToTensor()
+                ])
         return transform

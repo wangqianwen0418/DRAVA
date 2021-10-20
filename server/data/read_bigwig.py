@@ -2,22 +2,23 @@
 import pyBigWig
 import numpy as np
 
-name = "ENCFF158GBQ"
+name = "HFFc6_ATAC"
 
 filename = f"./geno_data/{name}.bigWig"
-N_BINS = 64
-CHR = 'chr7'
+IMG_SIZE = 64
+CHR_NUM = 7
+CHR = f'chr{CHR_NUM}'
 
 #%%
 bw = pyBigWig.open(filename)
 # length of a chromosome
 chr_len = bw.chroms(CHR)
 
-window_size = 12000
-step = int(window_size/2)
-sample_size = int((chr_len-window_size)/step + 1)
+window_size = 6000
+step_ratio = 0.5
+step = int(window_size * step_ratio)
 # force none type to nan
-records = np.array(bw.stats(CHR, 0, chr_len, nBins = sample_size * N_BINS)).astype('float')
+records = np.array(bw.stats(CHR, 0, chr_len, nBins = int( chr_len / window_size * IMG_SIZE))).astype('float')
 # convert nan to zero
 records = np.nan_to_num(records)
 
@@ -27,17 +28,22 @@ max_v = np.nanmax(records)
 #normalize records
 records = (records - min_v)/max_v
 imgs = []
+labels = []
 
-for i in range(sample_size):
-    img = np.ones((N_BINS, N_BINS))
+
+sample_num = int((chr_len-window_size)/step + 1)
+for i in range(sample_num):
+    img = np.ones((IMG_SIZE, IMG_SIZE))
     # stats of a range
-    value_arr = records[i * N_BINS: (i+1) * N_BINS]
-    for j in range(N_BINS):
-        h = int(value_arr[j] * N_BINS)
-        img[N_BINS - h:, j] = 0
+    start = i * int( IMG_SIZE * step_ratio ) 
+    value_arr = records[start: start + IMG_SIZE]
+    for j in range(IMG_SIZE):
+        h = int(value_arr[j] * IMG_SIZE)
+        img[IMG_SIZE - h:, j] = 0
     imgs.append(img)
-    imgs.append(np.flip(img, 1))
+    labels.append(np.array([CHR_NUM, int(i * window_size * step_ratio), int(i * window_size * step_ratio + window_size)]))
 
 imgs = np.stack(imgs)
+labels = np.stack(labels)
 
-np.savez(f'./{name}.npz', imgs=imgs)
+np.savez(f'./{name}.npz', imgs=imgs, labels=labels)
