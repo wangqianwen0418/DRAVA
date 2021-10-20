@@ -21,11 +21,11 @@ export const GoslingVis = (props: Props) => {
     const spec = `{
         "title": "",
         "alignment": "overlay",
-        "width": ${window.innerWidth},
+        "width": ${window.innerWidth * 0.8},
         "height": 180,
         "tracks": [
           {
-          "layout": "linear", 
+          "layout": "linear",
           "data": {
             "url": "https://s3.amazonaws.com/gosling-lang.org/data/HFFc6_Atacseq.mRp.clN.bigWig",
             "type": "bigwig",
@@ -41,7 +41,6 @@ export const GoslingVis = (props: Props) => {
               "axis": "bottom"
             },
             "y": {"field": "peak", "type": "quantitative"},
-            "size": {"value": "2"},
             "color": {"value": "black"}
           },
           {

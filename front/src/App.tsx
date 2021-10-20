@@ -72,6 +72,9 @@ export default class App extends React.Component <{}, State> {
     return (
       <div className="App">
         <Grid images= {images} setFilters = {this.setFilters} filters={filters}/>
+
+        <br/>
+        <h3>Data Samples [{sampleIdxs.length}/{sampleVectors.length}]</h3>
         <GoslingVis sampleIdxs={sampleIdxs}/>
         <SampleBrowser sampleIdxs={sampleIdxs}/>
       </div>

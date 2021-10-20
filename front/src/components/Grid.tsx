@@ -22,7 +22,7 @@ export default class Grid extends React.Component <Props, States> {
 
         
         return <div className='grid'>
-            <h4> Latent Space </h4>
+            <h3> Latent Space </h3>
             {this.props.images.map((row,row_idx) =>{
                 return <div className={clsx(styles.rowContainer)} key={`row_${row_idx}`}>
 
