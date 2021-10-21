@@ -15,7 +15,7 @@ interface States {}
 export default class Grid extends React.Component <Props, States> {
     render(){
         const {filters} = this.props
-        const spanWidth = 80, barHeight = 30, imgWidth = 64, barLabelHeight = 14, gap = 2
+        const spanWidth = 80, barHeight = 30, imgWidth = 64, barLabelHeight = 14, gap = 3
 
         const hist = getSampleHist(sampleVectors)
         const maxV = Math.max(...hist.flat())
