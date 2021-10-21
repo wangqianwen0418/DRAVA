@@ -37,7 +37,7 @@ export default class Grid extends React.Component <Props, States> {
                                         width={imgWidth} 
                                         y = {barHeight - barHeight/maxV*h }
                                         x={spanWidth + (imgWidth+gap) *i } 
-                                        fill="black"
+                                        fill="lightgray"
                                     />
                                     <text 
                                         x={spanWidth + (imgWidth+gap) * (i+0.5) } 
