@@ -40,8 +40,8 @@ class VAEModule(pl.LightningModule):
         self.curr_device = torch.cuda.current_device()
         self.hold_graph = False
 
-        self.bin_size = 11
-        self.latent_hist = torch.zeros(self.model.latent_dim, self.bin_size).to(self.curr_device)
+        self.bin_num = 11
+        self.latent_hist = torch.zeros(self.model.latent_dim, self.bin_num).to(self.curr_device)
         try:
             self.hold_graph = self.params['retain_first_backpass']
         except:
@@ -147,7 +147,7 @@ class VAEModule(pl.LightningModule):
         self.curr_device = real_img.device
 
         [recons, test_input, mu, log_var] = self.forward(real_img, labels = labels)
-        latent_hist = [ torch.histc( mu[:, i], bins= self.bin_size, min=-3, max= 3) for i in range(self.model.latent_dim)]
+        latent_hist = [ torch.histc( mu[:, i], bins= self.bin_num, min=-3, max= 3) for i in range(self.model.latent_dim)]
         latent_hist = torch.stack(latent_hist) # latent_dim * bin_size
         latent_hist = latent_hist.to(self.curr_device)
         self.latent_hist = latent_hist + self.latent_hist
@@ -211,22 +211,21 @@ class VAEModule(pl.LightningModule):
         each row is a hidden dimension, 
         all images in this row have same values for other dims but differnt values at this dim  
         """
-        nrow = 11 # number of images at each row
 
         z = []
         for i in range(self.model.latent_dim):
-            # z_ = torch.randn( self.model.latent_dim)
-            z_ = torch.zeros( self.model.latent_dim)
-            z_ = [z_ for i in range(nrow)]
+            # row = torch.randn( self.model.latent_dim)
+            row = torch.ones( self.model.latent_dim) *2
+            z_ = [row for i in range(self.bin_num)]
             z_ = torch.stack(z_, dim =0)
-            mask = torch.tensor([j for j in range(nrow)])
-            z_[mask, i] = torch.tensor([- 3 + j/(nrow-1)* 6 for j in range(nrow)]).float()
+            mask = torch.tensor([j for j in range(self.bin_num)])
+            z_[mask, i] = torch.tensor([- 3 + j/(self.bin_num-1)* 6 for j in range(self.bin_num)]).float()
 
             z.append(z_)
         z = torch.stack(z)
-        z = z.to(self.curr_device)
+        z = z.to(self.curr_device) # the shape of z: [ latent_dim * bin_size, latent_dim ]
 
-        samples = self.model.decode(z)
+        recons = self.model.decode(z)
 
         filepath = f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/imgs"
         if not(os.path.isdir(filepath)):
@@ -236,15 +235,15 @@ class VAEModule(pl.LightningModule):
             if not(os.path.isdir(f"{filepath}/simu")):
                 os.mkdir(f"{filepath}/simu")
             img_idx = 0
-            for img in samples.cpu().data:
-                q, mod = divmod(img_idx, nrow)
+            for img in recons.cpu().data:
+                q, mod = divmod(img_idx, self.bin_num)
                 vutils.save_image(img, f"{filepath}/simu/{q}_{mod}.png",)
                 img_idx += 1
         
-        vutils.save_image(samples.cpu().data,
+        vutils.save_image(recons.cpu().data,
                             f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png",
                             normalize=True,
-                            nrow=nrow)
+                            nrow=self.bin_num)
 
     
     def save_paired_samples(self):
