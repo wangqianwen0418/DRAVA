@@ -21,17 +21,17 @@ export const GoslingVis = (props: Props) => {
     const spec = `{
         "title": "",
         "alignment": "overlay",
-        "width": ${window.innerWidth},
+        "width": ${window.innerWidth * 0.8},
         "height": 180,
         "tracks": [
           {
-          "layout": "linear", 
+          "layout": "linear",
           "data": {
             "url": "https://s3.amazonaws.com/gosling-lang.org/data/HFFc6_Atacseq.mRp.clN.bigWig",
             "type": "bigwig",
             "column": "position",
             "value": "peak",
-            "binSize": "8"
+            "binSize": "2"
           },
             "mark": "area",
             "x": {
@@ -41,7 +41,6 @@ export const GoslingVis = (props: Props) => {
               "axis": "bottom"
             },
             "y": {"field": "peak", "type": "quantitative"},
-            "size": {"value": "2"},
             "color": {"value": "black"}
           },
           {
@@ -55,12 +54,23 @@ export const GoslingVis = (props: Props) => {
                     ]
               },
               "mark": "rect",
-              "size": {"value": 10},
+              "size": {"value": 12},
               "x": {"field": "chromStart", "type": "genomic"},
+              "xe": {"field": "chromEnd", "type": "genomic"},
               "stroke": {"value": "orange"},
               "strokeWidth": {"value": 1}
           }
         ]
       }`
+
+    // validate the spec
+    const validity = validateGoslingSpec(JSON.parse(spec));
+
+    if(validity.state === 'error') {
+        console.warn('Gosling spec is invalid!', validity.message);
+        return <></>;
+    }
+
+    
     return <GoslingComponent spec={JSON.parse(spec)} />
 }

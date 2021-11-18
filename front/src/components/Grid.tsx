@@ -1,8 +1,9 @@
 import React from 'react';
-import hist from 'assets/hist.json'
+import sampleVectors from 'assets/samples_vector.json'
 
 import styles from './Grid.module.css';
 import clsx from 'clsx';
+import { getSampleHist } from 'helpers';
 
 interface Props {
     images: string[][];
@@ -14,25 +15,39 @@ interface States {}
 export default class Grid extends React.Component <Props, States> {
     render(){
         const {filters} = this.props
-        const spanWidth = 80;
-        const maxV = Math.max(...hist.flat()), barHeight = 30, imgWidth = 64, barWidth = 10
+        const spanWidth = 80, barHeight = 30, imgWidth = 64, barLabelHeight = 14, gap = 3
 
+        const hist = getSampleHist(sampleVectors)
+        const maxV = Math.max(...hist.flat())
+
+        
         return <div className='grid'>
-            <h4> Latent Space </h4>
+            <h3> Latent Space </h3>
             {this.props.images.map((row,row_idx) =>{
-                return <div className='row' key={`row_${row_idx}`}>
+                return <div className={clsx(styles.rowContainer)} key={`row_${row_idx}`}>
 
-                    <svg height={barHeight} width={imgWidth*11 + spanWidth}>
+                    <svg height={barHeight +  barLabelHeight } width={ (imgWidth+gap )*11 + spanWidth}>
+                        
                         { hist[row_idx]
                             .map((h, i)=>
-                                <rect key={`bar_${i}`} 
-                                    height={barHeight/maxV*h} 
-                                    width={barWidth} 
-                                    y = {barHeight - barHeight/maxV*h }
-                                    x={spanWidth + imgWidth*i + (imgWidth - barWidth)/2} 
-                                    fill="black"
-                                />
-                                )
+                                <g key={`bar_${i}`} >
+                                    
+                                    <rect 
+                                        height={barHeight/maxV*h} 
+                                        width={imgWidth} 
+                                        y = {barHeight - barHeight/maxV*h }
+                                        x={spanWidth + (imgWidth+gap) *i } 
+                                        fill="lightgray"
+                                    />
+                                    <text 
+                                        x={spanWidth + (imgWidth+gap) * (i+0.5) } 
+                                        y={barHeight+barLabelHeight} 
+                                        textAnchor='middle'
+                                    > 
+                                        {h} 
+                                    </text>
+                                </g>
+                            )
                         }
                     </svg>
                     <div>

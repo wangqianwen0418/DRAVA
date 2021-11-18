@@ -1,7 +1,7 @@
 .latentImage {
     display: inline-block;
-    border: 1px solid orange;
-    opacity: 0.5;
+    border: 3px solid orange;
+    opacity: 0.25;
     cursor: pointer;
 }
 
@@ -13,4 +13,8 @@
 .isSelected {
     /* border: 1px solid black; */
     opacity: 1;
+}
+
+.rowContainer {
+    padding-top: 10px;
 }
