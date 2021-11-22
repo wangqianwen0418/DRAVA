@@ -1,17 +1,22 @@
 import math
-import torch
 import numpy as np
 import os
+import pandas as pd
+import json
+
+
+import torch
 from torch import optim
-from models import BaseVAE
-from models.types_ import *
-from utils import data_loader
 import pytorch_lightning as pl
 from torchvision import transforms
 import torchvision.utils as vutils
 from torchvision.datasets import CelebA
 from torch.utils.data import Dataset, DataLoader
-import json
+from PIL import Image
+
+from models import BaseVAE
+from models.types_ import *
+from utils import data_loader
 
 
 class CustomTensorDataset(Dataset):
@@ -24,6 +29,30 @@ class CustomTensorDataset(Dataset):
 
     def __len__(self):
         return self.data_tensor.size(0)
+
+
+
+
+class CustomImageDataset(Dataset):
+    def __init__(self, root, transform=None, target_transform=None):
+        self.img_labels = pd.read_csv(os.path.join(root, 'label.csv'))
+        self.img_dir = root
+        self.transform = transform
+        self.target_transform = target_transform
+
+    def __len__(self):
+        return len(self.img_labels)
+
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.img_dir, f'{self.img_labels.iloc[idx, 0]}.jpg')
+        image = Image.open(img_path).convert('L')
+        # 
+        label = self.img_labels.iloc[idx, 1:].to_numpy()
+        if self.transform:
+            image = self.transform(image)
+        if self.target_transform:
+            label = self.target_transform(label)
+        return image, label
 
 # extend the pytorch lightning module
 class VAEModule(pl.LightningModule):
@@ -47,9 +76,16 @@ class VAEModule(pl.LightningModule):
         except:
             pass
 
-    def is_np_dataset(self, dataset_name):
+    def is_tensor_dataset(self, dataset_name):
         # numpy datasets have different data loaders
         if 'sunspot' in dataset_name or dataset_name in ['dsprites', 'HFFc6_ATAC', 'ENCFF158GBQ']:
+            return True
+        else:
+            return False
+
+    def is_hic_dataset(self, dataset_name):
+        # whether to use custom image data loader for hi c data
+        if dataset_name in ['TAD_GM12878']:
             return True
         else:
             return False
@@ -61,7 +97,7 @@ class VAEModule(pl.LightningModule):
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
         real_img, labels = batch
 
-        if self.is_np_dataset(self.params['dataset']):
+        if self.is_tensor_dataset(self.params['dataset']):
             real_img = real_img.float()
 
         self.curr_device = real_img.device
@@ -83,7 +119,7 @@ class VAEModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx, optimizer_idx = 0):
         real_img, labels = batch
 
-        if self.is_np_dataset(self.params['dataset']):           
+        if self.is_tensor_dataset(self.params['dataset']):           
             real_img = real_img.float()
 
         self.curr_device = real_img.device
@@ -112,7 +148,7 @@ class VAEModule(pl.LightningModule):
         
         real_img, labels = batch
 
-        if self.is_np_dataset(self.params['dataset']):            
+        if self.is_tensor_dataset(self.params['dataset']):            
             real_img = real_img.float()
         
         self.curr_device = real_img.device
@@ -141,7 +177,7 @@ class VAEModule(pl.LightningModule):
         count the value distribution at each latent dimension
         """
         real_img, labels = batch
-        if self.is_np_dataset(self.params['dataset']):
+        if self.is_tensor_dataset(self.params['dataset']):
             real_img = real_img.float()
             
         self.curr_device = real_img.device
@@ -157,7 +193,7 @@ class VAEModule(pl.LightningModule):
         save real input samples to demonstrate the latent dim value distribution 
         """
         test_input, test_label = next(iter(self.sample_dataloader))
-        if self.is_np_dataset(self.params['dataset']):
+        if self.is_tensor_dataset(self.params['dataset']):
             test_input = test_input.float()
         
             
@@ -252,7 +288,7 @@ class VAEModule(pl.LightningModule):
         save input sample images and their reconstructed images
         """
         test_input, test_label = next(iter(self.sample_dataloader))
-        if self.is_np_dataset(self.params['dataset']):          
+        if self.is_tensor_dataset(self.params['dataset']):          
             test_input = test_input.float()
             
         test_label = test_label.to(self.curr_device)
@@ -341,7 +377,16 @@ class VAEModule(pl.LightningModule):
                             shuffle = True,
                             drop_last=True)
 
-        elif self.is_np_dataset(self.params['dataset']):
+        elif self.is_hic_dataset(self.params['dataset']):
+            root = os.path.join(self.params['data_path'], self.params['dataset'] )
+            dataset = CustomImageDataset(root = root, transform=self.data_transforms())
+            self.num_train_imgs = len(dataset)
+            return DataLoader(dataset,
+                            batch_size= self.params['batch_size'],
+                            shuffle = True,
+                            drop_last=True)
+        
+        elif self.is_tensor_dataset(self.params['dataset']):
             print('start train data loading')
             root = os.path.join(self.params['data_path'], f"{self.params['dataset']}.npz")
             if not os.path.exists(root):
@@ -385,7 +430,7 @@ class VAEModule(pl.LightningModule):
                                                  drop_last=True)
             self.num_val_imgs = len(self.sample_dataloader)
             return self.sample_dataloader
-        elif self.is_np_dataset(self.params['dataset']):
+        elif self.is_hic_dataset(self.params['dataset']) or self.is_tensor_dataset(self.params['dataset']):
             print('start val data loading')
             # since the two datasets are small, use the train data loader for val
             self.sample_dataloader = self.train_dataloader()
@@ -408,7 +453,7 @@ class VAEModule(pl.LightningModule):
             self.num_test_imgs = len(self.test_sample_dataloader)
             return self.test_sample_dataloader
 
-        elif self.is_np_dataset(self.params['dataset']):
+        elif self.is_hic_dataset(self.params['dataset']) or self.is_tensor_dataset(self.params['dataset']):
             # since the two datasets are small, use the train data loader for test
             return self.val_dataloader()
         else:
@@ -416,7 +461,13 @@ class VAEModule(pl.LightningModule):
 
 
     def data_transforms(self):
-        if self.params['dataset'] == 'celeba':
+        if self.is_hic_dataset(self.params['dataset']):
+            SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
+            transform = transforms.Compose([transforms.Resize(self.params['img_size']),
+                                            transforms.ToTensor(),
+                                            SetRange])
+
+        elif self.params['dataset'] == 'celeba':
             SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                             transforms.CenterCrop(148),
@@ -440,11 +491,16 @@ class VAEModule(pl.LightningModule):
                                             transforms.Resize(self.params['img_size']),
                                             transforms.ToTensor(),
                                             SetRange])
+        elif self.is_hic_dataset(self.params['dataset']):
+            SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
+            transform = transforms.Compose([transforms.Resize(self.params['img_size']),
+                                            transforms.ToTensor(),
+                                            SetRange])
         else:
             # 
             # do not use transforms for tensor datasets for now
             transform = transforms.Compose([
-                transforms.ToPILImage(),
+                # transforms.ToPILImage(),
                 transforms.RandomHorizontalFlip(0.5),
                 transforms.ToTensor()
                 ])
