@@ -1,0 +1,30 @@
+model_params:
+  name: 'BetaVAE_MLP'
+  in_channels: 4096 # 64*64
+  latent_dim: 8 # for dsprites
+  # latent_dim: 28 # for celeba
+  hidden_dims: [1200, 1200]
+  loss_type: 'B'
+  gamma: 10.0
+  max_capacity: 25
+  Capacity_max_iter: 10000
+
+exp_params:
+  dataset: TAD_HFFc6_chr7_10k
+  data_path: "./data/"
+  img_size: 64
+  optimizer: "adam"
+  batch_size: 256 # Better to have a square number
+  LR: 0.0005
+  weight_decay: 0.0
+  scheduler_gamma: 0.95
+
+trainer_params:
+  gpus: 1
+  max_nb_epochs: 2500
+  max_epochs: 2500
+
+logging_params:
+  save_dir: "logs"
+  name: "BetaVAE_MLP"
+  manual_seed: 1265

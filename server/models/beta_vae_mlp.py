@@ -5,7 +5,7 @@ from torch.nn import functional as F
 from .types_ import *
 from torch.distributions.bernoulli import Bernoulli
 
-class BetaVAEMLP(BaseVAE):
+class BetaVAE_MLP(BaseVAE):
 
     num_iter = 0 # Global static variable to keep track of iterations
 
@@ -18,12 +18,12 @@ class BetaVAEMLP(BaseVAE):
                  max_capacity: int = 25, # works similar to the beta in original beta vae
                  Capacity_max_iter: int = 1e5,
                  **kwargs) -> None:
-        super(BetaVAEMLP, self).__init__()
+        super(BetaVAE_MLP, self).__init__()
 
         self.latent_dim = latent_dim
         self.beta = beta
         self.gamma = gamma
-        self.loss_type = loss_type
+        self.loss_type = kwargs.get('loss_type', 'B')
         self.C_max = torch.Tensor([max_capacity])
         self.C_stop_iter = Capacity_max_iter
         out_channels = in_channels

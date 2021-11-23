@@ -85,7 +85,7 @@ class VAEModule(pl.LightningModule):
 
     def is_hic_dataset(self, dataset_name):
         # whether to use custom image data loader for hi c data
-        if dataset_name in ['TAD_GM12878']:
+        if dataset_name in ['TAD_GM12878', 'TAD_HFFc6_chr7_10k']:
             return True
         else:
             return False
@@ -464,6 +464,8 @@ class VAEModule(pl.LightningModule):
         if self.is_hic_dataset(self.params['dataset']):
             SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
             transform = transforms.Compose([transforms.Resize(self.params['img_size']),
+                                            transforms.RandomApply([transforms.RandomHorizontalFlip(1), transforms.RandomVerticalFlip(1)], 0.5),
+                                            transforms.RandomResizedCrop(self.params['img_size'], scale=(0.5, 1), ratio = (1, 1)),
                                             transforms.ToTensor(),
                                             SetRange])
 
