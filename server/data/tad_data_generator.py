@@ -5,12 +5,26 @@ import csv
 from iced import normalization, filter
 import imageio
 import os
+import cooler
 
 #%%
+
+def cool2mat(cool_filename: 'str', chr: 'str', resolution: 'int'):
+    '''
+    '''
+    c = cooler.Cooler(f'./{cool_filename}.mcool::resolutions/{resolution}')
+    mat = c.matrix(balance=False).fetch(chr)
+    np.savetxt(f'./{cool_filename}.matrix', mat)
+
+cool2mat('U54-HFFc6-FA-DSG-MNase-R1-R3.hg38.mapq_30.500', 'chr7', '10000')
+
+#%%
+#%%
 img_size = 64
-matrix_file = 'chr18_KR.matrix'
-tad_file = 'OnTAD_KRnorm_pen0.1_max200_chr18.tad'
-dir_name = 'TAD_data'
+matrix_file = 'HFFc6_chr7_10k.matrix'
+# TAD file is generated through OnTAD algorithm
+tad_file = 'OnTAD_HFFc6_pen0.1_max200_10k_chr7.tad'
+dir_name = 'TAD_HFFc6_chr7_10k'
 
 if not os.path.exists(dir_name):
     os.makedirs(dir_name)
