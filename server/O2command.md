@@ -16,18 +16,18 @@ request GPU resources: `srun -n 1 --pty -c 2 -t 14:00:00 -p gpu --gres=gpu:1 --m
 ## run conda on O2
 load conda: `module load conda2/4.2.13`  
 activate conda: 
-```
-conda deactivate && conda activate vae_env
-```
+`conda deactivate && conda activate vae_env`
 
 ##
 **train**
+
 the sunspots datasets
 `python run.py -c configs/bbvae.yaml`
 the celeba datasets
 `python run.py -c configs/bbvae_celeba.yaml`
 
 **load_model**
+
 the sunspots datasets
 `python load_model.py -c configs/bbvae.yaml -v 0`
 the celeba datasets
