@@ -1,6 +1,9 @@
 
-**/data/*
-!**/data/*.py
+server/data/**
+!server/data/*.py
+!server/data/tad_data_generator/
+server/data/tad_data_generator/*
+!server/data/tad_data_generator/*.py
 
 .vscode/
 
