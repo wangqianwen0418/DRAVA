@@ -47,7 +47,8 @@ def saveDataset(matrix_file, tad_file, dir_name, chr):
     f = open(os.path.join(dir_name, 'label.csv'), 'a+')
     label_writer = csv.writer(f)
     header = ['img', 'start', 'end', 'level', 'mean', 'score']
-    label_writer.writerow(header)
+    if f.tell()==0:
+        label_writer.writerow(header)
 
     tad_f = open(tad_file)
     row_reader = csv.reader(tad_f, delimiter='\t')
@@ -71,7 +72,7 @@ def saveDataset(matrix_file, tad_file, dir_name, chr):
 # %%
 
 if __name__ == "__main__": 
-    chrs = [f'chr{i}' for i in range(1, 10) ]
+    chrs = [f'chr{i}' for i in range(1, 7) ]
     cool_filename = 'U54-HFFc6-FA-DSG-MNase-R1-R3.hg38.mapq_30.500'
     resolution = 10000
     dataset_dir_name = '../TAD_HFFc6_10k'

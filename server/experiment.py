@@ -47,7 +47,7 @@ class CustomImageDataset(Dataset):
         img_path = os.path.join(self.img_dir, f'{self.img_labels.iloc[idx, 0]}.jpg')
         image = Image.open(img_path).convert('L')
         # 
-        label = self.img_labels.iloc[idx, 1:].to_numpy()
+        label = self.img_labels.iloc[idx, 1:].to_list()
         if self.transform:
             image = self.transform(image)
         if self.target_transform:
@@ -85,7 +85,7 @@ class VAEModule(pl.LightningModule):
 
     def is_hic_dataset(self, dataset_name):
         # whether to use custom image data loader for hi c data
-        if dataset_name in ['TAD_GM12878', 'TAD_HFFc6_chr7_10k']:
+        if dataset_name in ['TAD_GM12878', 'TAD_HFFc6_chr7_10k','TAD_HFFc6_10k']:
             return True
         else:
             return False
