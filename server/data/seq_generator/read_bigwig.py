@@ -50,7 +50,7 @@ def getImages(filename, IMG_SIZE, CHR_NUM ):
 #%%
 name = "HFFc6_ATAC"
 
-filename = f"./geno_data/{name}.bigWig"
+filename = f"./seq_data/{name}.bigWig"
 IMG_SIZE = 64
 
 chr_start = 1
@@ -66,4 +66,4 @@ for CHR_NUM in range(chr_start, chr_end+1):
         all_imgs = np.concatenate([all_imgs, imgs])
     
 
-np.savez(f'./{name}_chr{chr_start}-{chr_end}.npz', imgs=all_imgs, labels=all_labels)
+np.savez(f'../{name}_chr{chr_start}-{chr_end}.npz', imgs=all_imgs, labels=all_labels)

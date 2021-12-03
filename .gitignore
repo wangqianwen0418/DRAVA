@@ -1,15 +1,19 @@
 
 server/data/**
 !server/data/*.py
+
 !server/data/tad_data_generator/
 server/data/tad_data_generator/*
 !server/data/tad_data_generator/*.py
+
+!server/data/seq_generator/
+server/data/seq_generator/*
+!server/data/seq_generator/*.py
 
 .vscode/
 
 logs/
 *.out
-VanillaVAE/version_0/
 
 __pycache__/
 .ipynb_checkpoints/
