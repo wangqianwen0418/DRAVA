@@ -123,7 +123,7 @@ class BetaVAE_TAD(BaseVAE):
         result = result.view(-1, *self.encoder_outsize) 
         result = self.decoder(result)
         result = self.final_layer(result)
-        print('decoder out size: ', result.size())
+        
         return result
 
     def reparameterize(self, mu: Tensor, logvar: Tensor) -> Tensor:
