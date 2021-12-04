@@ -4,6 +4,8 @@ from torch import nn
 from torch.nn import functional as F
 from .types_ import *
 
+import math
+
 
 class BetaVAE_GENO(BaseVAE):
 
@@ -17,6 +19,7 @@ class BetaVAE_GENO(BaseVAE):
                  gamma:float = 1000.,
                  max_capacity: int = 25, # works similar to the beta in original beta vae
                  Capacity_max_iter: int = 1e5,
+                 img_size:int = 64,
                  **kwargs) -> None:
         super(BetaVAE_GENO, self).__init__()
 
@@ -31,25 +34,33 @@ class BetaVAE_GENO(BaseVAE):
         modules = []
 
         # Build Encoder
+        w_dim = img_size
+        kernel_size= 3
+        stride= 2
+        padding  = 1
         for h_dim in hidden_dims:
             modules.append(
                 nn.Sequential(
-                    nn.Conv2d(in_channels, out_channels=h_dim,
-                              kernel_size= 3, stride= 2, padding  = 1),
+                    nn.Conv2d(in_channels, h_dim,
+                              kernel_size, stride, padding),
                     nn.BatchNorm2d(h_dim),
                     nn.LeakyReLU())
             )
+            w_dim = math.floor((w_dim + 2 * padding - (kernel_size - 1) - 1)/stride + 1)
             in_channels = h_dim
 
+        self.encoder_outsize = [h_dim, w_dim, w_dim]
+        flat_outsize = h_dim * w_dim * w_dim
+
         self.encoder = nn.Sequential(*modules)
-        self.fc_mu = nn.Linear(hidden_dims[-1] * int((64/2**len(hidden_dims))**2), latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1] * int((64/2**len(hidden_dims))**2), latent_dim)
+        self.fc_mu = nn.Linear(flat_outsize, latent_dim)
+        self.fc_var = nn.Linear(flat_outsize, latent_dim)
 
 
         # Build Decoder
         modules = []
 
-        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * int((64/2**len(hidden_dims))**2))
+        self.decoder_input = nn.Linear(latent_dim, flat_outsize)
 
         hidden_dims.reverse()
 
@@ -102,7 +113,7 @@ class BetaVAE_GENO(BaseVAE):
 
     def decode(self, z: Tensor) -> Tensor:
         result = self.decoder_input(z)
-        result = result.view(-1, 512, 2, 2) # TO-DO
+        result = result.view(-1, *self.encoder_outsize)
         result = self.decoder(result)
         result = self.final_layer(result)
         return result
@@ -134,7 +145,7 @@ class BetaVAE_GENO(BaseVAE):
         log_var = args[3]
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
-        recons_loss =F.mse_loss(recons, input) * 256
+        recons_loss =F.mse_loss(recons, input) * 100
 
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 
