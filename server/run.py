@@ -1,6 +1,7 @@
 import yaml
 import argparse
 import numpy as np
+import subprocess
 
 from models import *
 from experiment import VAEModule
@@ -48,13 +49,18 @@ myModule = VAEModule(model,config['exp_params'])
 runner = Trainer(default_save_path=f"{tt_logger.save_dir}",
                     min_nb_epochs=1,
                     logger=tt_logger,
-                    log_save_interval=100,
+                    log_save_interval=200,
                     train_percent_check=1.,
                     val_percent_check=1.,
                     num_sanity_val_steps=5,
-                    check_val_every_n_epoch=10,
+                    check_val_every_n_epoch=4,
                     early_stop_callback = False,
                     **config['trainer_params'])
                     
 print(f"======= Training {config['model_params']['name']} =======")
 runner.fit(myModule)
+
+# copy config file to the logger folder
+logger_path = f"{tt_logger.save_dir}{tt_logger.name}/version_{tt_logger.version}/"
+cmd = ["cp", config, f"{logger_path}/config.yaml"]
+subprocess.run(cmd)
