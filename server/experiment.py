@@ -47,7 +47,7 @@ class CustomImageDataset(Dataset):
         img_path = os.path.join(self.img_dir, f'{self.img_labels.iloc[idx, 0]}.jpg')
         image = Image.open(img_path).convert('L')
         # 
-        label = self.img_labels.iloc[idx, 1:].to_list()
+        label = self.img_labels.iloc[idx, 1]
         if self.transform:
             image = self.transform(image)
         if self.target_transform:
@@ -78,14 +78,14 @@ class VAEModule(pl.LightningModule):
 
     def is_tensor_dataset(self, dataset_name):
         # numpy datasets have different data loaders
-        if 'sunspot' in dataset_name or dataset_name in ['dsprites', 'HFFc6_ATAC', 'ENCFF158GBQ']:
+        if 'sunspot' in dataset_name or dataset_name in ['dsprites', 'HFFc6_ATAC_chr7', 'HFFc6_ATAC_chr1-8', 'ENCFF158GBQ']:
             return True
         else:
             return False
 
     def is_hic_dataset(self, dataset_name):
         # whether to use custom image data loader for hi c data
-        if dataset_name in ['TAD_GM12878', 'TAD_HFFc6_chr7_10k','TAD_HFFc6_10k']:
+        if dataset_name in ['TAD_GM12878', 'TAD_HFFc6_chr7_10k','TAD_HFFc6_10k_chr1-5']:
             return True
         else:
             return False
@@ -250,8 +250,8 @@ class VAEModule(pl.LightningModule):
 
         z = []
         for i in range(self.model.latent_dim):
-            # row = torch.randn( self.model.latent_dim)
-            row = torch.ones( self.model.latent_dim) *2
+            row = torch.randn( self.model.latent_dim)
+            # row = torch.ones( self.model.latent_dim) *2
             z_ = [row for i in range(self.bin_num)]
             z_ = torch.stack(z_, dim =0)
             mask = torch.tensor([j for j in range(self.bin_num)])
