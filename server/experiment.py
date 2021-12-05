@@ -463,9 +463,8 @@ class VAEModule(pl.LightningModule):
     def data_transforms(self):
         if self.is_hic_dataset(self.params['dataset']):
             SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
-            transform = transforms.Compose([transforms.Resize(self.params['img_size']),
+            transform = transforms.Compose([transforms.Resize(self.params['img_size'], Image.NEAREST),
                                             transforms.RandomApply([transforms.RandomHorizontalFlip(1), transforms.RandomVerticalFlip(1)], 0.5),
-                                            transforms.RandomResizedCrop(self.params['img_size'], scale=(0.5, 1), ratio = (1, 1)),
                                             transforms.ToTensor(),
                                             SetRange])
 
@@ -495,7 +494,7 @@ class VAEModule(pl.LightningModule):
                                             SetRange])
         elif self.is_hic_dataset(self.params['dataset']):
             SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
-            transform = transforms.Compose([transforms.Resize(self.params['img_size']),
+            transform = transforms.Compose([transforms.Resize(self.params['img_size'], Image.NEAREST),
                                             transforms.ToTensor(),
                                             SetRange])
         else:
