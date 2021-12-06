@@ -12,6 +12,7 @@ from torchvision import transforms
 import torchvision.utils as vutils
 from torchvision.datasets import CelebA
 from torch.utils.data import Dataset, DataLoader
+from torch.optim import SGD, Adam, Adagrad
 from PIL import Image
 
 from models import BaseVAE
@@ -326,14 +327,17 @@ class VAEModule(pl.LightningModule):
         optims = []
         scheds = []
 
-        if self.params['optimizer'] == 'adagrad':
-            optimizer = optim.Adagrad(self.model.parameters(), lr=self.params['LR'],
-                                weight_decay=self.params['weight_decay'])
-        
-        else:
-            optimizer = optim.Adam(self.model.parameters(),
+        optimizer_dict = {'adagrad': Adagrad, 'adam': Adam, 'sgd': SGD}
+
+        assert self.params['optimizer'] in [*optimizer_dict], f'only support {[*optimizer_dict]} as optimizers'
+
+
+        optimizer = optimizer_dict[self.params['optimizer']](
+                                self.model.parameters(), 
                                 lr=self.params['LR'],
-                                weight_decay=self.params['weight_decay'])
+                                weight_decay=self.params['weight_decay']
+                                )
+        
         optims.append(optimizer)
         # Check if more than 1 optimizer is required (Used for adversarial training)
         try:
