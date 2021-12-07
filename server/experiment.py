@@ -363,6 +363,10 @@ class VAEModule(pl.LightningModule):
                 except:
                     pass
                 return optims, scheds
+            else:
+                # if no schedular gama, reduce LR when a metric has stopped improving
+                scheduler = optim.lr_scheduler.ReduceLROnPlateau(optims[0], factor = 0.1, patience = 10, verbose = True)
+                scheds.append(scheduler)
         except:
             return optims
 
