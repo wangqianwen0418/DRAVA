@@ -1,5 +1,5 @@
 model_params:
-  name: 'BetaVAE_TAD'
+  name: 'BetaVAE_BIG_CONV'
   in_channels: 1
   latent_dim: 8 # for dsprites
   # latent_dim: 28 # for celeba
@@ -19,7 +19,7 @@ exp_params:
   batch_size: 196 # Better to have a square number
   LR: 0.0005
   weight_decay: 0.0
-  scheduler_gamma: 0.95
+  # scheduler_gamma: 0.95
 
 trainer_params:
   gpus: 1

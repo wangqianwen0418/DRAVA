@@ -121,7 +121,7 @@ class BetaVAE_MLP(BaseVAE):
         log_var = args[3]
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
-        recons_loss =F.mse_loss(recons, input)
+        recons_loss = F.mse_loss(recons, input) * 100
         # print(mu, 'mu')
         # print(log_var, 'log var')
         # print(recons, 'recons')

@@ -10,7 +10,7 @@ model_params:
   Capacity_max_iter: 10000
 
 exp_params:
-  dataset: TAD_HFFc6_chr7_10k
+  dataset: TAD_HFFc6_10k
   data_path: "./data/"
   img_size: 64
   optimizer: "adam"
