@@ -54,17 +54,20 @@ runner = Trainer(default_save_path=f"{tt_logger.save_dir}",
                     train_percent_check=1.,
                     val_percent_check=1.,
                     num_sanity_val_steps=5,
-                    check_val_every_n_epoch=1,
+                    check_val_every_n_epoch=10,
                     early_stop_callback = False,
                     **config['trainer_params'])
                     
-print(f"======= Training {config['model_params']['name']} =======")
-runner.fit(myModule)
+
 
 # copy config file to the logger folder
-logger_path = f"{tt_logger.save_dir}{tt_logger.name}/version_{tt_logger.version}/"
+logger_path = f"{tt_logger.save_dir}{tt_logger.name}/version_{tt_logger.experiment.version}/"
 cmd = ["cp", args.filename, f"{logger_path}/config.yaml"]
 subprocess.run(cmd)
 
 with open(f"{logger_path}/model.pickle", "wb") as file_:
     pickle.dump(model, file_, -1)
+
+
+print(f"======= Training {config['model_params']['name']} =======")
+runner.fit(myModule)
