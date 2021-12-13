@@ -1,11 +1,11 @@
 model_params:
-  name: 'BetaVAE_BIG_CONV'
+  name: 'BetaVAE_CONV'
   in_channels: 1
   latent_dim: 12 # for dsprites
   # latent_dim: 28 # for celeba
   img_size: 64
-  hidden_dims: [16, 64, 256]
-  # conv_sizes: [7,5,3] # default is [3,3,3] 
+  hidden_dims: [32, 64, 128]
+  conv_sizes: [3,3,3] 
   loss_type: 'B'
   gamma: 10.0
   max_capacity: 25
@@ -20,7 +20,7 @@ exp_params:
   batch_size: 256 # Better to have a square number
   LR: 0.0005
   weight_decay: 0.0
-  scheduler_gamma: 0.95
+  # scheduler_gamma: 0.95 # if no scheduler gama, then reduce learning rate on plateau
 
 trainer_params:
   gpus: 1
@@ -29,5 +29,5 @@ trainer_params:
 
 logging_params:
   save_dir: "logs"
-  name: "BetaVAE_TAD"
+  name: 'BetaVAE_3x3CONV'
   manual_seed: 1265
