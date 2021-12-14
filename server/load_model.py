@@ -44,14 +44,11 @@ tt_logger = TestTubeLogger(
     version = args.version_num,
 )
 
-# model = vae_models[config['model_params']['name']](**config['model_params'])
-logger_path = f"{tt_logger.save_dir}/{tt_logger.name}/version_{args.version_num}"
-assert os.path.exists(logger_path), f'the logger folder {logger_path } does not exist'
-model = pickle.load(open(f"{logger_path}/model.pickle", "rb", -1))
+model = vae_models[config['model_params']['name']](**config['model_params'])
 
 
 # load state dict from check point
-
+logger_path = f"{tt_logger.save_dir}/{tt_logger.name}/version_{args.version_num}"
 ckp_dir = f"{logger_path}/checkpoints/"
 assert os.path.exists(ckp_dir), 'the checkpoint folder does not exist'
 assert len(os.listdir(ckp_dir))>0, 'the checkpoint file does not exist'

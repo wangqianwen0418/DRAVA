@@ -3,6 +3,7 @@ import numpy as np
 import os
 import pandas as pd
 import json
+import csv
 
 
 import torch
@@ -48,7 +49,10 @@ class CustomImageDataset(Dataset):
         img_path = os.path.join(self.img_dir, f'{self.img_labels.iloc[idx, 0]}.jpg')
         image = Image.open(img_path).convert('L')
         # 
-        label = self.img_labels.iloc[idx, 1]
+        label = self.img_labels.iloc[idx].copy()
+        label[0] = float(label[0].split(':')[0].replace('chr', '')) # get the CHR number from the jpg name
+        label = label.to_numpy(dtype='float')
+
         if self.transform:
             image = self.transform(image)
         if self.target_transform:
@@ -72,10 +76,15 @@ class VAEModule(pl.LightningModule):
 
         self.bin_num = 11
         self.latent_hist = torch.zeros(self.model.latent_dim, self.bin_num).to(self.curr_device)
+
         try:
             self.hold_graph = self.params['retain_first_backpass']
         except:
             pass
+
+    @property
+    def logger_folder(self):
+        return f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
 
     def is_tensor_dataset(self, dataset_name):
         # numpy datasets have different data loaders
@@ -96,6 +105,8 @@ class VAEModule(pl.LightningModule):
 
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
+
+        
         real_img, labels = batch
 
         if self.is_tensor_dataset(self.params['dataset']):
@@ -155,12 +166,15 @@ class VAEModule(pl.LightningModule):
         self.curr_device = real_img.device
 
         results = self.forward(real_img, labels = labels)
+        mu = results[2]
+
         loss = self.model.loss_function(*results,
                                             M_N = self.params['batch_size']/ self.num_val_imgs,
                                             optimizer_idx = optimizer_idx,
                                             batch_idx = batch_idx)
 
-        self.count_latent_dist(batch)
+        self.count_latent_dist(mu)
+        self.save_results(mu, labels, batch_idx)
         return loss
 
     def test_end(self, outputs):
@@ -173,17 +187,32 @@ class VAEModule(pl.LightningModule):
 
         return {'test_loss': avg_loss}
 
-    def count_latent_dist(self, batch):
+    def save_results(self, mu, labels, batch_idx):
+        """
+        save results in a csw file, columns are [labels] + [latent_z]
+        """
+        if batch_idx == 0:
+            f = open(os.path.join(self.logger_folder, 'results.csv'), 'w')
+            result_writer = csv.writer(f)
+            header = ['chr', 'start', 'end', 'level', 'mean', 'score'][0: len(labels[0])+1] + ['z']
+            result_writer.writerow(header)
+        else: 
+            f = open(os.path.join(self.logger_folder, 'results.csv'), 'a')
+            result_writer = csv.writer(f)
+
+
+        for i, mu in enumerate(mu.tolist()):
+            row = labels[i].tolist() + [mu]
+
+            result_writer.writerow(row)
+
+        f.close()
+
+    def count_latent_dist(self, mu):
         """
         count the value distribution at each latent dimension
         """
-        real_img, labels = batch
-        if self.is_tensor_dataset(self.params['dataset']):
-            real_img = real_img.float()
-            
-        self.curr_device = real_img.device
 
-        [recons, test_input, mu, log_var] = self.forward(real_img, labels = labels)
         latent_hist = [ torch.histc( mu[:, i], bins= self.bin_num, min=-3, max= 3) for i in range(self.model.latent_dim)]
         latent_hist = torch.stack(latent_hist) # latent_dim * bin_size
         latent_hist = latent_hist.to(self.curr_device)
@@ -203,10 +232,10 @@ class VAEModule(pl.LightningModule):
         
 
         [recons, test_input, mu, log_var] = self.forward(test_input, labels = test_label)
-        with open(f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/sample.json", 'w') as f:
+        with open(f"{self.logger_folder}/sample.json", 'w') as f:
             json.dump(mu.tolist(), f)
 
-        filepath = f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/imgs"
+        filepath = f"{self.logger_folder}/imgs"
         if not(os.path.isdir(filepath)):
             os.mkdir(filepath)
         vutils.save_image(test_input.data,
@@ -238,7 +267,7 @@ class VAEModule(pl.LightningModule):
         """
         save the value distribution of training images in each hidden dimension
         """   
-        with open(f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/hist.json", 'w') as f:
+        with open(f"{self.logger_folder}/hist.json", 'w') as f:
             json.dump(self.latent_hist.tolist(), f)
 
 
@@ -264,7 +293,7 @@ class VAEModule(pl.LightningModule):
 
         recons = self.model.decode(z)
 
-        filepath = f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/imgs"
+        filepath = f"{self.logger_folder}/imgs"
         if not(os.path.isdir(filepath)):
             os.mkdir(filepath)
         
@@ -297,7 +326,7 @@ class VAEModule(pl.LightningModule):
         
         recons = self.model.generate(test_input, labels = test_label)
         
-        filepath = f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/imgs"
+        filepath = f"{self.logger_folder}/imgs"
         if not(os.path.isdir(filepath)):
             os.mkdir(filepath)
 
@@ -461,7 +490,19 @@ class VAEModule(pl.LightningModule):
             self.num_test_imgs = len(self.test_sample_dataloader)
             return self.test_sample_dataloader
 
-        elif self.is_hic_dataset(self.params['dataset']) or self.is_tensor_dataset(self.params['dataset']):
+        elif self.is_hic_dataset(self.params['dataset']):
+
+            root = os.path.join(self.params['data_path'], self.params['dataset'] )
+            dataset = CustomImageDataset(root = root, transform=self.test_data_transforms())
+            self.test_sample_dataloader = DataLoader(dataset,
+                            batch_size= self.params['batch_size'],
+                            shuffle = False,
+                            drop_last = False)
+
+            self.num_test_imgs = len(self.test_sample_dataloader)
+            return self.test_sample_dataloader
+
+        elif self.is_tensor_dataset(self.params['dataset']):
             # since the two datasets are small, use the train data loader for test
             return self.val_dataloader()
         else:
