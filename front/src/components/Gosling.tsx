@@ -22,11 +22,9 @@ export const GoslingVis = (props: Props) => {
         })
 
     const padding = 15
-    console.info(props.height - padding *2 - 40)
 
     const spec = {
         "title": "",
-        "alignment": "overlay",
         "width": props.width - padding * 2,
         "height": props.height - padding *2 - 40 - 24, // card header: 40px, gosling vis axis: 24px
         "tracks": [
@@ -47,7 +45,8 @@ export const GoslingVis = (props: Props) => {
               "axis": "bottom"
             },
             "y": {"field": "peak", "type": "quantitative"},
-            "color": {"value": "black"}
+            "color": {"value": "black"},
+            height: 40
           },
           {
               "data": {
@@ -61,7 +60,8 @@ export const GoslingVis = (props: Props) => {
               },
               "mark": "rect",
               "size": {"value": 12},
-              "x": {"field": "chromStart", "type": "genomic", "axis": "bottom"},
+              height: 12,
+              "x": {"field": "chromStart", "type": "genomic", "axis": "none", "domain": {"chromosome": "7"}},
               "xe": {"field": "chromEnd", "type": "genomic"},
               "stroke": {"value": "orange"},
               "strokeWidth": {"value": 1}
