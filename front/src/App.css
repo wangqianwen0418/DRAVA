@@ -1,11 +1,23 @@
 .App {
-  text-align: center;
   padding: 10px;
 }
 
 .gosling-component {
   margin: auto !important;
-  padding-top: 0px !important;
-  padding-bottom: 0px !important;
+  padding: 0px !important;
   height: auto  !important;
+  width: auto  !important;
+}
+
+.ant-card-head {
+  /* background-color: rgb(143, 201, 255) !important; */
+  background-color: lightgray !important;
+  color: white !important;
+  height: 40px !important;
+  font-size: 18px !important;
+  padding: 0 10px;
+}
+
+.ant-card-bordered {
+  border: 1px solid lightgray !important;
 }

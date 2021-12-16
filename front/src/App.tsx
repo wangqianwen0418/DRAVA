@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import { Row, Col } from 'antd';
 
 import {latentDim, stepNum} from 'Const';
 import {range} from 'helpers';
@@ -68,15 +69,20 @@ export default class App extends React.Component <{}, State> {
     const {filters} = this.state
 
     const sampleIdxs = this.filterSamples()
-
+    const appPadding = 10, gutter = 16, appHeight = window.innerHeight - appPadding * 2
     return (
-      <div className="App">
-        <Grid images= {images} setFilters = {this.setFilters} filters={filters}/>
+      <div className="App" style={{padding: appPadding}}>
+      <Row gutter={gutter}>
 
-        <br/>
-        <h3>Data Samples [{sampleIdxs.length}]</h3>
-        <GoslingVis sampleIdxs={sampleIdxs}/>
-        <SampleBrowser sampleIdxs={sampleIdxs}/>
+        <Col span={12}>
+          <GoslingVis sampleIdxs={sampleIdxs} width={(window.innerWidth - appPadding * 2)*0.5 - gutter} height={appHeight * 0.5} />
+          <SampleBrowser sampleIdxs={sampleIdxs} height={appHeight * 0.5}/>
+        </Col>
+
+        <Col span={12}>
+          <Grid images= {images} setFilters = {this.setFilters} filters={filters} height={ appHeight }/>
+        </Col>
+      </Row>
       </div>
     );
   }

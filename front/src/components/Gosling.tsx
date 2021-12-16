@@ -1,11 +1,14 @@
-import { validateGoslingSpec, GoslingComponent } from "gosling.js";
+import { validateGoslingSpec, GoslingComponent, GoslingSpec } from "gosling.js";
 import * as React from "react";
 
 import sampleLabels from 'assets/sample_labels.json'
+import { Card } from "antd";
 
 
 interface Props {
-    sampleIdxs: number[]
+    sampleIdxs: number[],
+    width: number,
+    height: number
 }
 
 export const GoslingVis = (props: Props) => {
@@ -18,11 +21,14 @@ export const GoslingVis = (props: Props) => {
             }
         })
 
-    const spec = `{
+    const padding = 15
+    console.info(props.height - padding *2 - 40)
+
+    const spec = {
         "title": "",
         "alignment": "overlay",
-        "width": ${window.innerWidth * 0.8},
-        "height": 180,
+        "width": props.width - padding * 2,
+        "height": props.height - padding *2 - 40 - 24, // card header: 40px, gosling vis axis: 24px
         "tracks": [
           {
           "layout": "linear",
@@ -31,7 +37,7 @@ export const GoslingVis = (props: Props) => {
             "type": "bigwig",
             "column": "position",
             "value": "peak",
-            "binSize": "2"
+            "binSize": "2",
           },
             "mark": "area",
             "x": {
@@ -45,7 +51,7 @@ export const GoslingVis = (props: Props) => {
           },
           {
               "data": {
-                  "values": ${JSON.stringify(labelJSON)},
+                  "values": labelJSON,
                   "type":"json",
                     "chromosomeField":"Chromosome",
                     "genomicFields":[
@@ -55,16 +61,16 @@ export const GoslingVis = (props: Props) => {
               },
               "mark": "rect",
               "size": {"value": 12},
-              "x": {"field": "chromStart", "type": "genomic"},
+              "x": {"field": "chromStart", "type": "genomic", "axis": "bottom"},
               "xe": {"field": "chromEnd", "type": "genomic"},
               "stroke": {"value": "orange"},
               "strokeWidth": {"value": 1}
           }
         ]
-      }`
+      }
 
     // validate the spec
-    const validity = validateGoslingSpec(JSON.parse(spec));
+    const validity = validateGoslingSpec(spec);
 
     if(validity.state === 'error') {
         console.warn('Gosling spec is invalid!', validity.message);
@@ -72,5 +78,7 @@ export const GoslingVis = (props: Props) => {
     }
 
     
-    return <GoslingComponent spec={JSON.parse(spec)} />
+    return <Card title='Genomic Browser' size="small">
+      <GoslingComponent spec={spec as GoslingSpec} /> 
+    </Card>
 }

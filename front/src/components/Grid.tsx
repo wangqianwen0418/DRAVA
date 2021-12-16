@@ -4,11 +4,13 @@ import sampleVectors from 'assets/samples_vector.json'
 import styles from './Grid.module.css';
 import clsx from 'clsx';
 import { getSampleHist } from 'helpers';
+import { Card } from 'antd';
 
 interface Props {
     images: string[][];
     filters: number[][];
     setFilters: (row:number, col:number)=> void;
+    height: number;
 }
 interface States {}
 
@@ -21,8 +23,7 @@ export default class Grid extends React.Component <Props, States> {
         const maxV = Math.max(...hist.flat())
 
         
-        return <div className='grid'>
-            <h3> Latent Space </h3>
+        return <Card title="Pattern Space" size="small" bodyStyle={{height: this.props.height - 40, overflowY: 'scroll'}}>
             {this.props.images.map((row,row_idx) =>{
                 return <div className={clsx(styles.rowContainer)} key={`row_${row_idx}`}>
 
@@ -73,6 +74,6 @@ export default class Grid extends React.Component <Props, States> {
                     </div>
                 </div>
             })}
-            </div>
+            </Card>
     }
 }
