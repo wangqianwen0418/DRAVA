@@ -202,7 +202,7 @@ class VAEModule(pl.LightningModule):
 
 
         for i, mu in enumerate(mu.tolist()):
-            row = labels[i].tolist() + [mu]
+            row = labels[i].tolist() + [','.join([str(m) for m in mu])]
 
             result_writer.writerow(row)
 

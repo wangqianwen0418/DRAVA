@@ -1,32 +1,60 @@
 import { latentDim, stepNum } from "Const"
 
-export const getRange = (i:number):[number, number]=>{
-    return [-3.3 + i * 0.6, -3.3 + (1+ i)*0.6]
-}
 
 /**
- * 
+ * similar to the python range function
  * @param v : length of array
  * @param fill: 
  * - when given, fill the array with this constant value 
  * - otherwise, [0, 1, .., v-1]
- * @returns the array
+ * @returns array
  */
 export const range = (v : number, fill?: number):number[] => {
     return Array.from(Array(v).keys()).map(d=>fill ?? d)
 }
 
+// math.min and math.max crashed with large arrays
+const getMax = (arr: number[]):number => {
+    let len = arr.length;
+    let max = -Infinity;
+
+    while (len--) {
+        max = arr[len] > max ? arr[len] : max;
+    }
+    return max;
+}
+
+const getMin = (arr: number[]):number => {
+    let len = arr.length;
+    let min = Infinity;
+
+    while (len--) {
+        min = arr[len] < min ? arr[len] : min;
+    }
+    return min;
+}
+
+
+/**
+ * @param i : range index
+ * @returns : range [number, number]
+ */
+ export const getRange = (i:number):[number, number]=>{
+    return [-3.3 + i * 0.6, -3.3 + (1+ i)*0.6]
+}
+
+
 /**
  * @param v 
  * @param ranges 
- * @returns whether the number v is within any of the ranges
+ * @returns whether the number v is within any of the given ranges
  */
 export const withinRange = (v: number, ranges:number[][]):boolean =>{
     return ranges.some(range=> (v >= range[0] && v <= range[1]))
 }
 
-const value2rangeIdx = (v:number):number => {
-    return Math.floor( (v + 3.3 )/0.6 )
+const value2rangeIdx = (v:number, min: number, max: number):number => {
+    return Math.ceil( (v-min)/ ((max-min)/stepNum) )
 }
 
 
@@ -37,9 +65,13 @@ const value2rangeIdx = (v:number):number => {
  */
 export const getSampleHist = (sampleVectors: number[][]): number[][]=>{
     let hist = range(latentDim).map( _ => range(stepNum, 0))
+
+    const allNums = sampleVectors.flat()
+    const rangeMin = getMin(allNums), rangeMax = getMax(allNums)
+
     sampleVectors.forEach(sample=>{
         sample.forEach((dimensionValue, dimIdx)=>{
-            const idx = value2rangeIdx(dimensionValue)
+            const idx = value2rangeIdx(dimensionValue, rangeMin, rangeMax)
             if (idx <  stepNum) {
                 hist[dimIdx][idx] += 1
             }

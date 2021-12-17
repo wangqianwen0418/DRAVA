@@ -1,10 +1,9 @@
 import React from 'react';
-import sampleVectors from 'assets/samples_vector.json'
-
 import styles from './Grid.module.css';
 import clsx from 'clsx';
-import { getSampleHist } from 'helpers';
 import { Card } from 'antd';
+
+import {requestHist} from 'dataService';
 
 interface Props {
     images: string[][];
@@ -12,14 +11,28 @@ interface Props {
     setFilters: (row:number, col:number)=> void;
     height: number;
 }
-interface States {}
+interface States {
+    hist:number[][];
+}
 
 export default class Grid extends React.Component <Props, States> {
-    render(){
-        const {filters} = this.props
-        const spanWidth = 80, barHeight = 30, imgWidth = 64, barLabelHeight = 14, gap = 3
 
-        const hist = getSampleHist(sampleVectors)
+   async onRequestHist() {
+       const hist = await requestHist() 
+       this.setState({hist})
+   }
+    componentDidMount(){
+        this.onRequestHist()
+    }
+    render(){
+        if (! this.state) return <Card title="Pattern Space" size="small" bodyStyle={{height: this.props.height - 40, overflowY: 'scroll'}}></Card>
+
+        const {filters} = this.props
+        const {hist} = this.state
+
+        
+
+        const spanWidth = 80, barHeight = 30, imgWidth = 64, barLabelHeight = 14, gap = 3
         const maxV = Math.max(...hist.flat())
 
         
