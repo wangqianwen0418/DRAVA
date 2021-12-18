@@ -1,4 +1,4 @@
-import { latentDim, stepNum } from "Const"
+import { stepNum } from "Const"
 
 
 /**
@@ -14,7 +14,7 @@ export const range = (v : number, fill?: number):number[] => {
 }
 
 // math.min and math.max crashed with large arrays
-const getMax = (arr: number[]):number => {
+export const getMax = (arr: number[]):number => {
     let len = arr.length;
     let max = -Infinity;
 
@@ -24,7 +24,7 @@ const getMax = (arr: number[]):number => {
     return max;
 }
 
-const getMin = (arr: number[]):number => {
+export const getMin = (arr: number[]):number => {
     let len = arr.length;
     let min = Infinity;
 
@@ -64,16 +64,23 @@ const value2rangeIdx = (v:number, min: number, max: number):number => {
  * @returns historgram of each dimension 
  */
 export const getSampleHist = (sampleVectors: number[][]): number[][]=>{
+    const latentDim = sampleVectors[0].length
     let hist = range(latentDim).map( _ => range(stepNum, 0))
 
-    const allNums = sampleVectors.flat()
-    const rangeMin = getMin(allNums), rangeMax = getMax(allNums)
+    // const allNums = sampleVectors.flat()
+    // const rangeMin = getMin(allNums), rangeMax = getMax(allNums)
+    const rangeMin = -3, rangeMax = 3
+
 
     sampleVectors.forEach(sample=>{
         sample.forEach((dimensionValue, dimIdx)=>{
             const idx = value2rangeIdx(dimensionValue, rangeMin, rangeMax)
-            if (idx <  stepNum) {
+            if (idx < 0){
+                hist[dimIdx][0] += 1
+            } else if (idx <  stepNum) {
                 hist[dimIdx][idx] += 1
+            } else {
+                hist[dimIdx][stepNum-1] += 1
             }
         })
     })

@@ -3,90 +3,92 @@ import styles from './Grid.module.css';
 import clsx from 'clsx';
 import { Card } from 'antd';
 
-import {requestHist} from 'dataService';
+import {getMax} from 'helpers'; 
+import { stepNum } from 'Const';
+
+import {scaleLinear, scaleLog} from 'd3-scale';
+import { transform } from 'typescript';
 
 interface Props {
-    images: string[][];
     filters: number[][];
     setFilters: (row:number, col:number)=> void;
+    hist: number[][];
     height: number;
+    width: number;
 }
 interface States {
-    hist:number[][];
 }
 
 export default class Grid extends React.Component <Props, States> {
 
-   async onRequestHist() {
-       const hist = await requestHist() 
-       this.setState({hist})
-   }
-    componentDidMount(){
-        this.onRequestHist()
-    }
     render(){
-        if (! this.state) return <Card title="Pattern Space" size="small" bodyStyle={{height: this.props.height - 40, overflowY: 'scroll'}}></Card>
+        const {filters, height, width} = this.props
+        const {hist} = this.props
 
-        const {filters} = this.props
-        const {hist} = this.state
+        const rootStyle = getComputedStyle(document.documentElement)
+        const cardPadding = parseInt( rootStyle.getPropertyValue('--card-body-padding') ),
+        cardHeadHeight = parseInt( rootStyle.getPropertyValue('--card-head-height') )
+        
+
+        const spanWidth = 80, // width used for left-side dimension annotation
+            barHeight = 30, // height of bar chart
+            gap = 3, //horizontal gap between thumbnails
+            stepWidth = (width - 2 * cardPadding - spanWidth)/stepNum - gap, 
+            barLabelHeight = 14,
+            rowGap = 10 // vertical gap between rows
+            
+        const cardInnerHeight =  hist.length * (barHeight +  stepWidth + barHeight + rowGap)
+
+        const maxV = getMax(hist.flat())
+        const yScale = scaleLog().domain([0.1, maxV]).range([0, barHeight])
+        const isSelected = (row_idx:number, col_idx:number) => filters[row_idx].includes(col_idx)
 
         
 
-        const spanWidth = 80, barHeight = 30, imgWidth = 64, barLabelHeight = 14, gap = 3
-        const maxV = Math.max(...hist.flat())
-
-        
-        return <Card title="Pattern Space" size="small" bodyStyle={{height: this.props.height - 40, overflowY: 'scroll'}}>
-            {this.props.images.map((row,row_idx) =>{
-                return <div className={clsx(styles.rowContainer)} key={`row_${row_idx}`}>
-
-                    <svg height={barHeight +  barLabelHeight } width={ (imgWidth+gap )*11 + spanWidth}>
+        return <Card title="Pattern Space" size="small" bodyStyle={{height: height - cardHeadHeight, width: width, overflowY: 'scroll'}}>
+             
+             {/* the pcp charts */}
+             <svg height={cardInnerHeight } width={ width - 2 * cardPadding} className='pcp' >
                         
-                        { hist[row_idx]
-                            .map((h, i)=>
-                                <g key={`bar_${i}`} >
+                        { hist.map((row,row_idx) =>{
+                            return <g key={`row_${row_idx}`} transform={`translate(0, ${row_idx * (barHeight + barLabelHeight + stepWidth + rowGap)})`}>
+                            <text y={barHeight+barLabelHeight}> Dim_{row_idx} </text>
+                            {row.map((h, col_idx)=>
+                                <g key={`bar_${col_idx}`} onClick = {()=>this.props.setFilters(row_idx, col_idx)} 
+                                transform={`translate(${spanWidth + (stepWidth+gap) *  col_idx }, 0)`}>
                                     
                                     <rect 
-                                        height={barHeight/maxV*h} 
-                                        width={imgWidth} 
-                                        y = {barHeight - barHeight/maxV*h }
-                                        x={spanWidth + (imgWidth+gap) *i } 
+                                        height={yScale(h)} 
+                                        width={stepWidth} 
+                                        y = { barHeight - yScale(h)! }
                                         fill="lightgray"
+                                        className={ clsx(isSelected(row_idx, col_idx) && styles.isBarSelected) } 
                                     />
                                     <text 
-                                        x={spanWidth + (imgWidth+gap) * (i+0.5) } 
+                                        x={(stepWidth+gap) * 0.5 } 
                                         y={barHeight+barLabelHeight} 
+                                        fontSize={8}
                                         textAnchor='middle'
                                     > 
                                         {h} 
                                     </text>
+
+                                    <image href={`assets/simu/${row_idx}_${col_idx}.png`} 
+                                        className='latentImage'
+                                        y={barHeight+barLabelHeight} 
+                                        width={stepWidth}
+                                        height={stepWidth} />
+                                    <rect className={clsx(styles.imageBorder, isSelected(row_idx, col_idx) && styles.isImageSelected )} 
+                                        y={barHeight+barLabelHeight} 
+                                        fill='none'
+                                        width={stepWidth + gap}
+                                        height={stepWidth + gap} />
                                 </g>
-                            )
-                        }
+                            )}
+                            </g>
+                        })}
                     </svg>
-                    <div>
-                        <span 
-                            className={styles.dimHeader} 
-                            onClick={()=>this.props.setFilters(row_idx, -1)}
-                            style={{width: spanWidth}}
-                        >
-                            DIM_{row_idx}
-                        </span>
-                            
-                        {row.map((url, col_idx)=>{
-                            const isSelected = filters[row_idx].includes(col_idx)
-                            return <img 
-                                key={`${row_idx}_${col_idx}`} 
-                                src={url} 
-                                className={clsx(styles.latentImage, isSelected && styles.isSelected )} 
-                                style={{ width: imgWidth }}
-                                alt={url} 
-                                onClick = {()=>this.props.setFilters(row_idx, col_idx)}
-                                />
-                            })}
-                    </div>
-                </div>
-            })}
+
             </Card>
     }
 }

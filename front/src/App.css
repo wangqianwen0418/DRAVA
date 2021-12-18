@@ -1,5 +1,8 @@
-.App {
-  padding: 10px;
+:root {
+  --card-color: lightgray;
+  --card-body-padding: 12;
+  --card-head-height: 40;
+  --selected-color: orange;
 }
 
 .gosling-component {
@@ -9,15 +12,20 @@
   width: auto  !important;
 }
 
+
 .ant-card-head {
   /* background-color: rgb(143, 201, 255) !important; */
-  background-color: lightgray !important;
+  background-color: var(--card-color) !important;
   color: white !important;
-  height: 40px !important;
+  height: var(--card-head-height) !important;
   font-size: 18px !important;
   padding: 0 10px;
 }
 
 .ant-card-bordered {
-  border: 1px solid lightgray !important;
+  border: 1px solid var(--card-color) !important;
+}
+
+.ant-card-body {
+  padding: var(--card-body-padding);
 }

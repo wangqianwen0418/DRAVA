@@ -19,7 +19,6 @@ export const requestHist = async () => {
       })
       
     const pcsv = Papa.parse< TResultRow >(response.data, {header: true, skipEmptyLines: true})
-    console.info(pcsv)
     const z = pcsv.data.map(row=>row['z'].split(',').map(d=>parseFloat(d)))
     const hist = getSampleHist(z)
     return hist;

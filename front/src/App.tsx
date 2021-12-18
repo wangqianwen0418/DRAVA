@@ -2,34 +2,39 @@ import React from 'react';
 import './App.css';
 import { Row, Col } from 'antd';
 
-import {latentDim, stepNum} from 'Const';
+import {stepNum} from 'Const';
 import {range} from 'helpers';
-import sampleVectors from 'assets/samples_vector.json'
 import {withinRange, getRange} from 'helpers';
 
 import Grid from 'components/Grid';
 import SampleBrowser from 'components/SampleBrowser';
 import { GoslingVis } from 'components/Gosling';
 
-
-const images = range(latentDim)
-  .map(
-    row_idx=>range(stepNum)
-      .map(col_idx=>`assets/simu/${row_idx}_${col_idx}.png`)
-    )
+import {requestHist} from 'dataService';
 
 
 interface State {
-  filters: number[][]
+  filters: number[][],
+  hist: number[][]
 }
 export default class App extends React.Component <{}, State> {
   constructor(prop: {}){
     super(prop)
     this.state = {
-      filters: range(latentDim).map(_=>range(stepNum))
+      filters: [],
+      hist: []
     }
     this.setFilters = this.setFilters.bind(this)
   }
+
+  async onRequestHist() {
+    const hist = await requestHist() 
+    const filters = range(hist.length).map(_=>range(stepNum))
+    this.setState({filters, hist})
+  }
+ componentDidMount(){
+     this.onRequestHist()
+ }
 
   setFilters(row:number, col: number){
     let {filters} = this.state 
@@ -52,35 +57,39 @@ export default class App extends React.Component <{}, State> {
     }
     this.setState({filters})
   }
-  filterSamples (){
-    const {filters} = this.state
+  // filterSamples (){
+  //   const {filters} = this.state
 
-    let sampleIdxs: number[] = [] // idx of images
-        sampleVectors.forEach((sampleVector, sampleIdx)=>{
-            const inRange = sampleVector.every((dimensionValue, row_idx)=>{
-                const ranges = filters[row_idx].map(i=>getRange(i))
-                return withinRange(dimensionValue, ranges)
-            })
-            if (inRange) sampleIdxs.push(sampleIdx);
-        })
-    return sampleIdxs
-  }
+  //   let sampleIdxs: number[] = [] // idx of images
+  //       sampleVectors.forEach((sampleVector, sampleIdx)=>{
+  //           const inRange = sampleVector.every((dimensionValue, row_idx)=>{
+  //               const ranges = filters[row_idx].map(i=>getRange(i))
+  //               return withinRange(dimensionValue, ranges)
+  //           })
+  //           if (inRange) sampleIdxs.push(sampleIdx);
+  //       })
+  //   return sampleIdxs
+  // }
   render(){
-    const {filters} = this.state
+    const {filters, hist} = this.state
+    if (filters.length === 0) return null 
 
-    const sampleIdxs = this.filterSamples()
-    const appPadding = 10, gutter = 16, appHeight = window.innerHeight - appPadding * 2
+    // const sampleIdxs = this.filterSamples()
+    const sampleIdxs = range(400)
+    const appPadding = 10, gutter = 16, appHeight = window.innerHeight - appPadding * 2, 
+      colWidth = (window.innerWidth - appPadding * 2)*0.5 - gutter
+
     return (
       <div className="App" style={{padding: appPadding}}>
       <Row gutter={gutter}>
 
         <Col span={12}>
-          <GoslingVis sampleIdxs={sampleIdxs} width={(window.innerWidth - appPadding * 2)*0.5 - gutter} height={appHeight * 0.5} />
+          <GoslingVis sampleIdxs={sampleIdxs} width={colWidth} height={appHeight * 0.5} />
           <SampleBrowser sampleIdxs={sampleIdxs} height={appHeight * 0.5}/>
         </Col>
 
         <Col span={12}>
-          <Grid images= {images} setFilters = {this.setFilters} filters={filters} height={ appHeight }/>
+          <Grid setFilters = {this.setFilters} filters={filters} height={ appHeight } width={colWidth} hist={hist}/>
         </Col>
       </Row>
       </div>

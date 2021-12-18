@@ -26,7 +26,7 @@ export const GoslingVis = (props: Props) => {
     const spec = {
         "title": "",
         "width": props.width - padding * 2,
-        "height": props.height - padding *2 - 40 - 24, // card header: 40px, gosling vis axis: 24px
+        "height": props.height - padding * 2 - 40 - 24, // card header: 40px, gosling vis axis: 24px
         "tracks": [
           {
           "layout": "linear",
