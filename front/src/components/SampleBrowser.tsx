@@ -19,8 +19,9 @@ export default class SampleBrowser extends React.Component <Props, {}> {
     render(){
         const {sampleIdxs, height} = this.props;
         
-
-        return <Card title="Samples"  size="small" bodyStyle={{overflowY:'scroll', height: height - 40}}>
+        const rootStyle = getComputedStyle(document.documentElement),
+        cardHeadHeight = parseInt( rootStyle.getPropertyValue('--card-head-height') )
+        return <Card title="Samples"  size="small" bodyStyle={{overflowY:'scroll', height: height - cardHeadHeight}}>
             {sampleIdxs.map(sampleIdx=>{
                 return <img 
                     src={`assets/sample_imgs/${sampleIdx}.png`} 

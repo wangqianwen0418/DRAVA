@@ -21,12 +21,14 @@ export const GoslingVis = (props: Props) => {
             }
         })
 
-    const padding = 15
+    const rootStyle = getComputedStyle(document.documentElement),
+         cardPadding = parseInt( rootStyle.getPropertyValue('--card-body-padding') ),
+        cardHeadHeight = parseInt( rootStyle.getPropertyValue('--card-head-height') )
 
     const spec = {
         "title": "",
-        "width": props.width - padding * 2,
-        "height": props.height - padding * 2 - 40 - 24, // card header: 40px, gosling vis axis: 24px
+        "width": props.width - cardPadding * 2,
+        "height": props.height - cardPadding * 2 - cardHeadHeight - 24, // gosling vis axis: 24px
         "tracks": [
           {
           "layout": "linear",
