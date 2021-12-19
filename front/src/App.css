@@ -1,6 +1,6 @@
 :root {
   --card-color: lightgray;
-  --card-body-padding: 12;
+  --card-body-padding: 12px;
   --card-head-height: 40;
   --selected-color: orange;
 }
@@ -27,5 +27,5 @@
 }
 
 .ant-card-body {
-  padding: var(--card-body-padding);
+  padding: var(--card-body-padding) !important;
 }

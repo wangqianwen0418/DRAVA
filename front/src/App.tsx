@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import { Row, Col, Layout, Menu } from 'antd';
+import { Row, Col, Layout, Menu, Upload } from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 
 import { stepNum } from 'Const';
@@ -11,11 +11,31 @@ import SampleBrowser from 'components/SampleBrowser';
 import { GoslingVis } from 'components/Gosling';
 
 import { requestHist } from 'dataService';
+import {MenuInfo} from 'rc-menu/lib/interface';
 
 const { Header, Sider, Content } = Layout;
 const { SubMenu } = Menu;
 
+const uploadProps = {
+  name: 'file',
+  action: 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
+  headers: {
+    authorization: 'authorization-text',
+  },
+  onChange(info:any) {
+    if (info.file.status !== 'uploading') {
+      console.log(info.file, info.fileList);
+    }
+    if (info.file.status === 'done') {
+      // message.success(`${info.file.name} file uploaded successfully`);
+    } else if (info.file.status === 'error') {
+      // message.error(`${info.file.name} file upload failed.`);
+    }
+  },
+};
+
 interface State {
+  dataset: string,
   filters: number[][],
   hist: number[][]
 }
@@ -23,6 +43,7 @@ export default class App extends React.Component<{}, State> {
   constructor(prop: {}) {
     super(prop)
     this.state = {
+      dataset: 'sequence',
       filters: [],
       hist: []
     }
@@ -60,6 +81,12 @@ export default class App extends React.Component<{}, State> {
     this.setState({ filters })
   }
 
+  onClickMenu(e: MenuInfo){
+    this.setState({
+      dataset: e.key
+    })
+  }
+
   render() {
     const { filters, hist } = this.state
     if (filters.length === 0) return null
@@ -70,15 +97,19 @@ export default class App extends React.Component<{}, State> {
       gutter = 16, appHeight = window.innerHeight - headerHeight - 2 * contentPadding,
       colWidth = (window.innerWidth - siderWidth - contentPadding * 2) * 0.5 - gutter
 
-    const sider = <Sider width={siderWidth} collapsible trigger={null} >
+    const sider = <Sider width={siderWidth} collapsible >
       <div className="logo" style={{height: 32, margin: 16, textAlign: 'center', color:'white'}}> 
         LOGO
       </div>
-      <Menu theme="dark" mode="inline" defaultOpenKeys={['dataset']}>
+      <Menu theme="dark" mode="inline" defaultOpenKeys={['dataset']} onClick={this.onClickMenu.bind(this)}>
         <SubMenu key="dataset" title="Dataset">
           <Menu.Item key="sequence">ATAC</Menu.Item>
           <Menu.Item key="matrix">Hi-C</Menu.Item>
-          <Menu.Item key="upload" icon={<UploadOutlined />}> Upload </Menu.Item>
+          <Menu.Item key="upload"> 
+            <Upload {...uploadProps} >
+              <UploadOutlined style={{color: 'rgba(255, 255, 255, 0.65)'}}/>
+            </Upload>
+          </Menu.Item>
         </SubMenu>
       </Menu>
     </Sider>
