@@ -1,4 +1,4 @@
 /***
  * reltaed to the latent space layout
  */
-export const stepNum = 20
+export const stepNum = 20;
