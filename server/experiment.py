@@ -194,7 +194,7 @@ class VAEModule(pl.LightningModule):
         if batch_idx == 0:
             f = open(os.path.join(self.logger_folder, 'results.csv'), 'w')
             result_writer = csv.writer(f)
-            header = ['chr', 'start', 'end', 'level', 'mean', 'score'][0: len(labels[0])+1] + ['z']
+            header = ['chr', 'start', 'end', 'level', 'mean', 'score'][0: len(labels[0])] + ['z']
             result_writer.writerow(header)
         else: 
             f = open(os.path.join(self.logger_folder, 'results.csv'), 'a')
@@ -280,12 +280,14 @@ class VAEModule(pl.LightningModule):
 
         z = []
         for i in range(self.model.latent_dim):
-            row = torch.randn( self.model.latent_dim)
-            # row = torch.ones( self.model.latent_dim) *2
-            z_ = [row for i in range(self.bin_num)]
+            baseline = torch.randn( self.model.latent_dim) - 0.5
+            # baseline = torch.zeros( self.model.latent_dim)
+            # baseline = torch.ones( self.model.latent_dim) 
+            # baseline = torch.randn( self.model.latent_dim)
+            z_ = [baseline for _ in range(self.bin_num)]
             z_ = torch.stack(z_, dim =0)
             mask = torch.tensor([j for j in range(self.bin_num)])
-            z_[mask, i] = torch.tensor([- 3 + j/(self.bin_num-1)* 6 for j in range(self.bin_num)]).float()
+            z_[mask, i] = torch.tensor([- 2 + j/(self.bin_num-1)* 4 for j in range(self.bin_num)]).float()
 
             z.append(z_)
         z = torch.stack(z)
@@ -296,17 +298,22 @@ class VAEModule(pl.LightningModule):
         filepath = f"{self.logger_folder}/imgs"
         if not(os.path.isdir(filepath)):
             os.mkdir(filepath)
+
+        if self.is_tensor_dataset(self.params['dataset']):
+            recons_imgs = (recons.cpu().data>0.5).float()
+        else:
+            recons_imgs = recons.cpu().data
         
         if as_individual:
             if not(os.path.isdir(f"{filepath}/simu")):
                 os.mkdir(f"{filepath}/simu")
             img_idx = 0
-            for img in recons.cpu().data:
+            for img in recons_imgs:
                 q, mod = divmod(img_idx, self.bin_num)
                 vutils.save_image(img, f"{filepath}/simu/{q}_{mod}.png",)
                 img_idx += 1
         
-        vutils.save_image(recons.cpu().data,
+        vutils.save_image(recons_imgs,
                             f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png",
                             normalize=True,
                             nrow=self.bin_num)
