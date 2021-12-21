@@ -3,11 +3,10 @@ import styles from './Grid.module.css';
 import clsx from 'clsx';
 import { Card } from 'antd';
 
-import { getMax } from 'helpers';
+import { getMax, debounce } from 'helpers';
 import { stepNum } from 'Const';
 
 import { scaleLinear, scaleLog } from 'd3-scale';
-import { transform } from 'typescript';
 
 interface Props {
     filters: number[][];
@@ -19,9 +18,17 @@ interface Props {
 interface States {}
 
 export default class Grid extends React.Component<Props, States> {
+    constructor(props: Props) {
+        super(props);
+    }
     render() {
         const { filters, height, width } = this.props;
         const { hist } = this.props;
+
+        const onSetFilter = debounce(
+            (row_idx: number, col_idx: number) => this.props.setFilters(row_idx, col_idx),
+            200
+        );
 
         const rootStyle = getComputedStyle(document.documentElement);
         const cardPadding = parseInt(rootStyle.getPropertyValue('--card-body-padding')),
@@ -56,13 +63,20 @@ export default class Grid extends React.Component<Props, States> {
                                     row_idx * (barHeight + barLabelHeight + stepWidth + rowGap)
                                 })`}
                             >
-                                <text y={barHeight + barLabelHeight}> Dim_{row_idx} </text>
+                                <text
+                                    className="dim_annotation"
+                                    y={barHeight + barLabelHeight}
+                                    onClick={() => onSetFilter(row_idx, -1)}
+                                >
+                                    Dim_{row_idx}
+                                </text>
                                 {row.map((h, col_idx) => (
                                     <g
                                         key={`bar_${col_idx}`}
-                                        onClick={() => this.props.setFilters(row_idx, col_idx)}
+                                        onClick={() => onSetFilter(row_idx, col_idx)}
                                         transform={`translate(${spanWidth + (stepWidth + gap) * col_idx}, 0)`}
                                     >
+                                        {/* histogram */}
                                         <rect
                                             height={yScale(h)}
                                             width={stepWidth}
@@ -79,6 +93,7 @@ export default class Grid extends React.Component<Props, States> {
                                             {h}
                                         </text>
 
+                                        {/* thumbnails and their borders */}
                                         <image
                                             href={`assets/simu/${row_idx}_${col_idx}.png`}
                                             className="latentImage"

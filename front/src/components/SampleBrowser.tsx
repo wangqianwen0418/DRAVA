@@ -4,31 +4,32 @@ import sampleLabels from 'assets/sample_labels.json';
 
 import { Card } from 'antd';
 
-import styles from './SampleBrowser.module.css';
-
-import clsx from 'clsx';
+import { TResultRow } from 'types';
 
 interface Props {
-    sampleIdxs: number[];
+    samples: TResultRow[];
     height: number;
 }
 
 export default class SampleBrowser extends React.Component<Props, {}> {
     render() {
-        const { sampleIdxs, height } = this.props;
+        const { samples, height } = this.props;
 
         const rootStyle = getComputedStyle(document.documentElement),
             cardHeadHeight = parseInt(rootStyle.getPropertyValue('--card-head-height'));
         return (
-            <Card title="Samples" size="small" bodyStyle={{ overflowY: 'scroll', height: height - cardHeadHeight }}>
-                {sampleIdxs.map(sampleIdx => {
+            <Card
+                title={`Samples [${samples.length}]`}
+                size="small"
+                bodyStyle={{ overflowY: 'scroll', height: height - cardHeadHeight }}
+            >
+                {samples.slice(0, 20).map(sample => {
                     return (
                         <img
-                            src={`assets/sample_imgs/${sampleIdx}.png`}
-                            alt={`sample_${sampleIdx}`}
-                            key={sampleIdx}
+                            src={`assets/sample_imgs/${sample.id}.png`}
+                            alt={`sample_${sample.id}`}
+                            key={sample.id}
                             style={{ border: 'solid black 1px' }}
-                            title={`${sampleLabels[sampleIdx]} \n [${sampleVectors[sampleIdx].join(', ')}]`}
                         />
                     );
                 })}

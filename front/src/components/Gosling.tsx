@@ -1,26 +1,23 @@
 import { validateGoslingSpec, GoslingComponent, GoslingSpec } from 'gosling.js';
 import * as React from 'react';
 
-import sampleLabels from 'assets/sample_labels.json';
 import { Card } from 'antd';
+import { TResultRow } from 'types';
 
 interface Props {
-    sampleIdxs: number[];
+    samples: TResultRow[];
     width: number;
     height: number;
 }
 
 export const GoslingVis = (props: Props) => {
-    const labelJSON = sampleLabels
-        .filter((sample, idx) => props.sampleIdxs.includes(idx))
-        .map(sample => {
-            return {
-                Chromosome: `chr${sample[0]}`,
-                chromStart: sample[1],
-                chromEnd: sample[2]
-            };
-        });
-
+    const labelJSON = props.samples.map(sample => {
+        return {
+            Chromosome: `chr${sample.chr}`,
+            chromStart: sample.start,
+            chromEnd: sample.end
+        };
+    });
     const rootStyle = getComputedStyle(document.documentElement),
         cardPadding = parseInt(rootStyle.getPropertyValue('--card-body-padding')),
         cardHeadHeight = parseInt(rootStyle.getPropertyValue('--card-head-height'));

@@ -4,14 +4,15 @@ import { Row, Col, Layout, Menu, Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 
 import { stepNum } from 'Const';
-import { range } from 'helpers';
+import { getSampleHist, range, withinRange, getRange } from 'helpers';
 
 import Grid from 'components/Grid';
 import SampleBrowser from 'components/SampleBrowser';
 import { GoslingVis } from 'components/Gosling';
 
-import { requestHist } from 'dataService';
+import { queryResults } from 'dataService';
 import { MenuInfo } from 'rc-menu/lib/interface';
+import { TResultRow } from 'types';
 
 const { Header, Sider, Content } = Layout;
 const { SubMenu } = Menu;
@@ -37,7 +38,7 @@ const uploadProps = {
 interface State {
     dataset: string;
     filters: number[][];
-    hist: number[][];
+    samples: TResultRow[];
 }
 export default class App extends React.Component<{}, State> {
     constructor(prop: {}) {
@@ -45,18 +46,18 @@ export default class App extends React.Component<{}, State> {
         this.state = {
             dataset: 'sequence',
             filters: [],
-            hist: []
+            samples: []
         };
         this.setFilters = this.setFilters.bind(this);
     }
 
-    async onRequestHist() {
-        const hist = await requestHist();
-        const filters = range(hist.length).map(_ => range(stepNum));
-        this.setState({ filters, hist });
+    async onQueryResults(dataset: string) {
+        const samples = await queryResults(dataset);
+        const filters = range(samples[0]['z'].length).map(_ => range(stepNum));
+        this.setState({ filters, samples });
     }
     componentDidMount() {
-        this.onRequestHist();
+        this.onQueryResults(this.state.dataset);
     }
 
     setFilters(row: number, col: number) {
@@ -80,6 +81,17 @@ export default class App extends React.Component<{}, State> {
         }
         this.setState({ filters });
     }
+    // @compute
+    filterSamples(samples: TResultRow[], filters: number[][]) {
+        const filteredSamples = samples.filter(sample => {
+            const inRange = sample.z.every((dimensionValue, row_idx) => {
+                const ranges = filters[row_idx].map(i => getRange(i));
+                return withinRange(dimensionValue, ranges);
+            });
+            return inRange;
+        });
+        return filteredSamples;
+    }
 
     onClickMenu(e: MenuInfo) {
         this.setState({
@@ -88,11 +100,13 @@ export default class App extends React.Component<{}, State> {
     }
 
     render() {
-        const { filters, hist } = this.state;
+        const { filters, samples } = this.state;
         if (filters.length === 0) return null;
 
-        // const sampleIdxs = this.filterSamples()
-        const sampleIdxs = range(400);
+        const hist = getSampleHist(samples.map(sample => sample.z as number[]));
+
+        const filteredSamples = this.filterSamples(samples, filters);
+
         const siderWidth = 150,
             headerHeight = 0,
             contentPadding = 10,
@@ -127,8 +141,8 @@ export default class App extends React.Component<{}, State> {
                     <Content style={{ padding: contentPadding, backgroundColor: 'white' }}>
                         <Row gutter={gutter}>
                             <Col span={12}>
-                                <GoslingVis sampleIdxs={sampleIdxs} width={colWidth} height={appHeight * 0.5} />
-                                <SampleBrowser sampleIdxs={sampleIdxs} height={appHeight * 0.5} />
+                                <GoslingVis samples={filteredSamples} width={colWidth} height={appHeight * 0.5} />
+                                <SampleBrowser samples={filteredSamples} height={appHeight * 0.5} />
                             </Col>
 
                             <Col span={12}>
