@@ -1,2 +1,4 @@
-export const latentDim = 7
-export const stepNum = 11
+/***
+ * reltaed to the latent space layout
+ */
+export const stepNum = 20;

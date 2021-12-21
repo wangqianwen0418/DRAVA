@@ -1,11 +1,30 @@
-.App {
-  text-align: center;
-  padding: 10px;
+:root {
+    --card-color: lightgray;
+    --card-body-padding: 12px;
+    --card-head-height: 40;
+    --selected-color: orange;
 }
 
 .gosling-component {
-  margin: auto !important;
-  padding-top: 0px !important;
-  padding-bottom: 0px !important;
-  height: auto  !important;
+    margin: auto !important;
+    padding: 0px !important;
+    height: auto !important;
+    width: auto !important;
+}
+
+.ant-card-head {
+    /* background-color: rgb(143, 201, 255) !important; */
+    background-color: var(--card-color) !important;
+    color: white !important;
+    height: var(--card-head-height) !important;
+    font-size: 18px !important;
+    padding: 0 10px;
+}
+
+.ant-card-bordered {
+    border: 1px solid var(--card-color) !important;
+}
+
+.ant-card-body {
+    padding: var(--card-body-padding) !important;
 }

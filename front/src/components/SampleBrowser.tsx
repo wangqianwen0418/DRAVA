@@ -1,33 +1,39 @@
 import React from 'react';
-import sampleVectors from 'assets/samples_vector.json'
-import sampleLabels from 'assets/sample_labels.json'
+import sampleVectors from 'assets/samples_vector.json';
+import sampleLabels from 'assets/sample_labels.json';
 
-import styles from './SampleBrowser.module.css';
+import { Card } from 'antd';
 
-import clsx from 'clsx'
+import { TResultRow } from 'types';
 
 interface Props {
-    sampleIdxs: number[]
+    samples: TResultRow[];
+    height: number;
 }
 
+export default class SampleBrowser extends React.Component<Props, {}> {
+    render() {
+        const { samples, height } = this.props;
 
-
-export default class SampleBrowser extends React.Component <Props, {}> {
-    render(){
-        const {sampleIdxs} = this.props;
-        
-
-        return <div className={clsx(styles.sampleContainer, 'sampleBrowser' )}>
-            {sampleIdxs.map(sampleIdx=>{
-                return <img 
-                    src={`assets/sample_imgs/${sampleIdx}.png`} 
-                    alt={`sample_${sampleIdx}`} 
-                    key={sampleIdx}
-                    style={{border: 'solid black 1px'}}
-                    title={`${sampleLabels[sampleIdx]} \n [${sampleVectors[sampleIdx].join(', ')}]`}
-                    />
-            })}
-        </div>
+        const rootStyle = getComputedStyle(document.documentElement),
+            cardHeadHeight = parseInt(rootStyle.getPropertyValue('--card-head-height'));
+        return (
+            <Card
+                title={`Samples [${samples.length}]`}
+                size="small"
+                bodyStyle={{ overflowY: 'scroll', height: height - cardHeadHeight }}
+            >
+                {samples.slice(0, 20).map(sample => {
+                    return (
+                        <img
+                            src={`assets/sample_imgs/${sample.id}.png`}
+                            alt={`sample_${sample.id}`}
+                            key={sample.id}
+                            style={{ border: 'solid black 1px' }}
+                        />
+                    );
+                })}
+            </Card>
+        );
     }
-
 }
