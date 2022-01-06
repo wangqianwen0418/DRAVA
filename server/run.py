@@ -1,8 +1,9 @@
 import yaml
 import argparse
 import numpy as np
-import subprocess
-import pickle
+import shutil
+import os
+
 
 from models import *
 from experiment import VAEModule
@@ -46,10 +47,6 @@ np.random.seed(config['logging_params']['manual_seed'])
 cudnn.deterministic = True
 cudnn.benchmark = False
 
-# save config file for this experiment
-# with open('config.yml', 'w') as outfile:
-#             yaml.dump(config, outfile, default_flow_style=False)
-
 model = vae_models[config['model_params']['name']](**config['model_params'])
 myModule = VAEModule(model,config['exp_params'])
 
@@ -68,8 +65,7 @@ runner = Trainer(default_save_path=f"{tt_logger.save_dir}",
 
 # copy config file to the logger folder
 logger_path = f"{tt_logger.save_dir}{tt_logger.name}/version_{tt_logger.experiment.version}/"
-cmd = ["cp", args.filename, f"{logger_path}/config.yaml"]
-subprocess.run(cmd)
+shutil.copy(args.filename, os.path.join(logger_path, 'config.yaml'))
 
 print(f"======= Training {config['model_params']['name']} =======")
 runner.fit(myModule)
