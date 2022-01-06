@@ -5,10 +5,8 @@ import Papa from 'papaparse';
 import { TResultRow, TCSVResultRow } from 'types';
 
 export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
-    const url = '/assets/results_chr7_atac.csv';
-    if (dataset == 'sequence') {
-        // do some thing
-    }
+    const url = dataset == 'sequence' ? '/assets/results_chr7_atac.csv' : '/assets/results_chr1-5_onTad.csv';
+
     const response = await axios({
         method: 'get',
         url,
@@ -16,10 +14,14 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
     });
 
     const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
+    const resolution = dataset == 'sequence' ? 1 : 10000;
 
     const samples = pcsv.data.map((row, i) => {
         return {
             ...row,
+            chr: parseInt(row.chr as any),
+            start: parseInt(row.start as any) * resolution,
+            end: parseInt(row.end as any) * resolution,
             z: row['z'].split(',').map(d => parseFloat(d)),
             id: i.toString()
         };
