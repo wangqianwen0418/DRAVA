@@ -92,6 +92,10 @@ export const generateDistribution = (
   isCategorical: boolean,
   binNum: number | undefined
 ): { histogram: number[]; labels: string[] } => {
+  // no meaningful data
+  if (samples.length == 0) return { histogram: [], labels: [] };
+  if (samples[0] == undefined) return { histogram: [], labels: [] };
+  // meaningful data
   if (isCategorical) return countingCategories(samples);
   else return generateHistogram(samples as number[], binNum);
 };
@@ -128,10 +132,17 @@ const generateHistogram = (samples: number[], binNum: number = STEP_NUM): { hist
     }
   });
 
+  // to short num
+  const shortNum = (num: number): string => {
+    return num > 1000 ? `${Math.floor(num / 1000).toString()}k` : num.toFixed(3);
+  };
+
   return {
     histogram,
     labels: range(STEP_NUM).map(idx =>
-      [minV + (idx * (maxV - minV)) / STEP_NUM, minV + ((idx + 1) * (maxV - minV)) / STEP_NUM].join(', ')
+      [minV + (idx * (maxV - minV)) / STEP_NUM, minV + ((idx + 1) * (maxV - minV)) / STEP_NUM]
+        .map(d => shortNum(d))
+        .join('~')
     )
   };
 };

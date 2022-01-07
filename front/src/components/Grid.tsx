@@ -36,19 +36,9 @@ export default class Grid extends React.Component<Props, States> {
   render() {
     const { filters, height, width, dataset, samples } = this.props;
     const hist = getSampleHist(samples.map(sample => sample.z as number[]));
-    const sizeRow = generateDistribution(
-      samples.map(s => s.end - s.start),
-      false,
-      STEP_NUM
-    );
-
-    const levelRow = generateDistribution(
-      samples.map(s => s.level),
-      true,
-      undefined
-    );
 
     let { dims } = this.state;
+    // TO-DO, maybe resort is not a smart way
     dims = dims.sort((a, b) => {
       if (a.includes('dim') && b.includes('dim')) {
         return parseInt(a.replace('dim_', '')) - parseInt(b.replace('dim_', ''));
@@ -131,7 +121,20 @@ export default class Grid extends React.Component<Props, States> {
     };
 
     const getAdditionalRow = (dimName: string) => {
+      const sizeRow = generateDistribution(
+        samples.map(s => s.end - s.start),
+        false,
+        STEP_NUM
+      );
+
+      const levelRow = generateDistribution(
+        samples.map(s => s.level),
+        true,
+        undefined
+      );
+
       var row = dimName == 'size' ? sizeRow : levelRow;
+      console.info(row);
       return row['histogram'].map((h, col_idx) => {
         return (
           <g key={`bar_${col_idx}`} transform={`translate(${spanWidth + (stepWidth + gap) * col_idx}, 0)`}>
@@ -182,6 +185,7 @@ export default class Grid extends React.Component<Props, States> {
         <Option value="express">express</Option>
       </Select>
     );
+
     return (
       <Card
         title="Pattern Space"

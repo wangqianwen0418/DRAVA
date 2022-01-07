@@ -12,8 +12,10 @@ interface Props {
 }
 
 export const GoslingVis = (props: Props) => {
+  const CHR = props.dataset == 'sequence' ? 7 : 5;
   const labelJSON = props.samples
     .filter(sample => !sample.level || parseInt(sample.level) < 8) // only no level labels or labels whose level is less than 8
+    .filter(sample => sample.chr == CHR)
     .map(sample => {
       return {
         chromosome: `chr${sample.chr}`,
@@ -33,8 +35,7 @@ export const GoslingVis = (props: Props) => {
       values: labelJSON,
       type: 'json',
       chromosomeField: 'chromosome',
-      genomicFields: ['start', 'end'],
-      categories: ['1.0', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0']
+      genomicFields: ['start', 'end']
     },
     mark: 'rect',
     size: { value: 12 },
@@ -43,7 +44,7 @@ export const GoslingVis = (props: Props) => {
       field: 'start',
       type: 'genomic',
       axis: 'none',
-      domain: { chromosome: labelJSON[labelJSON.length - 1]?.chromosome }
+      domain: { chromosome: `chr${CHR}` }
     },
     xe: { field: 'end', type: 'genomic' },
     stroke: { value: 'steelblue' },
@@ -94,7 +95,7 @@ export const GoslingVis = (props: Props) => {
     x: {
       field: 'position',
       type: 'genomic',
-      domain: { chromosome: '7' },
+      domain: { chromosome: CHR.toString() },
       axis: 'bottom'
     },
     y: { field: 'peak', type: 'quantitative' },
