@@ -105,8 +105,6 @@ export default class App extends React.Component<{}, State> {
     const { filters, samples, dataset } = this.state;
     if (filters.length === 0) return null;
 
-    const hist = getSampleHist(samples.map(sample => sample.z as number[]));
-
     const filteredSamples = this.filterSamples(samples, filters);
 
     const siderWidth = 150,
@@ -160,7 +158,7 @@ export default class App extends React.Component<{}, State> {
                   filters={filters}
                   height={appHeight}
                   width={colWidth}
-                  hist={hist}
+                  samples={samples}
                 />
               </Col>
             </Row>

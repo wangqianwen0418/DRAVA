@@ -86,3 +86,52 @@ export const getSampleHist = (samples: number[][]): number[][] => {
   });
   return hist;
 };
+
+export const generateDistribution = (
+  samples: string[] | number[],
+  isCategorical: boolean,
+  binNum: number | undefined
+): { histogram: number[]; labels: string[] } => {
+  if (isCategorical) return countingCategories(samples);
+  else return generateHistogram(samples as number[], binNum);
+};
+
+const countingCategories = (samples: string[] | number[]): { histogram: number[]; labels: string[] } => {
+  var labels: string[] = [];
+  var histogram: number[] = [];
+  samples.forEach(sample => {
+    const idx = labels.indexOf(sample.toString());
+    if (idx == -1) {
+      labels.push(sample.toString());
+      histogram.push(1);
+    } else {
+      histogram[idx] += 1;
+    }
+  });
+  return { histogram, labels };
+};
+
+const generateHistogram = (samples: number[], binNum: number = STEP_NUM): { histogram: number[]; labels: string[] } => {
+  var labels: (string | number)[] = [];
+  var histogram: number[] = range(STEP_NUM, 0);
+
+  const minV = getMin(samples),
+    maxV = getMax(samples);
+  samples.forEach(sample => {
+    const idx = value2rangeIdx(sample, minV, maxV);
+    if (idx < 0) {
+      histogram[0] += 1;
+    } else if (idx < STEP_NUM) {
+      histogram[idx] += 1;
+    } else {
+      histogram[STEP_NUM - 1] += 1;
+    }
+  });
+
+  return {
+    histogram,
+    labels: range(STEP_NUM).map(idx =>
+      [minV + (idx * (maxV - minV)) / STEP_NUM, minV + ((idx + 1) * (maxV - minV)) / STEP_NUM].join(', ')
+    )
+  };
+};

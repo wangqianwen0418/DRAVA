@@ -13,12 +13,13 @@ interface Props {
 
 export const GoslingVis = (props: Props) => {
   const labelJSON = props.samples
-    // .filter(sample => !sample.level || sample.level == '3.0') // TO-DO, test using only level-3 or no level labels
+    .filter(sample => !sample.level || parseInt(sample.level) < 8) // only no level labels or labels whose level is less than 8
     .map(sample => {
       return {
         chromosome: `chr${sample.chr}`,
         chromStart: sample.start,
         chromEnd: sample.end,
+
         ...sample
       };
     });
@@ -33,7 +34,7 @@ export const GoslingVis = (props: Props) => {
       type: 'json',
       chromosomeField: 'chromosome',
       genomicFields: ['start', 'end'],
-      categories: ['1.0', '2.0', '3.0']
+      categories: ['1.0', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0']
     },
     mark: 'rect',
     size: { value: 12 },
@@ -42,17 +43,16 @@ export const GoslingVis = (props: Props) => {
       field: 'start',
       type: 'genomic',
       axis: 'none',
-      domain: { chromosome: labelJSON[labelJSON.length - 1].chromosome }
+      domain: { chromosome: labelJSON[labelJSON.length - 1]?.chromosome }
     },
     xe: { field: 'end', type: 'genomic' },
-    stroke: { value: 'orange' },
+    stroke: { value: 'steelblue' },
     strokeWidth: { value: 1 }
   };
 
   if (props.dataset == 'matrix') {
     labelTrack['row'] = { field: 'level', type: 'nominal', legend: false };
-    labelTrack['height'] = 12 * 6;
-    labelTrack['stroke'] = { value: 'white' };
+    labelTrack['height'] = 12 * 8;
   }
 
   const MatrixTrack = {
@@ -98,7 +98,7 @@ export const GoslingVis = (props: Props) => {
       axis: 'bottom'
     },
     y: { field: 'peak', type: 'quantitative' },
-    color: { value: 'black' },
+    color: { value: 'steelblue' },
     height: 40
   };
 
