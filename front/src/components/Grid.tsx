@@ -121,21 +121,45 @@ export default class Grid extends React.Component<Props, States> {
     };
 
     const getAdditionalRow = (dimName: string) => {
-      const sizeRow = generateDistribution(
-        samples.map(s => s.end - s.start),
-        false,
-        STEP_NUM
-      );
-
-      const levelRow = generateDistribution(
-        samples.map(s => s.level),
-        true,
-        undefined
-      );
-
-      var row = dimName == 'size' ? sizeRow : levelRow;
-      console.info(row);
-      return row['histogram'].map((h, col_idx) => {
+      let row: any = {};
+      if (dimName == 'size') {
+        row = generateDistribution(
+          samples.map(s => s.end - s.start),
+          false,
+          STEP_NUM
+        );
+      } else if (dimName == 'level') {
+        row = generateDistribution(
+          samples.map(s => s.level),
+          true,
+          undefined
+        );
+      } else if (dimName == 'score') {
+        row = generateDistribution(
+          samples.map(s => s.score),
+          false,
+          STEP_NUM
+        );
+      } else if (dimName == 'ctcfMean') {
+        row = generateDistribution(
+          samples.map(s => s.ctcf_mean),
+          false,
+          STEP_NUM
+        );
+      } else if (dimName == 'ctcfRight') {
+        row = generateDistribution(
+          samples.map(s => s.ctcf_right),
+          false,
+          STEP_NUM
+        );
+      } else if (dimName == 'ctcfLeft') {
+        row = generateDistribution(
+          samples.map(s => s.ctcf_left),
+          false,
+          STEP_NUM
+        );
+      }
+      return row['histogram'].map((h: number, col_idx: number) => {
         return (
           <g key={`bar_${col_idx}`} transform={`translate(${spanWidth + (stepWidth + gap) * col_idx}, 0)`}>
             {/* histogram */}
@@ -172,17 +196,30 @@ export default class Grid extends React.Component<Props, States> {
         value={this.state.dims}
         onChange={this.onChangeDim.bind(this)}
       >
+        {/* options about the latent dimensions */}
         {hist.map((hist, idx) => (
           <Option key={idx} value={`dim_${idx}`}>
             {' '}
             {`dim_${idx}`}{' '}
           </Option>
         ))}
-        <Option value="level">level</Option>
-        <Option value="size">size</Option>
-        <Option value="CTCF">CTCF</Option>
-        <Option value="active">active</Option>
-        <Option value="express">express</Option>
+        {/* options about the user added metrics */}
+        {this.props.dataset == 'sequence' ? (
+          <>
+            <Option value="size">size</Option>
+          </>
+        ) : (
+          <>
+            <Option value="level">level</Option>
+            <Option value="size">size</Option>
+            <Option value="score">score</Option>
+            <Option value="ctcfMean">CTCF mean</Option>
+            <Option value="ctcfLeft">CTCF left</Option>
+            <Option value="ctcfRight">CTCF right</Option>
+            <Option value="active">active</Option>
+            <Option value="express">express</Option>
+          </>
+        )}
       </Select>
     );
 

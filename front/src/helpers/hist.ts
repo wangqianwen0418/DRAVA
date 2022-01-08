@@ -116,8 +116,10 @@ const countingCategories = (samples: string[] | number[]): { histogram: number[]
 };
 
 const generateHistogram = (samples: number[], binNum: number = STEP_NUM): { histogram: number[]; labels: string[] } => {
-  var labels: (string | number)[] = [];
   var histogram: number[] = range(STEP_NUM, 0);
+
+  // in case the csv parse got bugs sometimes
+  samples = samples.map(d => parseFloat(d as any));
 
   const minV = getMin(samples),
     maxV = getMax(samples);
