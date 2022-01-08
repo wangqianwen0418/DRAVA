@@ -54,17 +54,18 @@ export default class Grid extends React.Component<Props, States> {
     const spanWidth = 80, // width used for left-side dimension annotation
       barHeight = 30, // height of bar chart
       gap = 3, //horizontal gap between thumbnails
-      stepWidth = (width - 2 * cardPadding - spanWidth) / STEP_NUM - gap,
       barLabelHeight = 14,
       rowGap = 10; // vertical gap between rows
 
-    const cardInnerHeight = hist.length * (barHeight + stepWidth + barHeight + rowGap);
+    const cardInnerHeight = dims.length * (barHeight + 2 * barHeight + rowGap);
 
     const maxV = getMax(hist.flat());
     const yScale = scaleLog().domain([0.1, maxV]).range([0, barHeight]);
     const isSelected = (dimNum: number, col_idx: number) => filters[dimNum].includes(col_idx);
 
     const getRow = (row: number[], row_idx: number) => {
+      const stepWidth = (width - 2 * cardPadding - spanWidth) / STEP_NUM - gap;
+      const imgSize = Math.min(stepWidth, barHeight);
       return row.map((h, col_idx) => {
         const image = (
           <g>
@@ -77,15 +78,15 @@ export default class Grid extends React.Component<Props, States> {
               className="latentImage"
               x={gap / 2}
               y={barHeight + barLabelHeight + gap + gap / 2}
-              width={stepWidth}
-              height={stepWidth}
+              width={imgSize}
+              height={imgSize}
             />
             <rect
               className={clsx(styles.imageBorder, isSelected(row_idx, col_idx) && styles.isImageSelected)}
               y={barHeight + barLabelHeight + gap}
               fill="none"
-              width={stepWidth + gap}
-              height={stepWidth + gap}
+              width={imgSize + gap}
+              height={imgSize + gap}
             />
           </g>
         );
@@ -122,43 +123,27 @@ export default class Grid extends React.Component<Props, States> {
 
     const getAdditionalRow = (dimName: string) => {
       let row: any = {};
+      const binNum = 11;
       if (dimName == 'size') {
         row = generateDistribution(
           samples.map(s => s.end - s.start),
           false,
-          STEP_NUM
+          binNum
         );
       } else if (dimName == 'level') {
         row = generateDistribution(
-          samples.map(s => s.level),
+          samples.map(s => s['level']),
           true,
           undefined
         );
-      } else if (dimName == 'score') {
+      } else {
         row = generateDistribution(
-          samples.map(s => s.score),
+          samples.map(s => s[dimName]),
           false,
-          STEP_NUM
-        );
-      } else if (dimName == 'ctcfMean') {
-        row = generateDistribution(
-          samples.map(s => s.ctcf_mean),
-          false,
-          STEP_NUM
-        );
-      } else if (dimName == 'ctcfRight') {
-        row = generateDistribution(
-          samples.map(s => s.ctcf_right),
-          false,
-          STEP_NUM
-        );
-      } else if (dimName == 'ctcfLeft') {
-        row = generateDistribution(
-          samples.map(s => s.ctcf_left),
-          false,
-          STEP_NUM
+          binNum
         );
       }
+      const stepWidth = (width - 2 * cardPadding - spanWidth) / binNum - gap;
       return row['histogram'].map((h: number, col_idx: number) => {
         return (
           <g key={`bar_${col_idx}`} transform={`translate(${spanWidth + (stepWidth + gap) * col_idx}, 0)`}>
@@ -213,9 +198,12 @@ export default class Grid extends React.Component<Props, States> {
             <Option value="level">level</Option>
             <Option value="size">size</Option>
             <Option value="score">score</Option>
-            <Option value="ctcfMean">CTCF mean</Option>
-            <Option value="ctcfLeft">CTCF left</Option>
-            <Option value="ctcfRight">CTCF right</Option>
+            <Option value="ctcf_mean">CTCF mean</Option>
+            <Option value="ctcf_left">CTCF left</Option>
+            <Option value="ctcf_right">CTCF right</Option>
+            <Option value="atac_mean">ATAC mean</Option>
+            <Option value="atac_left">ATAC left</Option>
+            <Option value="atac_right">ATAC right</Option>
             <Option value="active">active</Option>
             <Option value="express">express</Option>
           </>
@@ -235,10 +223,7 @@ export default class Grid extends React.Component<Props, States> {
           {dims.map((dimName, row_idx) => {
             const dimNum = parseInt(dimName.split('_')[1]);
             return (
-              <g
-                key={dimName}
-                transform={`translate(0, ${row_idx * (barHeight + barLabelHeight + stepWidth + rowGap)})`}
-              >
+              <g key={dimName} transform={`translate(0, ${row_idx * (barHeight * 2 + barLabelHeight + rowGap)})`}>
                 <text className="dim_annotation" y={barHeight + barLabelHeight} onClick={() => onSetFilter(dimNum, -1)}>
                   {dimName}
                 </text>

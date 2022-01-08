@@ -127,8 +127,8 @@ export default class App extends React.Component<{}, State> {
           onClick={this.onClickMenu.bind(this)}
         >
           <SubMenu key="dataset" title="Dataset">
-            <Menu.Item key="sequence">ATAC</Menu.Item>
-            <Menu.Item key="matrix">Hi-C</Menu.Item>
+            <Menu.Item key="sequence">Sequence</Menu.Item>
+            <Menu.Item key="matrix">Matrix</Menu.Item>
             <Menu.Item key="upload">
               <Upload {...uploadProps}>
                 <UploadOutlined style={{ color: 'rgba(255, 255, 255, 0.65)' }} />
