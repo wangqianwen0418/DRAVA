@@ -3,6 +3,7 @@ import * as React from 'react';
 
 import { Card } from 'antd';
 import { TResultRow } from 'types';
+import { whatCHR } from 'dataService';
 
 interface Props {
   samples: TResultRow[];
@@ -12,7 +13,7 @@ interface Props {
 }
 
 export const GoslingVis = (props: Props) => {
-  const CHR = props.dataset == 'sequence' ? 7 : 5;
+  const CHR = whatCHR(props.dataset);
   const labelJSON = props.samples
     .filter(sample => !sample.level || parseInt(sample.level) < 8) // only no level labels or labels whose level is less than 8
     .filter(sample => sample.chr == CHR)

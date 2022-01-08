@@ -1,4 +1,5 @@
 import { STEP_NUM, RANGE_MAX, RANGE_MIN } from 'Const';
+import { TDistribution } from 'types';
 
 /**
  * similar to the python range function
@@ -60,78 +61,84 @@ const value2rangeIdx = (v: number, min: number, max: number): number => {
   const step = (max - min) / STEP_NUM;
   return Math.floor((v - min) / step);
 };
-
 /**
  * @param samples
  * @returns historgram of each dimension
  */
-export const getSampleHist = (samples: number[][]): number[][] => {
+export const getSampleHist = (samples: number[][]): TDistribution[] => {
   const latentDim = samples[0].length;
-  const hist = range(latentDim).map(_ => range(STEP_NUM, 0));
-
-  // const allNums = samples.flat()
-  // const rangeMin = getMin(allNums), rangeMax = getMax(allNums)
-
-  samples.forEach(sample => {
-    sample.forEach((dimensionValue, dimIdx) => {
-      const idx = value2rangeIdx(dimensionValue, RANGE_MIN, RANGE_MAX);
-      if (idx < 0) {
-        hist[dimIdx][0] += 1;
-      } else if (idx < STEP_NUM) {
-        hist[dimIdx][idx] += 1;
-      } else {
-        hist[dimIdx][STEP_NUM - 1] += 1;
-      }
-    });
+  var results = range(latentDim).map(i => {
+    const sampleValues = samples.map(sample => sample[i]);
+    return generateDistribution(sampleValues, false, STEP_NUM, [RANGE_MIN, RANGE_MAX]);
   });
-  return hist;
+  return results;
 };
 
 export const generateDistribution = (
   samples: string[] | number[],
   isCategorical: boolean,
-  binNum: number | undefined
-): { histogram: number[]; labels: string[] } => {
+  binNum?: number,
+  valueRange?: number[], // users can specify a range to draw the histogram
+  sampleIds?: string[]
+): TDistribution => {
   // no meaningful data
-  if (samples.length == 0) return { histogram: [], labels: [] };
-  if (samples[0] == undefined) return { histogram: [], labels: [] };
+  if (samples.length == 0) return { histogram: [], labels: [], groupedSamples: [] };
+  if (samples[0] == undefined) return { histogram: [], labels: [], groupedSamples: [] };
+
+  if (!sampleIds) {
+    sampleIds = samples.map((d, idx) => idx.toString());
+  }
+
   // meaningful data
-  if (isCategorical) return countingCategories(samples);
-  else return generateHistogram(samples as number[], binNum);
+  if (isCategorical) return countingCategories(samples, sampleIds);
+  else return generateHistogram(samples as number[], binNum, sampleIds, valueRange);
 };
 
-const countingCategories = (samples: string[] | number[]): { histogram: number[]; labels: string[] } => {
+const countingCategories = (samples: string[] | number[], sampleIds: string[]): TDistribution => {
   var labels: string[] = [];
   var histogram: number[] = [];
-  samples.forEach(sample => {
+  var groupedSamples: string[][] = [];
+  samples.forEach((sample, sampleIdx) => {
     const idx = labels.indexOf(sample.toString());
     if (idx == -1) {
       labels.push(sample.toString());
       histogram.push(1);
+      groupedSamples.push([sampleIds[sampleIdx]]);
     } else {
       histogram[idx] += 1;
+      groupedSamples[idx].push(sampleIds[sampleIdx]);
     }
   });
-  return { histogram, labels };
+  return { histogram, labels, groupedSamples };
 };
 
-const generateHistogram = (samples: number[], binNum: number = STEP_NUM): { histogram: number[]; labels: string[] } => {
+const generateHistogram = (
+  samples: number[],
+  binNum: number = STEP_NUM,
+  sampleIds: string[],
+  valueRange?: number[]
+): TDistribution => {
   var histogram: number[] = range(STEP_NUM, 0);
+  var groupedSamples: string[][] = range(STEP_NUM).map(_ => []);
 
-  // in case the csv parse got bugs sometimes
+  // in case the csv parser process number to string
   samples = samples.map(d => parseFloat(d as any));
 
-  const minV = getMin(samples),
+  var [minV, maxV] = valueRange || [0, 0];
+  if (!valueRange) {
+    minV = getMin(samples);
     maxV = getMax(samples);
-  samples.forEach(sample => {
-    const idx = value2rangeIdx(sample, minV, maxV);
+  }
+
+  samples.forEach((sample, sampleIdx) => {
+    var idx = value2rangeIdx(sample, minV, maxV);
     if (idx < 0) {
-      histogram[0] += 1;
-    } else if (idx < STEP_NUM) {
-      histogram[idx] += 1;
-    } else {
-      histogram[STEP_NUM - 1] += 1;
+      idx = 0;
+    } else if (idx >= STEP_NUM) {
+      idx = STEP_NUM - 1;
     }
+    histogram[idx] += 1;
+    groupedSamples[idx].push(sampleIds[sampleIdx]);
   });
 
   // to short num
@@ -141,6 +148,7 @@ const generateHistogram = (samples: number[], binNum: number = STEP_NUM): { hist
 
   return {
     histogram,
+    groupedSamples,
     labels: range(STEP_NUM).map(idx =>
       [minV + (idx * (maxV - minV)) / STEP_NUM, minV + ((idx + 1) * (maxV - minV)) / STEP_NUM]
         .map(d => shortNum(d))
