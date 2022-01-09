@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import styles from './Grid.module.css';
 import clsx from 'clsx';
 import { Card, Select } from 'antd';
@@ -7,14 +7,14 @@ import { getMax, debounce, getSampleHist, generateDistribution } from 'helpers';
 import { STEP_NUM } from 'Const';
 
 import { scaleLinear, scaleLog, ScaleLogarithmic } from 'd3-scale';
-import { TDistribution, TResultRow } from 'types';
+import { TDistribution, TResultRow, TFilter } from 'types';
 
 const { Option } = Select;
 
 interface Props {
-  filters: number[][];
+  filters: TFilter;
   dataset: string;
-  setFilters: (row: number, col: number) => void;
+  setFilters: (dimName: string, col: number) => void;
   samples: TResultRow[];
   height: number;
   width: number;
@@ -29,7 +29,6 @@ export default class Grid extends React.Component<Props, States> {
   gap = 3; //horizontal gap between thumbnails
   barLabelHeight = 14;
   rowGap = 10; // vertical gap between rows
-  binNum = 11;
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -55,7 +54,7 @@ export default class Grid extends React.Component<Props, States> {
         row = generateDistribution(
           samples.map(s => s.end - s.start),
           false,
-          this.binNum
+          STEP_NUM
         );
       } else if (dimName == 'level') {
         row = generateDistribution(
@@ -66,27 +65,28 @@ export default class Grid extends React.Component<Props, States> {
         row = generateDistribution(
           samples.map(s => s[dimName]),
           false,
-          this.binNum
+          STEP_NUM
         );
       }
       matrixData[dimName] = row;
     });
     return matrixData;
   }
-  isSelected(dimNum: number, col_idx: number) {
-    return this.props.filters[dimNum].includes(col_idx);
+  isSelected(dimName: string, col_idx: number) {
+    return this.props.filters[dimName].includes(col_idx);
   }
   // @drawing
-  getRow(row: TDistribution, dim_idx: number, stepWidth: number, yScale: any) {
+  getRow(row: TDistribution, dimName: string, stepWidth: number, yScale: any) {
     const imgSize = Math.min(stepWidth, this.barHeight);
+    const dimNum = dimName.split('_')[1];
     return row['histogram'].map((h, col_idx) => {
       const image = (
         <g>
           <image
             href={
               this.props.dataset == 'sequence'
-                ? `assets/simu/${dim_idx}_${Math.floor(col_idx / 2)}.png`
-                : `assets/tad_simu/${dim_idx}_${Math.floor(col_idx / 2)}.png`
+                ? `assets/simu/${dimNum}_${Math.floor(col_idx / 2)}.png`
+                : `assets/tad_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`
             }
             className="latentImage"
             x={this.gap / 2}
@@ -95,7 +95,7 @@ export default class Grid extends React.Component<Props, States> {
             height={imgSize}
           />
           <rect
-            className={clsx(styles.imageBorder, this.isSelected(dim_idx, col_idx) && styles.isImageSelected)}
+            className={clsx(styles.imageBorder, this.isSelected(dimName, col_idx) && styles.isImageSelected)}
             y={this.barHeight + this.barLabelHeight + this.gap}
             fill="none"
             width={imgSize + this.gap}
@@ -124,7 +124,7 @@ export default class Grid extends React.Component<Props, States> {
             width={stepWidth}
             y={this.barHeight + this.barLabelHeight - yScale(h)!}
             fill="lightgray"
-            className={clsx(this.isSelected(dim_idx, col_idx) && styles.isBarSelected)}
+            className={clsx(this.isSelected(dimName, col_idx) && styles.isBarSelected)}
           />
 
           {/* thumbnails and their borders */}
@@ -160,15 +160,57 @@ export default class Grid extends React.Component<Props, States> {
             //   className={clsx(isSelected(row_idx, col_idx) && styles.isBarSelected)}
           />
           <text x={(stepWidth + gap) * 0.5} y={barHeight + barLabelHeight * 2} fontSize={8} textAnchor="middle">
-            {row['labels'][col_idx]}
+            {col_idx % 4 == 0 ? row['labels'][col_idx] : ''}
           </text>
         </g>
       );
     });
   }
   // @drawing
-  getLinks(matrixData: { [k: string]: TDistribution }) {
-    return <g className="links"></g>;
+  getLinks(matrixData: { [k: string]: TDistribution }, stepWidth: number) {
+    const { dims } = this.state;
+    const linkGroups: ReactNode[] = [];
+
+    for (let i = 0; i < dims.length - 1; i++) {
+      const links: ReactNode[] = [];
+      const prevRow = matrixData[dims[i]],
+        nextRow = matrixData[dims[i + 1]];
+
+      prevRow['groupedSamples'].forEach((prevSampleIds, prevIdx) => {
+        nextRow['groupedSamples'].forEach((nextSampleIds, nextIdx) => {
+          const insectSampleIds = prevSampleIds.filter(sampleId => nextSampleIds.includes(sampleId)),
+            prevX = this.spanWidth + prevIdx * (stepWidth + this.gap) + stepWidth / 2,
+            prevY = i * (this.barHeight * 2 + this.barLabelHeight + this.rowGap) + this.barHeight + this.barLabelHeight,
+            nextX = this.spanWidth + nextIdx * (stepWidth + this.gap) + stepWidth / 2,
+            nextY = prevY + (this.barHeight * 2 + this.barLabelHeight + this.rowGap);
+
+          const link = (
+            <line
+              x1={prevX}
+              y1={prevY}
+              x2={nextX}
+              y2={nextY}
+              stroke="steelblue"
+              strokeWidth={1}
+              opacity={
+                insectSampleIds.length / prevSampleIds.length > 0.1 ||
+                insectSampleIds.length / nextSampleIds.length > 0.1
+                  ? 0.3
+                  : 0
+              }
+              key={`${prevIdx}_${nextIdx}`}
+            />
+          );
+          links.push(link);
+        });
+      });
+      linkGroups.push(
+        <g key={i} className={`row_${i}`}>
+          {links}
+        </g>
+      );
+    }
+    return <g className="links">{linkGroups}</g>;
   }
   onChangeDim(dimNames: string[]) {
     this.setState({ dims: dimNames });
@@ -188,7 +230,7 @@ export default class Grid extends React.Component<Props, States> {
 
     const matrixData = this.matrixData();
 
-    const onSetFilter = debounce((row_idx: number, col_idx: number) => this.props.setFilters(row_idx, col_idx), 200);
+    const onSetFilter = debounce((dimName: string, col_idx: number) => this.props.setFilters(dimName, col_idx), 200);
 
     const rootStyle = getComputedStyle(document.documentElement);
     const cardPadding = parseInt(rootStyle.getPropertyValue('--card-body-padding')),
@@ -239,6 +281,8 @@ export default class Grid extends React.Component<Props, States> {
       </Select>
     );
 
+    const stepWidth = (width - 2 * cardPadding - this.spanWidth) / STEP_NUM - this.gap;
+
     return (
       <Card
         title="Pattern Space"
@@ -251,8 +295,7 @@ export default class Grid extends React.Component<Props, States> {
           {/* get rows */}
           {dims.map((dimName, row_idx) => {
             const dimNum = parseInt(dimName.split('_')[1]);
-            const binNum = dimName.includes('dim') ? STEP_NUM : this.binNum;
-            const stepWidth = (width - 2 * cardPadding - this.spanWidth) / binNum - this.gap;
+
             return (
               <g
                 key={dimName}
@@ -261,19 +304,19 @@ export default class Grid extends React.Component<Props, States> {
                 <text
                   className="dim_annotation"
                   y={this.barHeight + this.barLabelHeight}
-                  onClick={() => onSetFilter(dimNum, -1)}
+                  onClick={() => onSetFilter(dimName, -1)}
                 >
                   {dimName}
                 </text>
 
                 {/* get each cell of a row */}
                 {dimName.includes('dim_')
-                  ? this.getRow(matrixData[dimName], dimNum, stepWidth, yScale)
+                  ? this.getRow(matrixData[dimName], dimName, stepWidth, yScale)
                   : this.getAdditionalRow(matrixData[dimName], stepWidth, yScale)}
               </g>
             );
           })}
-          <g className="links">{this.getLinks(matrixData)}</g>
+          <g className="links">{this.getLinks(matrixData, stepWidth)}</g>
         </svg>
       </Card>
     );

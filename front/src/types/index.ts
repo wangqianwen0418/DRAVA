@@ -20,3 +20,10 @@ export type TDistribution = {
   groupedSamples: string[][]; // sample id grouped
   labels: string[]; // name of each group
 };
+
+export type TFilter = { [dimName: string]: number[] };
+interface State {
+  dataset: string;
+  filters: TFilter;
+  samples: TResultRow[];
+}

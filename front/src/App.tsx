@@ -12,7 +12,7 @@ import { GoslingVis } from 'components/Gosling';
 
 import { queryResults } from 'dataService';
 import { MenuInfo } from 'rc-menu/lib/interface';
-import { TResultRow } from 'types';
+import { TResultRow, TFilter } from 'types';
 
 const { Header, Sider, Content } = Layout;
 const { SubMenu } = Menu;
@@ -37,7 +37,7 @@ const uploadProps = {
 
 interface State {
   dataset: string;
-  filters: number[][];
+  filters: TFilter;
   samples: TResultRow[];
 }
 export default class App extends React.Component<{}, State> {
@@ -45,7 +45,7 @@ export default class App extends React.Component<{}, State> {
     super(prop);
     this.state = {
       dataset: 'matrix',
-      filters: [],
+      filters: {},
       samples: []
     };
     this.setFilters = this.setFilters.bind(this);
@@ -53,39 +53,42 @@ export default class App extends React.Component<{}, State> {
 
   async onQueryResults(dataset: string) {
     const samples = await queryResults(dataset);
-    const filters = range(samples[0]['z'].length).map(_ => range(STEP_NUM));
+    const filters: TFilter = {};
+    range(samples[0]['z'].length).forEach(dimNum => {
+      filters[`dim_${dimNum}`] = range(STEP_NUM);
+    });
     this.setState({ filters, samples });
   }
   componentDidMount() {
     this.onQueryResults(this.state.dataset);
   }
 
-  setFilters(row: number, col: number) {
+  setFilters(dimName: string, col: number) {
     const { filters } = this.state;
 
     if (col === -1) {
       // set filters for the whole row
-      if (filters[row].length > 0) {
-        filters[row] = [];
+      if (filters[dimName].length > 0) {
+        filters[dimName] = [];
       } else {
-        filters[row] = range(STEP_NUM);
+        filters[dimName] = range(STEP_NUM);
       }
     } else {
       // set filters for single grids
-      const idx = filters[row].indexOf(col);
+      const idx = filters[dimName].indexOf(col);
       if (idx === -1) {
-        filters[row].push(col);
+        filters[dimName].push(col);
       } else {
-        filters[row].splice(idx, 1);
+        filters[dimName].splice(idx, 1);
       }
     }
     this.setState({ filters });
   }
   // @compute
-  filterSamples(samples: TResultRow[], filters: number[][]) {
+  filterSamples(samples: TResultRow[], filters: TFilter) {
     const filteredSamples = samples.filter(sample => {
       const inRange = sample.z.every((dimensionValue, row_idx) => {
-        const ranges = filters[row_idx].map(i => getRange(i));
+        const ranges = filters[`dim_${row_idx}`].map(i => getRange(i));
         return withinRange(dimensionValue, ranges);
       });
       return inRange;
@@ -103,7 +106,7 @@ export default class App extends React.Component<{}, State> {
 
   render() {
     const { filters, samples, dataset } = this.state;
-    if (filters.length === 0) return null;
+    if (samples.length == 0) return null;
 
     const filteredSamples = this.filterSamples(samples, filters);
 
@@ -138,6 +141,7 @@ export default class App extends React.Component<{}, State> {
         </Menu>
       </Sider>
     );
+    console.info(samples);
 
     return (
       <Layout className="App">
