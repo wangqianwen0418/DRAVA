@@ -14,13 +14,15 @@ const { Option } = Select;
 interface Props {
   filters: TFilter;
   dataset: string;
-  setFilters: (dimName: string, col: number) => void;
   samples: TResultRow[];
+  matrixData: { [dimName: string]: TDistribution };
   height: number;
   width: number;
+  setFilters: (dimName: string, col: number) => void;
+  updateDims: (dimNames: string[]) => void;
 }
 interface States {
-  dims: string[]; // dimensions in the latent space
+  // dims: string[]; // dimensions in the latent space
 }
 
 export default class Grid extends React.Component<Props, States> {
@@ -35,48 +37,19 @@ export default class Grid extends React.Component<Props, States> {
       dims: props.samples[0].z.map((dim, dim_idx) => `dim_${dim_idx}`)
     };
   }
-  // @compute
-  matrixData(): { [dimName: string]: TDistribution } {
-    const { dims } = this.state;
-    const { samples } = this.props;
 
-    var matrixData: { [k: string]: TDistribution } = {},
-      row: TDistribution = { histogram: [], labels: [], groupedSamples: [] };
-    dims.forEach((dimName, idx) => {
-      if (dimName.includes('dim')) {
-        const dimNum = parseInt(dimName.split('_')[1]);
-        row = generateDistribution(
-          samples.map(sample => sample['z'][dimNum]),
-          false,
-          STEP_NUM
-        );
-      } else if (dimName == 'size') {
-        row = generateDistribution(
-          samples.map(s => s.end - s.start),
-          false,
-          STEP_NUM
-        );
-      } else if (dimName == 'level') {
-        row = generateDistribution(
-          samples.map(s => s['level']),
-          true
-        );
-      } else {
-        row = generateDistribution(
-          samples.map(s => s[dimName]),
-          false,
-          STEP_NUM
-        );
-      }
-      matrixData[dimName] = row;
-    });
-    return matrixData;
-  }
-  isSelected(dimName: string, col_idx: number) {
+  // @compute
+  isSelected(dimName: string, col_idx: number): boolean {
     return this.props.filters[dimName].includes(col_idx);
   }
   // @drawing
-  getRow(row: TDistribution, dimName: string, stepWidth: number, yScale: any) {
+  getRow(
+    row: TDistribution,
+    dimName: string,
+    stepWidth: number,
+    yScale: any,
+    onSetFilter: (dimName: string, col_idx: number) => void
+  ): ReactNode {
     const imgSize = Math.min(stepWidth, this.barHeight);
     const dimNum = dimName.split('_')[1];
     return row['histogram'].map((h, col_idx) => {
@@ -107,7 +80,7 @@ export default class Grid extends React.Component<Props, States> {
       return (
         <g
           key={`bar_${col_idx}`}
-          // onClick={() => this.onSetFilter(row_idx, col_idx)}
+          onClick={() => onSetFilter(dimName, col_idx)}
           transform={`translate(${this.spanWidth + (stepWidth + this.gap) * col_idx}, 0)`}
         >
           {/* histogram */}
@@ -134,7 +107,13 @@ export default class Grid extends React.Component<Props, States> {
     });
   }
   // @drawing
-  getAdditionalRow(row: TDistribution, stepWidth: number, yScale: any) {
+  getAdditionalRow(
+    row: TDistribution,
+    dimName: string,
+    stepWidth: number,
+    yScale: any,
+    onSetFilter: (dimName: string, col_idx: number) => void
+  ): ReactNode {
     // const stepWidth = (width - 2 * cardPadding - spanWidth) / binNum - gap;
     const gap = this.gap,
       barHeight = this.barHeight,
@@ -142,7 +121,11 @@ export default class Grid extends React.Component<Props, States> {
       spanWidth = this.spanWidth;
     return row['histogram'].map((h: number, col_idx: number) => {
       return (
-        <g key={`bar_${col_idx}`} transform={`translate(${spanWidth + (stepWidth + gap) * col_idx}, 0)`}>
+        <g
+          key={`bar_${col_idx}`}
+          transform={`translate(${spanWidth + (stepWidth + gap) * col_idx}, 0)`}
+          onClick={() => onSetFilter(dimName, col_idx)}
+        >
           {/* histogram */}
           <text
             x={(stepWidth + gap) * 0.5}
@@ -157,7 +140,7 @@ export default class Grid extends React.Component<Props, States> {
             width={stepWidth}
             y={barHeight + barLabelHeight - yScale(h)!}
             fill="lightgray"
-            //   className={clsx(isSelected(row_idx, col_idx) && styles.isBarSelected)}
+            className={clsx(this.isSelected(dimName, col_idx) && styles.isBarSelected)}
           />
           <text x={(stepWidth + gap) * 0.5} y={barHeight + barLabelHeight * 2} fontSize={8} textAnchor="middle">
             {col_idx % 4 == 0 ? row['labels'][col_idx] : ''}
@@ -168,7 +151,8 @@ export default class Grid extends React.Component<Props, States> {
   }
   // @drawing
   getLinks(matrixData: { [k: string]: TDistribution }, stepWidth: number) {
-    const { dims } = this.state;
+    const { filters } = this.props,
+      dims = Object.keys(filters);
     const linkGroups: ReactNode[] = [];
 
     for (let i = 0; i < dims.length - 1; i++) {
@@ -212,23 +196,22 @@ export default class Grid extends React.Component<Props, States> {
     }
     return <g className="links">{linkGroups}</g>;
   }
+  // call props functions
   onChangeDim(dimNames: string[]) {
-    this.setState({ dims: dimNames });
+    this.props.updateDims(dimNames);
   }
 
   render() {
-    const { filters, height, width, dataset, samples } = this.props;
+    const { filters, height, width, dataset, samples, matrixData } = this.props;
     const hist = getSampleHist(samples.map(sample => sample.z as number[]));
 
-    const { dims } = this.state;
+    const dims = Object.keys(filters);
     // // TO-DO, maybe resort is not a smart way
     // dims = dims.sort((a, b) => {
     //   if (a.includes('dim') && b.includes('dim')) {
     //     return parseInt(a.replace('dim_', '')) - parseInt(b.replace('dim_', ''));
     //   } else return a.includes('dim') ? -1 : 1;
     // });
-
-    const matrixData = this.matrixData();
 
     const onSetFilter = debounce((dimName: string, col_idx: number) => this.props.setFilters(dimName, col_idx), 200);
 
@@ -248,7 +231,7 @@ export default class Grid extends React.Component<Props, States> {
         allowClear
         placeholder="Add more dimensions"
         style={{ width: '350px', height: '30px', overflowY: 'scroll' }}
-        value={this.state.dims}
+        value={dims}
         onChange={this.onChangeDim.bind(this)}
       >
         {/* options about the latent dimensions */}
@@ -311,8 +294,8 @@ export default class Grid extends React.Component<Props, States> {
 
                 {/* get each cell of a row */}
                 {dimName.includes('dim_')
-                  ? this.getRow(matrixData[dimName], dimName, stepWidth, yScale)
-                  : this.getAdditionalRow(matrixData[dimName], stepWidth, yScale)}
+                  ? this.getRow(matrixData[dimName], dimName, stepWidth, yScale, onSetFilter)
+                  : this.getAdditionalRow(matrixData[dimName], dimName, stepWidth, yScale, onSetFilter)}
               </g>
             );
           })}
