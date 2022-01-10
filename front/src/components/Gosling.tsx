@@ -131,7 +131,7 @@ export const GoslingVis = (props: Props) => {
     title: '',
     width: props.width - cardPadding * 2,
     height: props.height - cardPadding * 2 - cardHeadHeight - 24, // gosling vis axis: 24px
-    tracks: [props.dataset == 'sequence' ? PeakTrack : MatrixTrack, CTCFTrack, labelTrack]
+    tracks: [...(props.dataset == 'sequence' ? [PeakTrack] : [MatrixTrack, CTCFTrack]), labelTrack]
   };
 
   // validate the spec

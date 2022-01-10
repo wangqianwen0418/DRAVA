@@ -44,7 +44,7 @@ export default class App extends React.Component<{}, State> {
   constructor(prop: {}) {
     super(prop);
     this.state = {
-      dataset: 'matrix',
+      dataset: 'sequence',
       filters: {},
       samples: []
     };
@@ -168,14 +168,6 @@ export default class App extends React.Component<{}, State> {
       });
       return inLatentSpace && inUserDims;
     });
-
-    // const filteredSamples = samples.filter(sample => {
-    //   const inRange = sample.z.every((dimensionValue, row_idx) => {
-    //     const ranges = filters[`dim_${row_idx}`].map(i => getRange(i));
-    //     return withinRange(dimensionValue, ranges);
-    //   });
-    //   return inRange;
-    // });
     return filteredSamples;
   }
 

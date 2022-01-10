@@ -23,6 +23,16 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
 
   const samples = pcsv.data
     .filter(d => parseInt(d.chr as any) === chr)
+    // only samples whose latent dim have large values
+    .filter(
+      row =>
+        dataset !== 'sequence' ||
+        row['z']
+          .split(',')
+          .map(d => parseFloat(d))
+          .some(d => Math.abs(d) > 1.5)
+      // .reduce((a, b) => Math.abs(a) + Math.abs(b), 0) > 0.8
+    )
     .map((row, i) => {
       return {
         ...row,
@@ -34,5 +44,14 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
       };
     });
 
+  console.info(samples.length);
   return samples;
+};
+
+export const queryRawSamples = async (samples: TResultRow) => {
+  const imgURLs = await axios({
+    method: 'post',
+    url: '',
+    data: samples
+  });
 };
