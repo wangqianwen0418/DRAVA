@@ -164,7 +164,7 @@ export default class App extends React.Component<{}, State> {
       });
       //  check other user-defined dims
       const inUserDims = userDims.every(dimName => {
-        return matrixData[dimName]['groupedSamples'].some(groupIds => groupIds.includes(sample.id));
+        return filters[dimName].some(groupIdx => matrixData[dimName]['groupedSamples'][groupIdx].includes(sample.id));
       });
       return inLatentSpace && inUserDims;
     });

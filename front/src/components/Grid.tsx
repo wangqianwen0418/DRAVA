@@ -162,6 +162,12 @@ export default class Grid extends React.Component<Props, States> {
 
       prevRow['groupedSamples'].forEach((prevSampleIds, prevIdx) => {
         nextRow['groupedSamples'].forEach((nextSampleIds, nextIdx) => {
+          const isShow =
+            this.isSelected(dims[i], prevIdx) &&
+            this.isSelected(dims[i + 1], nextIdx) &&
+            !dims[i].includes('dim') &&
+            !dims[i + 1].includes('dim');
+
           const insectSampleIds = prevSampleIds.filter(sampleId => nextSampleIds.includes(sampleId)),
             prevX = this.spanWidth + prevIdx * (stepWidth + this.gap) + stepWidth / 2,
             prevY = i * (this.barHeight * 2 + this.barLabelHeight + this.rowGap) + this.barHeight + this.barLabelHeight,
@@ -175,17 +181,18 @@ export default class Grid extends React.Component<Props, States> {
               x2={nextX}
               y2={nextY}
               stroke="steelblue"
-              strokeWidth={1}
-              opacity={
-                insectSampleIds.length / prevSampleIds.length > 0.1 ||
-                insectSampleIds.length / nextSampleIds.length > 0.1
-                  ? 0.3
-                  : 0
-              }
+              strokeWidth={2}
+              opacity={0.3}
               key={`${prevIdx}_${nextIdx}`}
             />
           );
-          links.push(link);
+          if (
+            (insectSampleIds.length / prevSampleIds.length > 0.1 ||
+              insectSampleIds.length / nextSampleIds.length > 0.1) &&
+            isShow
+          ) {
+            links.push(link);
+          }
         });
       });
       linkGroups.push(
