@@ -32,6 +32,7 @@ export const GoslingVis = (props: Props) => {
     cardHeadHeight = parseInt(rootStyle.getPropertyValue('--card-head-height'));
 
   const labelTrack: any = {
+    title: 'samples',
     data: {
       values: labelJSON,
       type: 'json',
@@ -83,6 +84,28 @@ export const GoslingVis = (props: Props) => {
     height: 600
   };
 
+  const CTCFTrack = {
+    title: 'CTCF',
+    layout: 'linear',
+    data: {
+      url: 'https://s3.amazonaws.com/gosling-lang.org/data/HFFC6_CTCF.mRp.clN.bigWig',
+      type: 'bigwig',
+      column: 'position',
+      value: 'peak',
+      binSize: 1
+    },
+    mark: 'area',
+    x: {
+      field: 'position',
+      type: 'genomic',
+      domain: { chromosome: CHR.toString() },
+      axis: 'none'
+    },
+    y: { field: 'peak', type: 'quantitative' },
+    color: { value: 'steelblue' },
+    height: 20
+  };
+
   const PeakTrack = {
     layout: 'linear',
     data: {
@@ -108,7 +131,7 @@ export const GoslingVis = (props: Props) => {
     title: '',
     width: props.width - cardPadding * 2,
     height: props.height - cardPadding * 2 - cardHeadHeight - 24, // gosling vis axis: 24px
-    tracks: [props.dataset == 'sequence' ? PeakTrack : MatrixTrack, labelTrack]
+    tracks: [props.dataset == 'sequence' ? PeakTrack : MatrixTrack, CTCFTrack, labelTrack]
   };
 
   // validate the spec

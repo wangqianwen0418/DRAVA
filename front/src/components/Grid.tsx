@@ -165,8 +165,7 @@ export default class Grid extends React.Component<Props, States> {
           const isShow =
             this.isSelected(dims[i], prevIdx) &&
             this.isSelected(dims[i + 1], nextIdx) &&
-            !dims[i].includes('dim') &&
-            !dims[i + 1].includes('dim');
+            (!dims[i].includes('dim') || !dims[i + 1].includes('dim'));
 
           const insectSampleIds = prevSampleIds.filter(sampleId => nextSampleIds.includes(sampleId)),
             prevX = this.spanWidth + prevIdx * (stepWidth + this.gap) + stepWidth / 2,
