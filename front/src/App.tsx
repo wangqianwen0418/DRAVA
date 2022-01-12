@@ -44,7 +44,7 @@ export default class App extends React.Component<{}, State> {
   constructor(prop: {}) {
     super(prop);
     this.state = {
-      dataset: 'sequence',
+      dataset: 'matrix',
       filters: {},
       samples: []
     };
@@ -218,7 +218,7 @@ export default class App extends React.Component<{}, State> {
             <Row gutter={gutter}>
               <Col span={12}>
                 <GoslingVis dataset={dataset} samples={filteredSamples} width={colWidth} height={appHeight * 0.5} />
-                <SampleBrowser samples={filteredSamples} height={appHeight * 0.5} />
+                <SampleBrowser dataset={dataset} samples={filteredSamples} height={appHeight * 0.5} />
               </Col>
 
               <Col span={12}>

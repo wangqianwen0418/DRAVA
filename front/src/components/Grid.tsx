@@ -58,7 +58,7 @@ export default class Grid extends React.Component<Props, States> {
           <image
             href={
               this.props.dataset == 'sequence'
-                ? `assets/simu/${dimNum}_${Math.floor(col_idx / 2)}.png`
+                ? `assets/sequence_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`
                 : `assets/tad_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`
             }
             className="latentImage"
