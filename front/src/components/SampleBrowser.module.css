@@ -1,6 +1,11 @@
 .sampleContainer {
-    width: 100%;
-    padding-top: 10px;
-    height: 50vh;
-    overflow-y: scroll;
+  width: 100%;
+  padding-top: 10px;
+  height: 50vh;
+  overflow-y: scroll;
+}
+
+.sample {
+  border: solid black 1px;
+  image-rendering: pixelated;
 }

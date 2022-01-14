@@ -3,7 +3,7 @@ import './App.css';
 import { Row, Col, Layout, Menu, Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 
-import { STEP_NUM } from 'Const';
+import { RANGE_MAX, RANGE_MIN, STEP_NUM } from 'Const';
 import { generateDistribution, range, withinRange, getRange } from 'helpers';
 
 import Grid from 'components/Grid';
@@ -116,30 +116,36 @@ export default class App extends React.Component<{}, State> {
 
     var matrixData: { [k: string]: TDistribution } = {},
       row: TDistribution = { histogram: [], labels: [], groupedSamples: [] };
+    const sampleIds = samples.map(d => d.id);
     Object.keys(filters).forEach((dimName, idx) => {
       if (dimName.includes('dim')) {
         const dimNum = parseInt(dimName.split('_')[1]);
         row = generateDistribution(
           samples.map(sample => sample['z'][dimNum]),
           false,
-          STEP_NUM
+          STEP_NUM,
+          sampleIds
         );
       } else if (dimName == 'size') {
         row = generateDistribution(
           samples.map(s => s.end - s.start),
           false,
-          STEP_NUM
+          STEP_NUM,
+          sampleIds
         );
       } else if (dimName == 'level') {
         row = generateDistribution(
           samples.map(s => s['level']),
-          true
+          true,
+          STEP_NUM,
+          sampleIds
         );
       } else {
         row = generateDistribution(
           samples.map(s => s[dimName]),
           false,
-          STEP_NUM
+          STEP_NUM,
+          sampleIds
         );
       }
       matrixData[dimName] = row;
@@ -164,18 +170,10 @@ export default class App extends React.Component<{}, State> {
       });
       //  check other user-defined dims
       const inUserDims = userDims.every(dimName => {
-        return matrixData[dimName]['groupedSamples'].some(groupIds => groupIds.includes(sample.id));
+        return filters[dimName].some(groupIdx => matrixData[dimName]['groupedSamples'][groupIdx].includes(sample.id));
       });
       return inLatentSpace && inUserDims;
     });
-
-    // const filteredSamples = samples.filter(sample => {
-    //   const inRange = sample.z.every((dimensionValue, row_idx) => {
-    //     const ranges = filters[`dim_${row_idx}`].map(i => getRange(i));
-    //     return withinRange(dimensionValue, ranges);
-    //   });
-    //   return inRange;
-    // });
     return filteredSamples;
   }
 
@@ -226,7 +224,7 @@ export default class App extends React.Component<{}, State> {
             <Row gutter={gutter}>
               <Col span={12}>
                 <GoslingVis dataset={dataset} samples={filteredSamples} width={colWidth} height={appHeight * 0.5} />
-                <SampleBrowser samples={filteredSamples} height={appHeight * 0.5} />
+                <SampleBrowser dataset={dataset} samples={filteredSamples} height={appHeight * 0.5} />
               </Col>
 
               <Col span={12}>

@@ -510,8 +510,29 @@ class VAEModule(pl.LightningModule):
             return self.test_sample_dataloader
 
         elif self.is_tensor_dataset(self.params['dataset']):
-            # since the two datasets are small, use the train data loader for test
-            return self.val_dataloader()
+            root = os.path.join(self.params['data_path'], f"{self.params['dataset']}.npz")
+            if not os.path.exists(root):
+                import subprocess
+                print('Now download dsprites-dataset')
+                subprocess.call(['./download_dsprites.sh'])
+                print('Finished')
+            data = np.load(root, encoding='bytes')
+            tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
+            labels = torch.from_numpy(data['labels'])
+
+            # transform = self.data_transforms()
+            # tensor = transform(tensor)
+
+            train_kwargs = {'data_tensor':tensor, 'labels': labels}
+            dset = CustomTensorDataset
+            train_data = dset(**train_kwargs)
+            self.test_sample_dataloader = DataLoader(train_data,
+                                    batch_size=self.params['batch_size'],
+                                    shuffle=False,
+                                    drop_last=False)
+            
+            self.num_test_imgs = len(self.test_sample_dataloader)
+            return self.test_sample_dataloader
         else:
             raise ValueError('Undefined dataset type')
 

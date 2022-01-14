@@ -1,19 +1,21 @@
 import React from 'react';
-import sampleVectors from 'assets/samples_vector.json';
-import sampleLabels from 'assets/sample_labels.json';
+
+import styles from './SampleBrowser.module.css';
 
 import { Card } from 'antd';
 
 import { TResultRow } from 'types';
+import { BASE_URL } from 'Const';
 
 interface Props {
+  dataset: string;
   samples: TResultRow[];
   height: number;
 }
 
 export default class SampleBrowser extends React.Component<Props, {}> {
   render() {
-    const { samples, height } = this.props;
+    const { samples, height, dataset } = this.props;
 
     const rootStyle = getComputedStyle(document.documentElement),
       cardHeadHeight = parseInt(rootStyle.getPropertyValue('--card-head-height'));
@@ -23,13 +25,18 @@ export default class SampleBrowser extends React.Component<Props, {}> {
         size="small"
         bodyStyle={{ overflowY: 'scroll', height: height - cardHeadHeight }}
       >
-        {samples.slice(0, 20).map(sample => {
+        {samples.map(sample => {
+          // const url = dataset == 'matrix' ? `assets/tad_imgs/chr5:${parseInt(sample.id) + 1}.jpg` : '';
+          const url = `${BASE_URL}/api/get_${dataset}_sample?id=${sample.id}`;
           return (
             <img
-              src={`assets/sample_imgs/${sample.id}.png`}
+              src={url}
               alt={`sample_${sample.id}`}
               key={sample.id}
-              style={{ border: 'solid black 1px' }}
+              className={styles.sample}
+              height={40}
+              width={40}
+              loading="lazy"
             />
           );
         })}
