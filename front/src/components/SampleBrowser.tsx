@@ -5,6 +5,7 @@ import styles from './SampleBrowser.module.css';
 import { Card } from 'antd';
 
 import { TResultRow } from 'types';
+import { BASE_URL } from 'Const';
 
 interface Props {
   dataset: string;
@@ -25,7 +26,8 @@ export default class SampleBrowser extends React.Component<Props, {}> {
         bodyStyle={{ overflowY: 'scroll', height: height - cardHeadHeight }}
       >
         {samples.map(sample => {
-          const url = dataset == 'matrix' ? `assets/tad_imgs/chr5:${parseInt(sample.id) + 1}.jpg` : '';
+          // const url = dataset == 'matrix' ? `assets/tad_imgs/chr5:${parseInt(sample.id) + 1}.jpg` : '';
+          const url = `${BASE_URL}/api/get_${dataset}_sample?id=${sample.id}`;
           return (
             <img
               src={url}
@@ -34,6 +36,7 @@ export default class SampleBrowser extends React.Component<Props, {}> {
               className={styles.sample}
               height={40}
               width={40}
+              loading="lazy"
             />
           );
         })}

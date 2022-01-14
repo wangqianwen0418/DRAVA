@@ -65,11 +65,11 @@ const value2rangeIdx = (v: number, min: number, max: number): number => {
  * @param samples
  * @returns historgram of each dimension
  */
-export const getSampleHist = (samples: number[][]): TDistribution[] => {
+export const getSampleHist = (samples: number[][], sampleIds: string[]): TDistribution[] => {
   const latentDim = samples[0].length;
   var results = range(latentDim).map(i => {
     const sampleValues = samples.map(sample => sample[i]);
-    return generateDistribution(sampleValues, false, STEP_NUM, [RANGE_MIN, RANGE_MAX]);
+    return generateDistribution(sampleValues, false, STEP_NUM, sampleIds, [RANGE_MIN, RANGE_MAX]);
   });
   return results;
 };
@@ -78,8 +78,8 @@ export const generateDistribution = (
   samples: string[] | number[],
   isCategorical: boolean,
   binNum?: number,
-  valueRange?: number[], // users can specify a range to draw the histogram
-  sampleIds?: string[]
+  sampleIds?: string[],
+  valueRange?: number[] // users can specify a range to draw the histogram
 ): TDistribution => {
   // no meaningful data
   if (samples.length == 0) return { histogram: [], labels: [], groupedSamples: [] };

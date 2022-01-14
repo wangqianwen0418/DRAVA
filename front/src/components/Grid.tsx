@@ -209,7 +209,10 @@ export default class Grid extends React.Component<Props, States> {
 
   render() {
     const { filters, height, width, dataset, samples, matrixData } = this.props;
-    const hist = getSampleHist(samples.map(sample => sample.z as number[]));
+    const hist = getSampleHist(
+      samples.map(sample => sample.z as number[]),
+      samples.map(d => d.id)
+    );
 
     const dims = Object.keys(filters);
     // // TO-DO, maybe resort is not a smart way
