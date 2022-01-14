@@ -1,5 +1,5 @@
 model_params:
-  name: 'BetaVAE_BIG_CONV'
+  name: 'BetaVAE_CONV'
   in_channels: 1
   latent_dim: 8 # for dsprites
   # latent_dim: 28 # for celeba
@@ -23,8 +23,8 @@ exp_params:
 
 trainer_params:
   gpus: 1
-  max_nb_epochs: 1000
-  max_epochs: 1000
+  max_nb_epochs: 100
+  max_epochs: 1
 
 logging_params:
   save_dir: "logs"
