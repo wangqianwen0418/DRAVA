@@ -280,10 +280,10 @@ class VAEModule(pl.LightningModule):
 
         z = []
         for i in range(self.model.latent_dim):
-            baseline = torch.randn( self.model.latent_dim) - 0.5
+            # baseline = torch.randn( self.model.latent_dim) - 0.5
             # baseline = torch.zeros( self.model.latent_dim)
             # baseline = torch.ones( self.model.latent_dim) 
-            # baseline = torch.randn( self.model.latent_dim)
+            baseline = torch.randn( self.model.latent_dim)*2 -1
             z_ = [baseline for _ in range(self.bin_num)]
             z_ = torch.stack(z_, dim =0)
             mask = torch.tensor([j for j in range(self.bin_num)])
@@ -300,7 +300,7 @@ class VAEModule(pl.LightningModule):
             os.mkdir(filepath)
 
         if self.is_tensor_dataset(self.params['dataset']):
-            recons_imgs = (recons.cpu().data>0.5).float()
+            recons_imgs = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
         else:
             recons_imgs = recons.cpu().data
         

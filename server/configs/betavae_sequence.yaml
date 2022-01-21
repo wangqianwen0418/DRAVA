@@ -1,11 +1,10 @@
 model_params:
   name: 'BetaVAE_CONV'
   in_channels: 1
-  latent_dim: 12 # for dsprites
+  latent_dim: 5 # for dsprites
   # latent_dim: 28 # for celeba
   img_size: 64
-  hidden_dims: [32, 64, 128]
-  conv_sizes: [3,3,3] 
+  hidden_dims: [8, 16, 32, 64, 128]
   loss_type: 'B'
   gamma: 10.0
   max_capacity: 25
@@ -13,7 +12,7 @@ model_params:
 
 exp_params:
   # dataset: celeba
-  dataset: HFFc6_ATAC_chr1-8
+  dataset: HFFc6_ATAC_chr7
   data_path: "./data/"
   img_size: 64
   optimizer: "adam"
@@ -25,9 +24,9 @@ exp_params:
 trainer_params:
   gpus: 1
   max_nb_epochs: 200
-  max_epochs: 200
+  max_epochs: 2000
 
 logging_params:
   save_dir: "logs"
-  name: 'BetaVAE_3x3CONV'
+  name: 'BetaVAE_CONV'
   manual_seed: 1265
