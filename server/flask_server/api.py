@@ -47,6 +47,18 @@ def get_sequence_sample():
     return send_file(img_io, mimetype='image/jpg')
 
 
+@api.route('/get_celeb_sample', methods=['GET'])
+def get_celeb_sample():
+    '''
+    e.g., base_url/api/get_celeb_sample?id=xx
+    '''
+    dataset = 'celeba'
+
+    id = request.args.get('id', type=str)
+    print(f'{int(id):06}.jpg')
+    return send_from_directory(f'../data/{dataset}/img_align_celeba/', f'{int(id)+1:06}.jpg')
+
+
 ######################
 # functions called by the API
 ######################

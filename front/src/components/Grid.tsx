@@ -56,11 +56,7 @@ export default class Grid extends React.Component<Props, States> {
       const image = (
         <g>
           <image
-            href={
-              this.props.dataset == 'sequence'
-                ? `assets/sequence_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`
-                : `assets/tad_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`
-            }
+            href={`assets/${this.props.dataset}_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`}
             className="latentImage"
             x={this.gap / 2}
             y={this.barHeight + this.barLabelHeight + this.gap + this.gap / 2}

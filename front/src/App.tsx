@@ -205,6 +205,7 @@ export default class App extends React.Component<{}, State> {
           <SubMenu key="dataset" title="Dataset">
             <Menu.Item key="sequence">Sequence</Menu.Item>
             <Menu.Item key="matrix">Matrix</Menu.Item>
+            <Menu.Item key="celeb">Celeb</Menu.Item>
             <Menu.Item key="upload">
               <Upload {...uploadProps}>
                 <UploadOutlined style={{ color: 'rgba(255, 255, 255, 0.65)' }} />
@@ -223,7 +224,12 @@ export default class App extends React.Component<{}, State> {
           <Content style={{ padding: contentPadding, backgroundColor: 'white' }}>
             <Row gutter={gutter}>
               <Col span={12}>
-                <GoslingVis dataset={dataset} samples={filteredSamples} width={colWidth} height={appHeight * 0.5} />
+                {dataset == 'celeb' ? (
+                  <></>
+                ) : (
+                  <GoslingVis dataset={dataset} samples={filteredSamples} width={colWidth} height={appHeight * 0.5} />
+                )}
+
                 <SampleBrowser dataset={dataset} samples={filteredSamples} height={appHeight * 0.5} />
               </Col>
 

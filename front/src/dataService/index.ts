@@ -9,6 +9,25 @@ export const whatCHR = (dataset: string) => {
 };
 
 export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
+  if (dataset == 'celeb') {
+    const url = '/assets/results_celeba.csv';
+    const response = await axios({
+      method: 'get',
+      url,
+      responseType: 'text'
+    });
+    const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
+
+    const samples = pcsv.data.map((row, i) => {
+      return {
+        ...row,
+        z: row['z'].split(',').map(d => parseFloat(d)),
+        id: i.toString()
+      };
+    });
+    return samples;
+  }
+
   const url = dataset == 'sequence' ? '/assets/results_chr7_atac.csv' : '/assets/test:results_chr1-5_10k_onTad.csv';
   const chr = whatCHR(dataset);
 
