@@ -3,6 +3,7 @@ import React from 'react';
 import styles from './SampleBrowser.module.css';
 
 import { Card } from 'antd';
+import LazyLoad from 'react-lazyload';
 
 import { TResultRow } from 'types';
 import { BASE_URL } from 'Const';
@@ -26,17 +27,16 @@ export default class SampleBrowser extends React.Component<Props, {}> {
         bodyStyle={{ overflowY: 'scroll', height: height - cardHeadHeight }}
       >
         {samples.map(sample => {
-          // const url = dataset == 'matrix' ? `assets/tad_imgs/chr5:${parseInt(sample.id) + 1}.jpg` : '';
           const url = `${BASE_URL}/api/get_${dataset}_sample?id=${sample.id}`;
           return (
             <img
+              loading="lazy"
               src={url}
               alt={`sample_${sample.id}`}
               key={sample.id}
               className={styles.sample}
-              height={40}
-              width={40}
-              loading="lazy"
+              height="40"
+              width="40"
             />
           );
         })}
