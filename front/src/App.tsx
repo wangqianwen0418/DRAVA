@@ -39,6 +39,7 @@ interface State {
   dataset: string;
   filters: TFilter;
   samples: TResultRow[];
+  isDataLoading: boolean;
 }
 export default class App extends React.Component<{}, State> {
   constructor(prop: {}) {
@@ -46,7 +47,8 @@ export default class App extends React.Component<{}, State> {
     this.state = {
       dataset: 'matrix',
       filters: {},
-      samples: []
+      samples: [],
+      isDataLoading: true
     };
     this.setFilters = this.setFilters.bind(this);
     this.updateDims = this.updateDims.bind(this);
@@ -58,7 +60,7 @@ export default class App extends React.Component<{}, State> {
     range(samples[0]['z'].length).forEach(dimNum => {
       filters[`dim_${dimNum}`] = range(STEP_NUM);
     });
-    this.setState({ filters, samples });
+    this.setState({ filters, samples, isDataLoading: false });
   }
   componentDidMount() {
     this.onQueryResults(this.state.dataset);
@@ -67,7 +69,10 @@ export default class App extends React.Component<{}, State> {
   onClickMenu(e: MenuInfo): void {
     const dataset = e.key;
     this.setState({
-      dataset
+      dataset,
+      samples: [],
+      filters: {},
+      isDataLoading: true
     });
     this.onQueryResults(dataset);
   }
@@ -112,20 +117,29 @@ export default class App extends React.Component<{}, State> {
   }
   // @compute
   matrixData(): { [dimName: string]: TDistribution } {
-    const { samples, dataset } = this.state;
+    const { samples, dataset, isDataLoading } = this.state;
 
     var matrixData: { [k: string]: TDistribution } = {},
       row: TDistribution = { histogram: [], labels: [], groupedSamples: [] };
     const sampleIds = samples.map(d => d.id);
 
-    const dimNames =
-      dataset == 'matrix'
-        ? ['size', 'score', 'ctcf_mean', 'ctcf_left', 'ctcf_right', 'atac_mean', 'atac_left', 'atac_right']
-        : [];
-    if (samples[0].z) {
+    let dimNames: string[] = [];
+    if (samples.length > 0) {
       samples[0].z.forEach((_, idx) => {
         dimNames.push(`dim_${idx}`);
       });
+      if (dataset == 'matrix') {
+        dimNames = dimNames.concat([
+          'size',
+          'score',
+          'ctcf_mean',
+          'ctcf_left',
+          'ctcf_right',
+          'atac_mean',
+          'atac_left',
+          'atac_right'
+        ]);
+      }
     }
     dimNames.forEach((dimName, idx) => {
       if (dimName.includes('dim')) {
@@ -189,8 +203,7 @@ export default class App extends React.Component<{}, State> {
   }
 
   render() {
-    const { filters, samples, dataset } = this.state;
-    if (samples.length == 0) return null;
+    const { filters, samples, dataset, isDataLoading } = this.state;
 
     const filteredSamples = this.filteredSamples();
 
@@ -238,10 +251,21 @@ export default class App extends React.Component<{}, State> {
                 {dataset == 'celeb' ? (
                   <></>
                 ) : (
-                  <GoslingVis dataset={dataset} samples={filteredSamples} width={colWidth} height={appHeight * 0.5} />
+                  <GoslingVis
+                    dataset={dataset}
+                    samples={filteredSamples}
+                    width={colWidth}
+                    height={appHeight * 0.5}
+                    isDataLoading={isDataLoading}
+                  />
                 )}
 
-                <SampleBrowser dataset={dataset} samples={filteredSamples} height={appHeight * 0.5} />
+                <SampleBrowser
+                  dataset={dataset}
+                  samples={filteredSamples}
+                  height={appHeight * (dataset == 'celeb' ? 1 : 0.5)}
+                  isDataLoading={isDataLoading}
+                />
               </Col>
 
               <Col span={12}>
@@ -252,6 +276,7 @@ export default class App extends React.Component<{}, State> {
                   matrixData={this.matrixData()}
                   height={appHeight}
                   width={colWidth}
+                  isDataLoading={isDataLoading}
                   updateDims={this.updateDims}
                   setFilters={this.setFilters}
                 />

@@ -20,6 +20,7 @@ interface Props {
   width: number;
   setFilters: (dimName: string, col: number) => void;
   updateDims: (dimNames: string[]) => void;
+  isDataLoading: boolean;
 }
 interface States {
   // dims: string[]; // dimensions in the latent space
@@ -33,9 +34,6 @@ export default class Grid extends React.Component<Props, States> {
   rowGap = 10; // vertical gap between rows
   constructor(props: Props) {
     super(props);
-    this.state = {
-      dims: props.samples[0].z.map((dim, dim_idx) => `dim_${dim_idx}`)
-    };
   }
 
   // @compute
@@ -47,8 +45,8 @@ export default class Grid extends React.Component<Props, States> {
     row: TDistribution,
     dimName: string,
     stepWidth: number,
-    yScale: any,
-    onSetFilter: (dimName: string, col_idx: number) => void
+    yScale: any
+    // onSetFilter: (dimName: string, col_idx: number) => void
   ): ReactNode {
     const imgSize = Math.min(stepWidth, this.barHeight);
     const dimNum = dimName.split('_')[1];
@@ -76,7 +74,8 @@ export default class Grid extends React.Component<Props, States> {
       return (
         <g
           key={`bar_${col_idx}`}
-          onClick={() => onSetFilter(dimName, col_idx)}
+          // onClick={() => onSetFilter(dimName, col_idx)}
+          onClick={() => this.props.setFilters(dimName, col_idx)}
           transform={`translate(${this.spanWidth + (stepWidth + this.gap) * col_idx}, 0)`}
         >
           {/* histogram */}
@@ -107,8 +106,8 @@ export default class Grid extends React.Component<Props, States> {
     row: TDistribution,
     dimName: string,
     stepWidth: number,
-    yScale: any,
-    onSetFilter: (dimName: string, col_idx: number) => void
+    yScale: any
+    // onSetFilter: (dimName: string, col_idx: number) => void
   ): ReactNode {
     // const stepWidth = (width - 2 * cardPadding - spanWidth) / binNum - gap;
     const gap = this.gap,
@@ -120,7 +119,8 @@ export default class Grid extends React.Component<Props, States> {
         <g
           key={`bar_${col_idx}`}
           transform={`translate(${spanWidth + (stepWidth + gap) * col_idx}, 0)`}
-          onClick={() => onSetFilter(dimName, col_idx)}
+          // onClick={() => onSetFilter(dimName, col_idx)}
+          onClick={() => this.props.setFilters(dimName, col_idx)}
         >
           {/* histogram */}
           <text
@@ -204,7 +204,7 @@ export default class Grid extends React.Component<Props, States> {
   }
 
   render() {
-    const { filters, height, width, dataset, samples, matrixData } = this.props;
+    const { filters, height, width, dataset, samples, matrixData, isDataLoading } = this.props;
 
     const dims = Object.keys(filters);
     // // TO-DO, maybe resort is not a smart way
@@ -255,6 +255,7 @@ export default class Grid extends React.Component<Props, States> {
         size="small"
         extra={axisController}
         bodyStyle={{ height: height - cardHeadHeight, width: width, overflowY: 'scroll' }}
+        loading={isDataLoading}
       >
         {/* the pcp charts */}
         <svg height={cardInnerHeight} width={width - 2 * cardPadding} className="pcp">
@@ -270,15 +271,16 @@ export default class Grid extends React.Component<Props, States> {
                 <text
                   className="dim_annotation"
                   y={this.barHeight + this.barLabelHeight}
-                  onClick={() => onSetFilter(dimName, -1)}
+                  // onClick={() => onSetFilter(dimName, -1)}
+                  onClick={() => this.props.setFilters(dimName, -1)}
                 >
                   {dimName}
                 </text>
 
                 {/* get each cell of a row */}
                 {dimName.includes('dim_')
-                  ? this.getRow(matrixData[dimName], dimName, stepWidth, yScale, onSetFilter)
-                  : this.getAdditionalRow(matrixData[dimName], dimName, stepWidth, yScale, onSetFilter)}
+                  ? this.getRow(matrixData[dimName], dimName, stepWidth, yScale)
+                  : this.getAdditionalRow(matrixData[dimName], dimName, stepWidth, yScale)}
               </g>
             );
           })}

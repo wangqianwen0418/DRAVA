@@ -10,6 +10,7 @@ interface Props {
   dataset: string;
   width: number;
   height: number;
+  isDataLoading: boolean;
 }
 
 export const GoslingVis = (props: Props) => {
@@ -143,7 +144,7 @@ export const GoslingVis = (props: Props) => {
   }
 
   return (
-    <Card title="Genomic Browser" size="small">
+    <Card title="Genomic Browser" size="small" loading={props.isDataLoading}>
       <GoslingComponent spec={spec as GoslingSpec} />
     </Card>
   );
