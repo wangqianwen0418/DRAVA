@@ -20,11 +20,11 @@ interface Props {
   width: number;
   setFilters: (dimName: string, col: number) => void;
   updateDims: (dimNames: string[]) => void;
+  dimUserNames: { [key: string]: string };
+  setDimUserNames: (dictName: { [key: string]: string }) => void;
   isDataLoading: boolean;
 }
-interface States {
-  // dims: string[]; // dimensions in the latent space
-}
+interface States {}
 
 export default class Grid extends React.Component<Props, States> {
   spanWidth = 80; // width used for left-side dimension annotation
@@ -203,8 +203,13 @@ export default class Grid extends React.Component<Props, States> {
     this.props.updateDims(dimNames);
   }
 
+  // call props function
+  onChangeDimNames(dimName: string, newName: string) {
+    this.props.setDimUserNames({ [dimName]: newName });
+  }
+
   render() {
-    const { filters, height, width, dataset, samples, matrixData, isDataLoading } = this.props;
+    const { filters, height, width, dataset, samples, matrixData, isDataLoading, dimUserNames } = this.props;
 
     const dims = Object.keys(filters);
     // // TO-DO, maybe resort is not a smart way
@@ -268,14 +273,22 @@ export default class Grid extends React.Component<Props, States> {
                 key={dimName}
                 transform={`translate(0, ${row_idx * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}
               >
-                <text
+                {/* <text
                   className="dim_annotation"
                   y={this.barHeight + this.barLabelHeight}
                   // onClick={() => onSetFilter(dimName, -1)}
                   onClick={() => this.props.setFilters(dimName, -1)}
                 >
                   {dimName}
-                </text>
+                </text> */}
+
+                <foreignObject className={styles.inputTextWrapper}>
+                  <input
+                    value={dimUserNames[dimName] || dimName}
+                    className={styles.inputText}
+                    onChange={e => this.onChangeDimNames(dimName, e.target.value)}
+                  />
+                </foreignObject>
 
                 {/* get each cell of a row */}
                 {dimName.includes('dim_')

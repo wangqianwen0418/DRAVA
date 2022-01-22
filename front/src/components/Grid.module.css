@@ -29,3 +29,14 @@
 .rowContainer {
   padding-top: 10px;
 }
+
+.inputTextWrapper {
+  width: 60px;
+  height: 30px;
+  transform: translate(0px, 30px);
+}
+
+.inputText,
+.inputText:active {
+  border: none;
+}

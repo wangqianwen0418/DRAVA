@@ -39,6 +39,7 @@ interface State {
   dataset: string;
   filters: TFilter;
   samples: TResultRow[];
+  dimUserNames: { [key: string]: string }; // user can specify new names for latent dim
   isDataLoading: boolean;
 }
 export default class App extends React.Component<{}, State> {
@@ -46,12 +47,14 @@ export default class App extends React.Component<{}, State> {
     super(prop);
     this.state = {
       dataset: 'matrix',
+      dimUserNames: {},
       filters: {},
       samples: [],
       isDataLoading: true
     };
     this.setFilters = this.setFilters.bind(this);
     this.updateDims = this.updateDims.bind(this);
+    this.setDimUserNames = this.setDimUserNames.bind(this);
   }
 
   async onQueryResults(dataset: string) {
@@ -72,6 +75,7 @@ export default class App extends React.Component<{}, State> {
       dataset,
       samples: [],
       filters: {},
+      dimUserNames: {},
       isDataLoading: true
     });
     this.onQueryResults(dataset);
@@ -114,6 +118,12 @@ export default class App extends React.Component<{}, State> {
       }
     }
     this.setState({ filters });
+  }
+  //@ state update
+  setDimUserNames(nameDict: { [key: string]: string }) {
+    this.setState({
+      dimUserNames: { ...this.state.dimUserNames, ...nameDict }
+    });
   }
   // @compute
   matrixData(): { [dimName: string]: TDistribution } {
@@ -203,9 +213,10 @@ export default class App extends React.Component<{}, State> {
   }
 
   render() {
-    const { filters, samples, dataset, isDataLoading } = this.state;
+    const { filters, samples, dataset, isDataLoading, dimUserNames } = this.state;
 
     const filteredSamples = this.filteredSamples();
+    const matrixData = this.matrixData();
 
     const siderWidth = 150,
       headerHeight = 0,
@@ -265,6 +276,8 @@ export default class App extends React.Component<{}, State> {
                   samples={filteredSamples}
                   height={appHeight * (dataset == 'celeb' ? 1 : 0.5)}
                   isDataLoading={isDataLoading}
+                  matrixData={matrixData}
+                  dimUserNames={dimUserNames}
                   filters={filters}
                 />
               </Col>
@@ -274,10 +287,12 @@ export default class App extends React.Component<{}, State> {
                   dataset={dataset}
                   samples={samples}
                   filters={filters}
-                  matrixData={this.matrixData()}
+                  matrixData={matrixData}
                   height={appHeight}
                   width={colWidth}
                   isDataLoading={isDataLoading}
+                  dimUserNames={dimUserNames}
+                  setDimUserNames={this.setDimUserNames}
                   updateDims={this.updateDims}
                   setFilters={this.setFilters}
                 />
