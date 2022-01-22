@@ -265,6 +265,7 @@ export default class App extends React.Component<{}, State> {
                   samples={filteredSamples}
                   height={appHeight * (dataset == 'celeb' ? 1 : 0.5)}
                   isDataLoading={isDataLoading}
+                  filters={filters}
                 />
               </Col>
 
