@@ -8,7 +8,7 @@ import { generateDistribution, range, withinRange, getRange } from 'helpers';
 
 import Grid from 'components/Grid';
 import SampleBrowser from 'components/SampleBrowser';
-import { GoslingVis } from 'components/Gosling';
+import GoslingVis from 'components/Gosling';
 
 import { queryResults } from 'dataService';
 import { MenuInfo } from 'rc-menu/lib/interface';
