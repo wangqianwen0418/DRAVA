@@ -112,19 +112,30 @@ export default class App extends React.Component<{}, State> {
   }
   // @compute
   matrixData(): { [dimName: string]: TDistribution } {
-    const { samples, filters } = this.state;
+    const { samples, dataset } = this.state;
 
     var matrixData: { [k: string]: TDistribution } = {},
       row: TDistribution = { histogram: [], labels: [], groupedSamples: [] };
     const sampleIds = samples.map(d => d.id);
-    Object.keys(filters).forEach((dimName, idx) => {
+
+    const dimNames =
+      dataset == 'matrix'
+        ? ['size', 'score', 'ctcf_mean', 'ctcf_left', 'ctcf_right', 'atac_mean', 'atac_left', 'atac_right']
+        : [];
+    if (samples[0].z) {
+      samples[0].z.forEach((_, idx) => {
+        dimNames.push(`dim_${idx}`);
+      });
+    }
+    dimNames.forEach((dimName, idx) => {
       if (dimName.includes('dim')) {
         const dimNum = parseInt(dimName.split('_')[1]);
         row = generateDistribution(
           samples.map(sample => sample['z'][dimNum]),
           false,
           STEP_NUM,
-          sampleIds
+          sampleIds,
+          [RANGE_MIN, RANGE_MAX]
         );
       } else if (dimName == 'size') {
         row = generateDistribution(

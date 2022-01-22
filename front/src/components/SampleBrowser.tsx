@@ -3,7 +3,6 @@ import React from 'react';
 import styles from './SampleBrowser.module.css';
 
 import { Card } from 'antd';
-import LazyLoad from 'react-lazyload';
 
 import { TResultRow } from 'types';
 import { BASE_URL } from 'Const';

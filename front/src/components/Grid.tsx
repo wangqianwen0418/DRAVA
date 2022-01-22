@@ -57,7 +57,7 @@ export default class Grid extends React.Component<Props, States> {
         <g>
           <image
             href={`assets/${this.props.dataset}_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`}
-            className="latentImage"
+            className={clsx(styles.latentImage, this.isSelected(dimName, col_idx) && styles.isImageSelected)}
             x={this.gap / 2}
             y={this.barHeight + this.barLabelHeight + this.gap + this.gap / 2}
             width={imgSize}
@@ -205,10 +205,6 @@ export default class Grid extends React.Component<Props, States> {
 
   render() {
     const { filters, height, width, dataset, samples, matrixData } = this.props;
-    const hist = getSampleHist(
-      samples.map(sample => sample.z as number[]),
-      samples.map(d => d.id)
-    );
 
     const dims = Object.keys(filters);
     // // TO-DO, maybe resort is not a smart way
@@ -226,7 +222,11 @@ export default class Grid extends React.Component<Props, States> {
 
     const cardInnerHeight = dims.length * (this.barHeight + 2 * this.barHeight + this.rowGap);
 
-    const maxV = getMax(hist.map(d => d.histogram).flat());
+    const maxV = getMax(
+      Object.values(matrixData)
+        .map(d => d.histogram)
+        .flat()
+    );
     const yScale = scaleLog().domain([0.1, maxV]).range([0, this.barHeight]);
 
     //   axis controller
@@ -239,33 +239,11 @@ export default class Grid extends React.Component<Props, States> {
         value={dims}
         onChange={this.onChangeDim.bind(this)}
       >
-        {/* options about the latent dimensions */}
-        {hist.map((hist, idx) => (
-          <Option key={idx} value={`dim_${idx}`}>
-            {' '}
-            {`dim_${idx}`}{' '}
+        {Object.keys(matrixData).map(dimName => (
+          <Option key={dimName} value={dimName}>
+            {dimName}
           </Option>
         ))}
-        {/* options about the user added metrics */}
-        {this.props.dataset == 'sequence' ? (
-          <>
-            <Option value="size">size</Option>
-          </>
-        ) : (
-          <>
-            <Option value="level">level</Option>
-            <Option value="size">size</Option>
-            <Option value="score">score</Option>
-            <Option value="ctcf_mean">CTCF mean</Option>
-            <Option value="ctcf_left">CTCF left</Option>
-            <Option value="ctcf_right">CTCF right</Option>
-            <Option value="atac_mean">ATAC mean</Option>
-            <Option value="atac_left">ATAC left</Option>
-            <Option value="atac_right">ATAC right</Option>
-            <Option value="active">active</Option>
-            <Option value="express">express</Option>
-          </>
-        )}
       </Select>
     );
 
