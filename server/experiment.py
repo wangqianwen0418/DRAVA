@@ -194,7 +194,11 @@ class VAEModule(pl.LightningModule):
         if batch_idx == 0:
             f = open(os.path.join(self.logger_folder, 'results.csv'), 'w')
             result_writer = csv.writer(f)
-            header = ['chr', 'start', 'end', 'level', 'mean', 'score'][0: len(labels[0])] + ['z']
+
+            if self.params['dataset'] == 'celeba':
+                header = ['z']
+            else: 
+                header = ['chr', 'start', 'end', 'level', 'mean', 'score'][0: len(labels[0])] + ['z']
             result_writer.writerow(header)
         else: 
             f = open(os.path.join(self.logger_folder, 'results.csv'), 'a')
@@ -202,7 +206,10 @@ class VAEModule(pl.LightningModule):
 
 
         for i, mu in enumerate(mu.tolist()):
-            row = labels[i].tolist() + [','.join([str(m) for m in mu])]
+            if self.params['dataset'] == 'celeba':
+                row = [','.join([str(m) for m in mu])]
+            else:
+                row = labels[i].tolist() + [','.join([str(m) for m in mu])]
 
             result_writer.writerow(row)
 
@@ -281,9 +288,9 @@ class VAEModule(pl.LightningModule):
         z = []
         for i in range(self.model.latent_dim):
             # baseline = torch.randn( self.model.latent_dim) - 0.5
-            # baseline = torch.zeros( self.model.latent_dim)
+            baseline = torch.zeros( self.model.latent_dim)
             # baseline = torch.ones( self.model.latent_dim) 
-            baseline = torch.randn( self.model.latent_dim)*2 -1
+            # baseline = torch.randn( self.model.latent_dim)
             z_ = [baseline for _ in range(self.bin_num)]
             z_ = torch.stack(z_, dim =0)
             mask = torch.tensor([j for j in range(self.bin_num)])
@@ -400,7 +407,7 @@ class VAEModule(pl.LightningModule):
                     pass
                 return optims, scheds
             else:
-                # if no schedular gama, reduce LR when a metric has stopped improving
+                # if no schedular gama, reduce LR by factor (0.1) when a metric has stopped improving
                 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optims[0], factor = 0.1, patience = 10, verbose = True)
                 scheds.append(scheduler)
         except:
@@ -485,6 +492,7 @@ class VAEModule(pl.LightningModule):
     
     @data_loader
     def test_dataloader(self):
+        print('loading test data')
         if self.params['dataset'] == 'celeba':
             transform = self.test_data_transforms()
             self.test_sample_dataloader =  DataLoader(CelebA(root = self.params['data_path'],
