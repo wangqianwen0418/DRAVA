@@ -14,16 +14,16 @@ const { Option } = Select;
 interface Props {
   filters: TFilter;
   dataset: string;
-  samples: TResultRow[];
   matrixData: { [dimName: string]: TDistribution };
   height: number;
   width: number;
   setFilters: (dimName: string, col: number) => void;
   updateDims: (dimNames: string[]) => void;
+  dimUserNames: { [key: string]: string };
+  setDimUserNames: (dictName: { [key: string]: string }) => void;
+  isDataLoading: boolean;
 }
-interface States {
-  // dims: string[]; // dimensions in the latent space
-}
+interface States {}
 
 export default class Grid extends React.Component<Props, States> {
   spanWidth = 80; // width used for left-side dimension annotation
@@ -33,9 +33,6 @@ export default class Grid extends React.Component<Props, States> {
   rowGap = 10; // vertical gap between rows
   constructor(props: Props) {
     super(props);
-    this.state = {
-      dims: props.samples[0].z.map((dim, dim_idx) => `dim_${dim_idx}`)
-    };
   }
 
   // @compute
@@ -47,8 +44,8 @@ export default class Grid extends React.Component<Props, States> {
     row: TDistribution,
     dimName: string,
     stepWidth: number,
-    yScale: any,
-    onSetFilter: (dimName: string, col_idx: number) => void
+    yScale: any
+    // onSetFilter: (dimName: string, col_idx: number) => void
   ): ReactNode {
     const imgSize = Math.min(stepWidth, this.barHeight);
     const dimNum = dimName.split('_')[1];
@@ -57,7 +54,7 @@ export default class Grid extends React.Component<Props, States> {
         <g>
           <image
             href={`assets/${this.props.dataset}_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`}
-            className="latentImage"
+            className={clsx(styles.latentImage, this.isSelected(dimName, col_idx) && styles.isImageSelected)}
             x={this.gap / 2}
             y={this.barHeight + this.barLabelHeight + this.gap + this.gap / 2}
             width={imgSize}
@@ -76,7 +73,8 @@ export default class Grid extends React.Component<Props, States> {
       return (
         <g
           key={`bar_${col_idx}`}
-          onClick={() => onSetFilter(dimName, col_idx)}
+          // onClick={() => onSetFilter(dimName, col_idx)}
+          onClick={() => this.props.setFilters(dimName, col_idx)}
           transform={`translate(${this.spanWidth + (stepWidth + this.gap) * col_idx}, 0)`}
         >
           {/* histogram */}
@@ -107,8 +105,8 @@ export default class Grid extends React.Component<Props, States> {
     row: TDistribution,
     dimName: string,
     stepWidth: number,
-    yScale: any,
-    onSetFilter: (dimName: string, col_idx: number) => void
+    yScale: any
+    // onSetFilter: (dimName: string, col_idx: number) => void
   ): ReactNode {
     // const stepWidth = (width - 2 * cardPadding - spanWidth) / binNum - gap;
     const gap = this.gap,
@@ -120,7 +118,8 @@ export default class Grid extends React.Component<Props, States> {
         <g
           key={`bar_${col_idx}`}
           transform={`translate(${spanWidth + (stepWidth + gap) * col_idx}, 0)`}
-          onClick={() => onSetFilter(dimName, col_idx)}
+          // onClick={() => onSetFilter(dimName, col_idx)}
+          onClick={() => this.props.setFilters(dimName, col_idx)}
         >
           {/* histogram */}
           <text
@@ -203,12 +202,13 @@ export default class Grid extends React.Component<Props, States> {
     this.props.updateDims(dimNames);
   }
 
+  // call props function
+  onChangeDimNames(dimName: string, newName: string) {
+    this.props.setDimUserNames({ [dimName]: newName });
+  }
+
   render() {
-    const { filters, height, width, dataset, samples, matrixData } = this.props;
-    const hist = getSampleHist(
-      samples.map(sample => sample.z as number[]),
-      samples.map(d => d.id)
-    );
+    const { filters, height, width, matrixData, isDataLoading, dimUserNames } = this.props;
 
     const dims = Object.keys(filters);
     // // TO-DO, maybe resort is not a smart way
@@ -226,7 +226,11 @@ export default class Grid extends React.Component<Props, States> {
 
     const cardInnerHeight = dims.length * (this.barHeight + 2 * this.barHeight + this.rowGap);
 
-    const maxV = getMax(hist.map(d => d.histogram).flat());
+    const maxV = getMax(
+      Object.values(matrixData)
+        .map(d => d.histogram)
+        .flat()
+    );
     const yScale = scaleLog().domain([0.1, maxV]).range([0, this.barHeight]);
 
     //   axis controller
@@ -239,33 +243,11 @@ export default class Grid extends React.Component<Props, States> {
         value={dims}
         onChange={this.onChangeDim.bind(this)}
       >
-        {/* options about the latent dimensions */}
-        {hist.map((hist, idx) => (
-          <Option key={idx} value={`dim_${idx}`}>
-            {' '}
-            {`dim_${idx}`}{' '}
+        {Object.keys(matrixData).map(dimName => (
+          <Option key={dimName} value={dimName}>
+            {dimName}
           </Option>
         ))}
-        {/* options about the user added metrics */}
-        {this.props.dataset == 'sequence' ? (
-          <>
-            <Option value="size">size</Option>
-          </>
-        ) : (
-          <>
-            <Option value="level">level</Option>
-            <Option value="size">size</Option>
-            <Option value="score">score</Option>
-            <Option value="ctcf_mean">CTCF mean</Option>
-            <Option value="ctcf_left">CTCF left</Option>
-            <Option value="ctcf_right">CTCF right</Option>
-            <Option value="atac_mean">ATAC mean</Option>
-            <Option value="atac_left">ATAC left</Option>
-            <Option value="atac_right">ATAC right</Option>
-            <Option value="active">active</Option>
-            <Option value="express">express</Option>
-          </>
-        )}
       </Select>
     );
 
@@ -277,6 +259,7 @@ export default class Grid extends React.Component<Props, States> {
         size="small"
         extra={axisController}
         bodyStyle={{ height: height - cardHeadHeight, width: width, overflowY: 'scroll' }}
+        loading={isDataLoading}
       >
         {/* the pcp charts */}
         <svg height={cardInnerHeight} width={width - 2 * cardPadding} className="pcp">
@@ -289,18 +272,27 @@ export default class Grid extends React.Component<Props, States> {
                 key={dimName}
                 transform={`translate(0, ${row_idx * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}
               >
-                <text
+                {/* <text
                   className="dim_annotation"
                   y={this.barHeight + this.barLabelHeight}
-                  onClick={() => onSetFilter(dimName, -1)}
+                  // onClick={() => onSetFilter(dimName, -1)}
+                  onClick={() => this.props.setFilters(dimName, -1)}
                 >
                   {dimName}
-                </text>
+                </text> */}
+
+                <foreignObject className={styles.inputTextWrapper}>
+                  <input
+                    value={dimUserNames[dimName] || dimName}
+                    className={styles.inputText}
+                    onChange={e => this.onChangeDimNames(dimName, e.target.value)}
+                  />
+                </foreignObject>
 
                 {/* get each cell of a row */}
                 {dimName.includes('dim_')
-                  ? this.getRow(matrixData[dimName], dimName, stepWidth, yScale, onSetFilter)
-                  : this.getAdditionalRow(matrixData[dimName], dimName, stepWidth, yScale, onSetFilter)}
+                  ? this.getRow(matrixData[dimName], dimName, stepWidth, yScale)
+                  : this.getAdditionalRow(matrixData[dimName], dimName, stepWidth, yScale)}
               </g>
             );
           })}

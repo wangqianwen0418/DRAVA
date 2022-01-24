@@ -9,3 +9,7 @@
   border: solid black 1px;
   image-rendering: pixelated;
 }
+
+.groupContainer {
+  padding: 5px;
+}
