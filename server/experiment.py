@@ -50,7 +50,10 @@ class CustomImageDataset(Dataset):
         image = Image.open(img_path).convert('L')
         # 
         label = self.img_labels.iloc[idx].copy()
-        label[0] = float(label[0].split(':')[0].replace('chr', '')) # get the CHR number from the jpg name
+        try:
+            label[0] = float(label[0].split(':')[0].replace('chr', '')) # get the CHR number from the jpg name
+        except Exception:
+            label[0] = 7 # chr 7 dataset
         label = label.to_numpy(dtype='float')
 
         if self.transform:
@@ -287,14 +290,14 @@ class VAEModule(pl.LightningModule):
 
         z = []
         for i in range(self.model.latent_dim):
-            # baseline = torch.randn( self.model.latent_dim) - 0.5
-            baseline = torch.zeros( self.model.latent_dim)
+            baseline = torch.randn( self.model.latent_dim) - 0.5
+            # baseline = torch.zeros( self.model.latent_dim)
             # baseline = torch.ones( self.model.latent_dim) 
             # baseline = torch.randn( self.model.latent_dim)
             z_ = [baseline for _ in range(self.bin_num)]
             z_ = torch.stack(z_, dim =0)
             mask = torch.tensor([j for j in range(self.bin_num)])
-            z_[mask, i] = torch.tensor([- 2 + j/(self.bin_num-1)* 4 for j in range(self.bin_num)]).float()
+            z_[mask, i] = torch.tensor([- 3 + j/(self.bin_num-1)* 6 for j in range(self.bin_num)]).float()
 
             z.append(z_)
         z = torch.stack(z)
@@ -496,7 +499,7 @@ class VAEModule(pl.LightningModule):
         if self.params['dataset'] == 'celeba':
             transform = self.test_data_transforms()
             self.test_sample_dataloader =  DataLoader(CelebA(root = self.params['data_path'],
-                                                        split = "test",
+                                                        split = "train",
                                                         transform=transform,
                                                         download=False),
                                                  batch_size= 144,

@@ -50,9 +50,11 @@ model = vae_models[config['model_params']['name']](**config['model_params'])
 # load state dict from check point
 logger_path = f"{tt_logger.save_dir}/{tt_logger.name}/version_{args.version_num}"
 ckp_dir = f"{logger_path}/checkpoints/"
+ckp_file_num = len(os.listdir(ckp_dir))
 assert os.path.exists(ckp_dir), 'the checkpoint folder does not exist'
-assert len(os.listdir(ckp_dir))>0, 'the checkpoint file does not exist'
-ckp_name = [f for f in os.listdir(ckp_dir)][0]
+assert ckp_file_num>0, 'the checkpoint file does not exist'
+ckp_name = [f for f in os.listdir(ckp_dir)][ckp_file_num-1] # use the lastest checkpoint if there is more than one
+
 checkpoint = torch.load( os.path.join(ckp_dir, ckp_name) )
 new_state_dict = {}
 for k in checkpoint['state_dict']:
