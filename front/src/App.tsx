@@ -12,7 +12,7 @@ import GoslingVis from 'components/Gosling';
 
 import { queryResults } from 'dataService';
 import { MenuInfo } from 'rc-menu/lib/interface';
-import { TResultRow, TFilter, TDistribution } from 'types';
+import { TResultRow, TFilter, TDistribution, TMatrixData } from 'types';
 
 const { Header, Sider, Content } = Layout;
 const { SubMenu } = Menu;
@@ -43,6 +43,8 @@ interface State {
   isDataLoading: boolean;
 }
 export default class App extends React.Component<{}, State> {
+  filteredSamples: TResultRow[] = [];
+  matrixData: TMatrixData = {};
   constructor(prop: {}) {
     super(prop);
     this.state = {
@@ -63,6 +65,9 @@ export default class App extends React.Component<{}, State> {
     range(samples[0]['z'].length).forEach(dimNum => {
       filters[`dim_${dimNum}`] = range(STEP_NUM);
     });
+    this.matrixData = this.calculateMatrixData(samples, dataset);
+    this.filteredSamples = samples;
+
     this.setState({ filters, samples, isDataLoading: false });
   }
   componentDidMount() {
@@ -117,6 +122,9 @@ export default class App extends React.Component<{}, State> {
         filters[dimName].splice(idx, 1);
       }
     }
+
+    this.filteredSamples = this.getFilteredSamples(this.state.samples, filters);
+
     this.setState({ filters });
   }
   //@ state update
@@ -126,9 +134,8 @@ export default class App extends React.Component<{}, State> {
     });
   }
   // @compute
-  matrixData(): { [dimName: string]: TDistribution } {
-    const { samples, dataset, isDataLoading } = this.state;
-
+  calculateMatrixData(samples: TResultRow[], dataset: string): { [dimName: string]: TDistribution } {
+    console.info('call matrix calculation');
     var matrixData: { [k: string]: TDistribution } = {},
       row: TDistribution = { histogram: [], labels: [], groupedSamples: [] };
     const sampleIds = samples.map(d => d.id);
@@ -188,11 +195,9 @@ export default class App extends React.Component<{}, State> {
     return matrixData;
   }
   // @compute
-  filteredSamples(): TResultRow[] {
-    const { samples, filters } = this.state;
+  getFilteredSamples(samples: TResultRow[], filters: TFilter): TResultRow[] {
+    console.info('call filtered samples');
     const userDims = Object.keys(filters).filter(d => !d.includes('dim_'));
-    const matrixData = this.matrixData();
-
     const filteredSamples = samples.filter(sample => {
       // check latent dim z
       const inLatentSpace = sample.z.every((dimValue, dimIdx) => {
@@ -200,12 +205,16 @@ export default class App extends React.Component<{}, State> {
         if (!filters[dimName]) {
           return true;
         } else {
-          return filters[dimName].some(groupIdx => matrixData[dimName]['groupedSamples'][groupIdx].includes(sample.id));
+          return filters[dimName].some(groupIdx =>
+            this.matrixData[dimName]['groupedSamples'][groupIdx].includes(sample.id)
+          );
         }
       });
       //  check other user-defined dims
       const inUserDims = userDims.every(dimName => {
-        return filters[dimName].some(groupIdx => matrixData[dimName]['groupedSamples'][groupIdx].includes(sample.id));
+        return filters[dimName].some(groupIdx =>
+          this.matrixData[dimName]['groupedSamples'][groupIdx].includes(sample.id)
+        );
       });
       return inLatentSpace && inUserDims;
     });
@@ -214,9 +223,6 @@ export default class App extends React.Component<{}, State> {
 
   render() {
     const { filters, samples, dataset, isDataLoading, dimUserNames } = this.state;
-
-    const filteredSamples = this.filteredSamples();
-    const matrixData = this.matrixData();
 
     const siderWidth = 150,
       headerHeight = 0,
@@ -264,7 +270,7 @@ export default class App extends React.Component<{}, State> {
                 ) : (
                   <GoslingVis
                     dataset={dataset}
-                    samples={filteredSamples}
+                    samples={this.filteredSamples}
                     width={colWidth}
                     height={appHeight * 0.5}
                     isDataLoading={isDataLoading}
@@ -273,10 +279,10 @@ export default class App extends React.Component<{}, State> {
 
                 <SampleBrowser
                   dataset={dataset}
-                  samples={filteredSamples}
+                  samples={this.filteredSamples}
                   height={appHeight * (dataset == 'celeb' ? 1 : 0.5)}
                   isDataLoading={isDataLoading}
-                  matrixData={matrixData}
+                  matrixData={this.matrixData}
                   dimUserNames={dimUserNames}
                   filters={filters}
                 />
@@ -285,9 +291,8 @@ export default class App extends React.Component<{}, State> {
               <Col span={12}>
                 <Grid
                   dataset={dataset}
-                  samples={samples}
                   filters={filters}
-                  matrixData={matrixData}
+                  matrixData={this.matrixData}
                   height={appHeight}
                   width={colWidth}
                   isDataLoading={isDataLoading}

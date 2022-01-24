@@ -14,7 +14,6 @@ const { Option } = Select;
 interface Props {
   filters: TFilter;
   dataset: string;
-  samples: TResultRow[];
   matrixData: { [dimName: string]: TDistribution };
   height: number;
   width: number;
@@ -209,7 +208,7 @@ export default class Grid extends React.Component<Props, States> {
   }
 
   render() {
-    const { filters, height, width, dataset, samples, matrixData, isDataLoading, dimUserNames } = this.props;
+    const { filters, height, width, matrixData, isDataLoading, dimUserNames } = this.props;
 
     const dims = Object.keys(filters);
     // // TO-DO, maybe resort is not a smart way

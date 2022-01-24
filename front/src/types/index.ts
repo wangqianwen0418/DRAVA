@@ -27,3 +27,5 @@ interface State {
   filters: TFilter;
   samples: TResultRow[];
 }
+
+export type TMatrixData = { [dimName: string]: TDistribution };

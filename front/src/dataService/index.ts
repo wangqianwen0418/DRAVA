@@ -28,7 +28,7 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
     return samples;
   }
 
-  const url = dataset == 'sequence' ? '/assets/results_chr7_atac.csv' : '/assets/test:results_chr1-5_10k_onTad.csv';
+  const url = dataset == 'sequence' ? '/assets/results_chr7_atac.csv' : '/assets/results_chr1-5_10k_onTad.csv';
   const chr = whatCHR(dataset);
 
   const response = await axios({
