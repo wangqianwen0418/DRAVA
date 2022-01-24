@@ -296,7 +296,7 @@ export default class Grid extends React.Component<Props, States> {
               </g>
             );
           })}
-          <g className="links">{this.getLinks(matrixData, stepWidth)}</g>
+          {/* <g className="links">{this.getLinks(matrixData, stepWidth)}</g> */}
         </svg>
       </Card>
     );

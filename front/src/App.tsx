@@ -194,35 +194,21 @@ export default class App extends React.Component<{}, State> {
     });
     return matrixData;
   }
+
   // @compute
   getFilteredSamples(samples: TResultRow[], filters: TFilter): TResultRow[] {
-    console.info('call filtered samples');
-    const userDims = Object.keys(filters).filter(d => !d.includes('dim_'));
     const filteredSamples = samples.filter(sample => {
-      // check latent dim z
-      const inLatentSpace = sample.z.every((dimValue, dimIdx) => {
-        const dimName = `dim_${dimIdx}`;
-        if (!filters[dimName]) {
-          return true;
-        } else {
-          return filters[dimName].some(groupIdx =>
-            this.matrixData[dimName]['groupedSamples'][groupIdx].includes(sample.id)
-          );
-        }
-      });
-      //  check other user-defined dims
-      const inUserDims = userDims.every(dimName => {
+      return Object.keys(filters).every(dimName => {
         return filters[dimName].some(groupIdx =>
           this.matrixData[dimName]['groupedSamples'][groupIdx].includes(sample.id)
         );
       });
-      return inLatentSpace && inUserDims;
     });
     return filteredSamples;
   }
 
   render() {
-    const { filters, samples, dataset, isDataLoading, dimUserNames } = this.state;
+    const { filters, dataset, isDataLoading, dimUserNames } = this.state;
 
     const siderWidth = 150,
       headerHeight = 0,
