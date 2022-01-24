@@ -50,6 +50,15 @@ cudnn.benchmark = False
 model = vae_models[config['model_params']['name']](**config['model_params'])
 myModule = VAEModule(model,config['exp_params'])
 
+# checkpoint_callback = ModelCheckpoint(
+#     filepath = f"{tt_logger.save_dir}{tt_logger.name}/version_{tt_logger.experiment.version}/checkpoints",
+#     verbose=True,
+#     save_top_k= -1, # save at each epoch
+#     monitor='val_loss',
+#     mode='min',
+#     prefix=''
+# )
+
 runner = Trainer(default_save_path=f"{tt_logger.save_dir}",
                     min_nb_epochs=1,
                     logger=tt_logger,
@@ -58,6 +67,7 @@ runner = Trainer(default_save_path=f"{tt_logger.save_dir}",
                     val_percent_check=1.,
                     num_sanity_val_steps=5,
                     check_val_every_n_epoch=args.n_epoch,
+                    # checkpoint_callback=checkpoint_callback,
                     early_stop_callback = False,
                     **config['trainer_params'])
                     
