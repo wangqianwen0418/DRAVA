@@ -30,6 +30,7 @@ class BetaVAE_CONV(BaseVAE):
         self.loss_type = loss_type
         
         conv_sizes =  kwargs.get('conv_sizes', [ 3 for i in hidden_dims])
+        self.recons_multi = kwargs.get('recons_multi', 1)
         
         self.C_max = torch.Tensor([max_capacity])
         self.C_stop_iter = Capacity_max_iter
@@ -153,7 +154,7 @@ class BetaVAE_CONV(BaseVAE):
         log_var = args[3]
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
-        recons_loss =F.mse_loss(recons, input) * 100
+        recons_loss =F.mse_loss(recons, input) * self.recons_multi
 
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 

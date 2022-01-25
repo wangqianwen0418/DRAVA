@@ -1,7 +1,7 @@
 model_params:
   name: 'BetaVAE_CONV'
   in_channels: 1
-  latent_dim: 5 # for dsprites
+  latent_dim: 6 # for dsprites
   # latent_dim: 28 # for celeba
   img_size: 64
   hidden_dims: [8, 16, 32, 64, 128]
@@ -9,6 +9,7 @@ model_params:
   gamma: 10.0
   max_capacity: 25
   Capacity_max_iter: 10000
+  recons_multi: 1
 
 exp_params:
   # dataset: celeba
