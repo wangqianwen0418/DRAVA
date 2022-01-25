@@ -284,8 +284,13 @@ export default class Grid extends React.Component<Props, States> {
                 <foreignObject className={styles.inputTextWrapper}>
                   <input
                     value={dimUserNames[dimName] || dimName}
-                    className={styles.inputText}
+                    className={clsx(styles.inputText)}
+                    unselectable="on"
                     onChange={e => this.onChangeDimNames(dimName, e.target.value)}
+                    onDoubleClick={e => {
+                      e.preventDefault();
+                      this.props.setFilters(dimName, -1);
+                    }}
                   />
                 </foreignObject>
 
@@ -296,7 +301,7 @@ export default class Grid extends React.Component<Props, States> {
               </g>
             );
           })}
-          <g className="links">{this.getLinks(matrixData, stepWidth)}</g>
+          {/* <g className="links">{this.getLinks(matrixData, stepWidth)}</g> */}
         </svg>
       </Card>
     );

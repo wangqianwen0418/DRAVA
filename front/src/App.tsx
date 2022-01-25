@@ -43,8 +43,18 @@ interface State {
   isDataLoading: boolean;
 }
 export default class App extends React.Component<{}, State> {
-  filteredSamples: TResultRow[] = [];
+  /****
+   * the distribution of all samples on different dims
+   * calculated based on samples
+   ****/
   matrixData: TMatrixData = {};
+  /***
+   * whether a sample is shown based on each latent dim filter
+   * if the flag from each dim is all true, show this sample
+   * size: samples.length x Object.keys(matrixData).length
+   * calculated based on samples, filters
+   */
+  filterMask: { [sampleId: string]: boolean[] } = {};
   constructor(prop: {}) {
     super(prop);
     this.state = {
@@ -66,7 +76,11 @@ export default class App extends React.Component<{}, State> {
       filters[`dim_${dimNum}`] = range(STEP_NUM);
     });
     this.matrixData = this.calculateMatrixData(samples, dataset);
-    this.filteredSamples = samples;
+
+    // default show all samples
+    samples.forEach(sample => {
+      this.filterMask[sample.id] = Object.keys(this.matrixData).map(_ => true);
+    });
 
     this.setState({ filters, samples, isDataLoading: false });
   }
@@ -104,26 +118,45 @@ export default class App extends React.Component<{}, State> {
 
   // @state update
   setFilters(dimName: string, col: number): void {
-    const { filters } = this.state;
+    const { filters, samples } = this.state;
+    const dimIndex = Object.keys(this.matrixData).indexOf(dimName);
 
     if (col === -1) {
       // set filters for the whole row
       if (filters[dimName].length > 0) {
         filters[dimName] = [];
+        // update filter mask
+        // this.filterMask = this.filterMask.map(d => {
+        //   d[dimIndex] = false;
+        //   return d;
+        // });
+        Object.values(this.filterMask).forEach(d => {
+          d[dimIndex] = false;
+        });
       } else {
         filters[dimName] = range(STEP_NUM);
+        // update filter mask
+        Object.values(this.filterMask).forEach(d => {
+          d[dimIndex] = true;
+        });
       }
     } else {
       // set filters for single grids
       const idx = filters[dimName].indexOf(col);
       if (idx === -1) {
         filters[dimName].push(col);
+        // update filter mask
+        this.matrixData[dimName].groupedSamples[col].forEach(sampleId => {
+          this.filterMask[sampleId][dimIndex] = true;
+        });
       } else {
         filters[dimName].splice(idx, 1);
+        // update filter mask
+        this.matrixData[dimName].groupedSamples[col].forEach(sampleId => {
+          this.filterMask[sampleId][dimIndex] = false;
+        });
       }
     }
-
-    this.filteredSamples = this.getFilteredSamples(this.state.samples, filters);
 
     this.setState({ filters });
   }
@@ -194,35 +227,11 @@ export default class App extends React.Component<{}, State> {
     });
     return matrixData;
   }
-  // @compute
-  getFilteredSamples(samples: TResultRow[], filters: TFilter): TResultRow[] {
-    console.info('call filtered samples');
-    const userDims = Object.keys(filters).filter(d => !d.includes('dim_'));
-    const filteredSamples = samples.filter(sample => {
-      // check latent dim z
-      const inLatentSpace = sample.z.every((dimValue, dimIdx) => {
-        const dimName = `dim_${dimIdx}`;
-        if (!filters[dimName]) {
-          return true;
-        } else {
-          return filters[dimName].some(groupIdx =>
-            this.matrixData[dimName]['groupedSamples'][groupIdx].includes(sample.id)
-          );
-        }
-      });
-      //  check other user-defined dims
-      const inUserDims = userDims.every(dimName => {
-        return filters[dimName].some(groupIdx =>
-          this.matrixData[dimName]['groupedSamples'][groupIdx].includes(sample.id)
-        );
-      });
-      return inLatentSpace && inUserDims;
-    });
-    return filteredSamples;
-  }
 
   render() {
-    const { filters, samples, dataset, isDataLoading, dimUserNames } = this.state;
+    const { filters, dataset, isDataLoading, dimUserNames, samples } = this.state;
+
+    const filteredSamples = samples.filter(sample => this.filterMask[sample.id].every(d => d));
 
     const siderWidth = 150,
       headerHeight = 0,
@@ -270,7 +279,7 @@ export default class App extends React.Component<{}, State> {
                 ) : (
                   <GoslingVis
                     dataset={dataset}
-                    samples={this.filteredSamples}
+                    samples={filteredSamples}
                     width={colWidth}
                     height={appHeight * 0.5}
                     isDataLoading={isDataLoading}
@@ -279,7 +288,7 @@ export default class App extends React.Component<{}, State> {
 
                 <SampleBrowser
                   dataset={dataset}
-                  samples={this.filteredSamples}
+                  samples={filteredSamples}
                   height={appHeight * (dataset == 'celeb' ? 1 : 0.5)}
                   isDataLoading={isDataLoading}
                   matrixData={this.matrixData}
