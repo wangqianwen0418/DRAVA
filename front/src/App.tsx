@@ -54,7 +54,7 @@ export default class App extends React.Component<{}, State> {
    * size: samples.length x Object.keys(matrixData).length
    * calculated based on samples, filters
    */
-  filterMask: boolean[][] = [];
+  filterMask: { [sampleId: string]: boolean[] } = {};
   constructor(prop: {}) {
     super(prop);
     this.state = {
@@ -78,7 +78,9 @@ export default class App extends React.Component<{}, State> {
     this.matrixData = this.calculateMatrixData(samples, dataset);
 
     // default show all samples
-    this.filterMask = samples.map(_ => Object.keys(this.matrixData).map(_ => true));
+    samples.forEach(sample => {
+      this.filterMask[sample.id] = Object.keys(this.matrixData).map(_ => true);
+    });
 
     this.setState({ filters, samples, isDataLoading: false });
   }
@@ -124,16 +126,18 @@ export default class App extends React.Component<{}, State> {
       if (filters[dimName].length > 0) {
         filters[dimName] = [];
         // update filter mask
-        this.filterMask = this.filterMask.map(d => {
+        // this.filterMask = this.filterMask.map(d => {
+        //   d[dimIndex] = false;
+        //   return d;
+        // });
+        Object.values(this.filterMask).forEach(d => {
           d[dimIndex] = false;
-          return d;
         });
       } else {
         filters[dimName] = range(STEP_NUM);
         // update filter mask
-        this.filterMask = this.filterMask.map(d => {
+        Object.values(this.filterMask).forEach(d => {
           d[dimIndex] = true;
-          return d;
         });
       }
     } else {
@@ -143,13 +147,13 @@ export default class App extends React.Component<{}, State> {
         filters[dimName].push(col);
         // update filter mask
         this.matrixData[dimName].groupedSamples[col].forEach(sampleId => {
-          this.filterMask[parseInt(sampleId)][dimIndex] = true;
+          this.filterMask[sampleId][dimIndex] = true;
         });
       } else {
         filters[dimName].splice(idx, 1);
         // update filter mask
         this.matrixData[dimName].groupedSamples[col].forEach(sampleId => {
-          this.filterMask[parseInt(sampleId)][dimIndex] = false;
+          this.filterMask[sampleId][dimIndex] = false;
         });
       }
     }
@@ -227,7 +231,7 @@ export default class App extends React.Component<{}, State> {
   render() {
     const { filters, dataset, isDataLoading, dimUserNames, samples } = this.state;
 
-    const filteredSamples = samples.filter((_, idx) => this.filterMask[idx].every(d => d));
+    const filteredSamples = samples.filter(sample => this.filterMask[sample.id].every(d => d));
 
     const siderWidth = 150,
       headerHeight = 0,
