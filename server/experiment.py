@@ -85,6 +85,11 @@ class VAEModule(pl.LightningModule):
         except:
             pass
 
+        # min and max value for each latent dim, used to generate simu images
+        # to avoid long tail, use the top k value as the max value, least k value as the min value
+        K = 5
+        self.z_range = [ [ [math.inf for _ in range(K) ], [-math.inf for _ in range(K)]  ] for _ in range(self.model.latent_dim) ]
+
     @property
     def logger_folder(self):
         return f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
@@ -185,7 +190,29 @@ class VAEModule(pl.LightningModule):
 
         self.save_sample_dist(save_vector=True, save_label=True) 
         self.save_latent_hist()
-        self.save_simu_images(as_individual=True)
+
+        # # save z range
+        # f = open(os.path.join(self.logger_folder, 'z_range.csv'), 'w')
+        # csv_writer = csv.writer(f)
+        # ranges = []
+        # for dim in self.z_range:
+        #     row = [ dim[0][-1], dim[1][0] ]
+        #     csv_writer.writerow(row)
+        #     ranges.append(row)
+        # f.close()
+
+        # save z range
+        f = open(os.path.join(self.logger_folder, 'z_range.json'), 'w')
+        
+        ranges = []
+        for dim in self.z_range:
+            row = [ dim[0][-1], dim[1][0] ]
+            ranges.append(row)
+        json.dump(ranges, f)
+        f.close()
+
+        #
+        self.save_simu_images(as_individual=True, ranges = ranges)
         print('test_loss', avg_loss)
 
         return {'test_loss': avg_loss}
@@ -208,13 +235,23 @@ class VAEModule(pl.LightningModule):
             result_writer = csv.writer(f)
 
 
-        for i, mu in enumerate(mu.tolist()):
+        for i, m in enumerate(mu.tolist()):
             if self.params['dataset'] == 'celeba':
-                row = [','.join([str(m) for m in mu])]
+                row = [','.join([str(d) for d in m])]
             else:
-                row = labels[i].tolist() + [','.join([str(m) for m in mu])]
+                row = labels[i].tolist() + [','.join([str(d) for d in m])]
 
             result_writer.writerow(row)
+
+            # get range z
+            for j, d in enumerate(m):
+                if d < self.z_range[j][0][-1]:
+                    self.z_range[j][0][-1] = d
+                    self.z_range[j][0].sort()
+
+                if d > self.z_range[j][1][0]:
+                    self.z_range[j][1][0] = d
+                    self.z_range[j][1].sort()
 
         f.close()
 
@@ -281,7 +318,7 @@ class VAEModule(pl.LightningModule):
             json.dump(self.latent_hist.tolist(), f)
 
 
-    def save_simu_images(self, as_individual=False):
+    def save_simu_images(self, as_individual=False, ranges = []):
         """
         return an image grid,
         each row is a hidden dimension, 
@@ -294,10 +331,23 @@ class VAEModule(pl.LightningModule):
             # baseline = torch.zeros( self.model.latent_dim)
             # baseline = torch.ones( self.model.latent_dim) 
             # baseline = torch.randn( self.model.latent_dim)
+            if len(ranges)>0:
+                baseline = torch.tensor( 
+                    [(ranges[i][0] + ranges[i][1])/2 for i in range(self.model.latent_dim)]
+                    )
             z_ = [baseline for _ in range(self.bin_num)]
             z_ = torch.stack(z_, dim =0)
             mask = torch.tensor([j for j in range(self.bin_num)])
-            z_[mask, i] = torch.tensor([- 3 + j/(self.bin_num-1)* 6 for j in range(self.bin_num)]).float()
+
+            if len(ranges) == 0:
+                z_min = -3
+                z_max = 3
+            else:
+                z_min = ranges[i][0]
+                z_max = ranges[i][1]    
+            z_[mask, i] = torch.tensor(
+                [z_min + j/(self.bin_num-1)* (z_max - z_min) for j in range(self.bin_num)]
+            ).float()
 
             z.append(z_)
         z = torch.stack(z)
