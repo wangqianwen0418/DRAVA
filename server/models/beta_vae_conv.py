@@ -5,6 +5,7 @@ from torch.nn import functional as F
 from .types_ import *
 
 import math
+import numpy as np
 
 
 class BetaVAE_CONV(BaseVAE):
@@ -31,12 +32,23 @@ class BetaVAE_CONV(BaseVAE):
         
         conv_sizes =  kwargs.get('conv_sizes', [ 3 for i in hidden_dims])
         self.recons_multi = kwargs.get('recons_multi', 1)
+        is_masked = kwargs.get('is_masked', False)
         
         self.C_max = torch.Tensor([max_capacity])
         self.C_stop_iter = Capacity_max_iter
         out_channels = in_channels
 
         modules = []
+
+        # for matrix images, we use a mask otherwise the diagonal is emphasized too much
+        self.mask = np.ones( (img_size, img_size) )
+        ratio = 0.5
+        if is_masked:
+            for i in range(img_size):
+                for j in range(img_size):
+                    self.mask[i,j] = ratio * abs(i-j)/63 + (1-ratio)
+        self.mask = torch.from_numpy(self.mask).float()
+        self.mask = self.mask.to(torch.cuda.current_device())
 
 
         # Build Encoder
@@ -154,7 +166,7 @@ class BetaVAE_CONV(BaseVAE):
         log_var = args[3]
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
-        recons_loss =F.mse_loss(recons, input) * self.recons_multi
+        recons_loss =F.mse_loss(recons * self.mask, input * self.mask) * self.recons_multi
 
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 
