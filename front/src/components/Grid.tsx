@@ -3,7 +3,7 @@ import styles from './Grid.module.css';
 import clsx from 'clsx';
 import { Card, Select, Tooltip } from 'antd';
 
-import { getMax, debounce, getSampleHist, generateDistribution } from 'helpers';
+import { getMax, debounce } from 'helpers';
 import { STEP_NUM } from 'Const';
 
 import { scaleLinear, scaleLog, ScaleLogarithmic } from 'd3-scale';
