@@ -2,6 +2,7 @@ import json
 import numpy as np
 from PIL import Image
 from io import BytesIO
+from matplotlib import cm as colormap
 
 import flask
 from flask import request, jsonify, safe_join, send_from_directory, send_file, Blueprint, current_app, g
@@ -18,13 +19,30 @@ sequence_data = []
 def test():
     return 'api test successfully'
 
+# @api.route('/get_matrix_sample', methods=['GET'])
+# def get_matrix_sample():
+#     '''
+#     e.g., base_url/api/get_matrix_sample?id=xx
+#     '''
+#     id = request.args.get('id', type=str)
+#     return send_from_directory(safe_join('../data/', 'tad_imgs'), f'chr5:{int(id)+1}.jpg')
+
 @api.route('/get_matrix_sample', methods=['GET'])
 def get_matrix_sample():
     '''
     e.g., base_url/api/get_matrix_sample?id=xx
     '''
     id = request.args.get('id', type=str)
-    return send_from_directory(safe_join('../data/', 'tad_imgs'), f'chr5:{int(id)+1}.jpg')
+    img_src = Image.open(f'../data/tad_imgs/chr5:{int(id)+1}.jpg').convert('L')
+    im = np.array(img_src)
+    im = colormap.get_cmap('viridis')(im) * 255
+    pil_img = Image.fromarray(im.astype(np.uint8)).convert('RGB')
+
+    img_io = BytesIO()
+    pil_img.save(img_io, 'JPEG', quality=70)
+    img_io.seek(0)
+    return send_file(img_io, mimetype='image/jpg')
+    
 
 @api.route('/get_sequence_sample', methods=['GET'])
 def get_sequence_sample():
