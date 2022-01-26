@@ -4,7 +4,10 @@ import { Row, Col, Layout, Menu, Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 
 import { RANGE_MAX, RANGE_MIN, STEP_NUM } from 'Const';
-import { generateDistribution, range, withinRange, getRange } from 'helpers';
+import { generateDistribution, range } from 'helpers';
+
+import z_ranges_sequence from 'assets/z_range_sequence.json';
+import z_ranges_matrix from 'assets/z_range_matrix.json';
 
 import Grid from 'components/Grid';
 import SampleBrowser from 'components/SampleBrowser';
@@ -16,6 +19,14 @@ import { TResultRow, TFilter, TDistribution, TMatrixData } from 'types';
 
 const { Header, Sider, Content } = Layout;
 const { SubMenu } = Menu;
+
+/***
+ * for learned latent dimensions, use the range used to generate simu images
+ */
+const Z_Ranges: { [k: string]: number[][] } = {
+  sequence: z_ranges_sequence,
+  matrix: z_ranges_matrix
+};
 
 const uploadProps = {
   name: 'file',
@@ -194,12 +205,13 @@ export default class App extends React.Component<{}, State> {
     dimNames.forEach((dimName, idx) => {
       if (dimName.includes('dim')) {
         const dimNum = parseInt(dimName.split('_')[1]);
+        const range = Z_Ranges[dataset] ? Z_Ranges[dataset][idx] : [RANGE_MIN, RANGE_MAX];
         row = generateDistribution(
           samples.map(sample => sample['z'][dimNum]),
           false,
           STEP_NUM,
           sampleIds,
-          [RANGE_MIN, RANGE_MAX]
+          range
         );
       } else if (dimName == 'size') {
         row = generateDistribution(

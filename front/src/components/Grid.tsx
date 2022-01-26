@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import styles from './Grid.module.css';
 import clsx from 'clsx';
-import { Card, Select } from 'antd';
+import { Card, Select, Tooltip } from 'antd';
 
 import { getMax, debounce, getSampleHist, generateDistribution } from 'helpers';
 import { STEP_NUM } from 'Const';
@@ -50,24 +50,27 @@ export default class Grid extends React.Component<Props, States> {
     const imgSize = Math.min(stepWidth, this.barHeight);
     const dimNum = dimName.split('_')[1];
     return row['histogram'].map((h, col_idx) => {
+      const href = `assets/${this.props.dataset}_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`;
       const image = (
-        <g>
-          <image
-            href={`assets/${this.props.dataset}_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`}
-            className={clsx(styles.latentImage, this.isSelected(dimName, col_idx) && styles.isImageSelected)}
-            x={this.gap / 2}
-            y={this.barHeight + this.barLabelHeight + this.gap + this.gap / 2}
-            width={imgSize}
-            height={imgSize}
-          />
-          <rect
-            className={clsx(styles.imageBorder, this.isSelected(dimName, col_idx) && styles.isImageSelected)}
-            y={this.barHeight + this.barLabelHeight + this.gap}
-            fill="none"
-            width={imgSize + this.gap}
-            height={imgSize + this.gap}
-          />
-        </g>
+        <Tooltip title={<img width={64} src={href} />} destroyTooltipOnHide placement="top">
+          <g>
+            <image
+              href={href}
+              className={clsx(styles.latentImage, this.isSelected(dimName, col_idx) && styles.isImageSelected)}
+              x={this.gap / 2}
+              y={this.barHeight + this.barLabelHeight + this.gap + this.gap / 2}
+              width={imgSize}
+              height={imgSize}
+            />
+            <rect
+              className={clsx(styles.imageBorder, this.isSelected(dimName, col_idx) && styles.isImageSelected)}
+              y={this.barHeight + this.barLabelHeight + this.gap}
+              fill="none"
+              width={imgSize + this.gap}
+              height={imgSize + this.gap}
+            />
+          </g>
+        </Tooltip>
       );
 
       return (
