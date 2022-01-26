@@ -1,5 +1,5 @@
 model_params:
-  name: 'BetaVAE_CONV'
+  name: 'BetaVAE'
   in_channels: 3
   latent_dim: 20 # for celeba
   hidden_dims: [32, 64, 128, 256, 512]
@@ -16,7 +16,7 @@ exp_params:
   batch_size: 144 # Better to have a square number
   LR: 0.0005
   weight_decay: 0.0
-  scheduler_gamma: 0.95
+  # scheduler_gamma: 0.95
 
 trainer_params:
   gpus: 1
