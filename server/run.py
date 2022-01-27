@@ -80,5 +80,28 @@ shutil.copy(args.filename, os.path.join(logger_path, 'config.yaml'))
 print(f"======= Training {config['model_params']['name']} =======")
 runner.fit(myModule)
 
+print("=========test==================")
+# test with the best model if checkpoin exist
+# load state dict from check point
+logger_path = f"{tt_logger.save_dir}/{tt_logger.name}/version_{tt_logger.experiment.version}"
+ckp_dir = f"{logger_path}/checkpoints/"
+ckp_file_num = len(os.listdir(ckp_dir))
+if (not os.path.exists(ckp_dir) ) or ckp_file_num == 0:
+    print('==========no checkpoint, use the latest model===========')
+    runner.test(myModule) 
 
-runner.test(myModule)
+else:
+    
+    ckp_name = [f for f in os.listdir(ckp_dir)][ckp_file_num-1] # use the lastest checkpoint if there is more than one
+    print(f'==========found checkpoint {ckp_name }===========')
+    checkpoint = torch.load( os.path.join(ckp_dir, ckp_name) )
+    new_state_dict = {}
+    for k in checkpoint['state_dict']:
+        new_k = k.replace('model.', '')
+        new_state_dict[new_k] = checkpoint['state_dict'][k]
+    model.load_state_dict(new_state_dict)
+
+    best_module = VAEModule(model, config['exp_params'])
+    best_module.freeze()
+
+    runner.test(best_module)

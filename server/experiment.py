@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import os
+from pathlib import Path
 import pandas as pd
 import json
 import csv
@@ -78,8 +79,6 @@ class VAEModule(pl.LightningModule):
         self.hold_graph = False
 
         self.bin_num = 11
-        self.latent_hist = torch.zeros(self.model.latent_dim, self.bin_num).to(self.curr_device)
-
         try:
             self.hold_graph = self.params['retain_first_backpass']
         except:
@@ -190,8 +189,7 @@ class VAEModule(pl.LightningModule):
 
 
         # save z range
-        f = open(os.path.join(self.logger_folder, 'z_range.json'), 'w')
-        
+        f = open(os.path.join(self.logger_folder, 'results/', 'z_range.json'), 'w')     
         ranges = []
         for dim in self.z_range:
             row = [ dim[0][-1], dim[1][0] ]
@@ -200,7 +198,7 @@ class VAEModule(pl.LightningModule):
         f.close()
 
         # save image reconstruction space
-        self.save_simu_images(as_individual=True, ranges = ranges)
+        self.save_simu_images(as_individual=True, ranges = ranges, is_test = True)
         print('test_loss', avg_loss)
 
         return {'test_loss': avg_loss}
@@ -209,8 +207,10 @@ class VAEModule(pl.LightningModule):
         """
         save results in a csw file, columns are [labels] + [latent_z]
         """
+        filepath = f"{self.logger_folder}/results/"
         if batch_idx == 0:
-            f = open(os.path.join(self.logger_folder, 'results.csv'), 'w')
+            Path(filepath).mkdir(parents=True, exist_ok = True)
+            f = open(os.path.join(filepath, 'results.csv'), 'w')
             result_writer = csv.writer(f)
 
             if self.params['dataset'] == 'celeba':
@@ -219,7 +219,7 @@ class VAEModule(pl.LightningModule):
                 header = ['chr', 'start', 'end', 'level', 'mean', 'score'][0: len(labels[0])] + ['z']
             result_writer.writerow(header)
         else: 
-            f = open(os.path.join(self.logger_folder, 'results.csv'), 'a')
+            f = open(os.path.join(filepath, 'results.csv'), 'a')
             result_writer = csv.writer(f)
 
 
@@ -243,53 +243,7 @@ class VAEModule(pl.LightningModule):
 
         f.close()
 
-    def save_sample_dist(self, save_vector=False, save_label=False):
-        """
-        save real input samples to demonstrate the latent dim value distribution 
-        """
-        test_input, test_label = next(iter(self.sample_dataloader))
-        if self.is_tensor_dataset(self.params['dataset']):
-            test_input = test_input.float()
-        
-            
-        test_input = test_input.to(self.curr_device)
-        test_label = test_label.to(self.curr_device)
-        
-
-        [recons, test_input, mu, log_var] = self.forward(test_input, labels = test_label)
-        with open(f"{self.logger_folder}/sample.json", 'w') as f:
-            json.dump(mu.tolist(), f)
-
-        filepath = f"{self.logger_folder}/imgs"
-        if not(os.path.isdir(filepath)):
-            os.mkdir(filepath)
-        vutils.save_image(test_input.data,
-                            f"{filepath}/samples.png",
-                            normalize=True,
-                            nrow=10)
-
-        # save sample images as individual images rather than a grid
-        img_idx = 0
-        for img in test_input.data:
-            if not(os.path.isdir(f"{filepath}/sample_imgs")):
-                os.mkdir(f"{filepath}/sample_imgs")
-            vutils.save_image(img, f"{filepath}/sample_imgs/{img_idx}.png",)
-            img_idx += 1
-
-
-        if save_vector:
-            # # save as pt
-            # torch.save(mu, f"{filepath}/real_samples_vector.pt")
-            # save vector as json
-            with open(f"{filepath}/samples_vector.json", "w") as f:
-                json.dump(mu.tolist(), f)
-
-        if save_label:
-            with open(f'{filepath}/sample_labels.json', 'w') as f:
-                json.dump(test_label.tolist(), f)
-
-
-    def save_simu_images(self, as_individual=False, ranges = []):
+    def save_simu_images(self, as_individual=False, ranges = [], is_test=False):
         """
         return an image grid,
         each row is a hidden dimension, 
@@ -327,8 +281,7 @@ class VAEModule(pl.LightningModule):
         recons = self.model.decode(z)
 
         filepath = f"{self.logger_folder}/imgs"
-        if not(os.path.isdir(filepath)):
-            os.mkdir(filepath)
+        Path(filepath).mkdir(parents=True, exist_ok=True)
 
         if self.is_tensor_dataset(self.params['dataset']):
             recons_imgs = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
@@ -336,16 +289,20 @@ class VAEModule(pl.LightningModule):
             recons_imgs = recons.cpu().data
         
         if as_individual:
-            if not(os.path.isdir(f"{filepath}/simu")):
-                os.mkdir(f"{filepath}/simu")
+            Path(f"{self.logger_folder}/results/simu").mkdir(parents=True, exist_ok=True)
             img_idx = 0
             for img in recons_imgs:
                 q, mod = divmod(img_idx, self.bin_num)
-                vutils.save_image(img, f"{filepath}/simu/{q}_{mod}.png",)
+                vutils.save_image(img, f"{self.logger_folder}/results/simu/{q}_{mod}.png",)
                 img_idx += 1
         
+        if is_test:
+            save_path = f"{self.logger_folder}/results/simu.png"
+        else:
+            save_path = f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png"
+        
         vutils.save_image(recons_imgs,
-                            f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png",
+                            save_path,
                             normalize=True,
                             nrow=self.bin_num)
 
