@@ -211,6 +211,7 @@ export default class App extends React.Component<{}, State> {
           false,
           STEP_NUM,
           sampleIds,
+          1,
           range
         );
       } else if (dimName == 'size') {
@@ -218,7 +219,8 @@ export default class App extends React.Component<{}, State> {
           samples.map(s => s.end - s.start),
           false,
           STEP_NUM,
-          sampleIds
+          sampleIds,
+          10
         );
       } else if (dimName == 'level') {
         row = generateDistribution(

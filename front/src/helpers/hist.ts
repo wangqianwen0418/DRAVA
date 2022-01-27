@@ -14,24 +14,32 @@ export const range = (v: number, fill?: number): number[] => {
 };
 
 // math.min and math.max crashed with large arrays
-export const getMax = (arr: number[]): number => {
+// can use k to avoid the long tail in histogram.
+// insteading of return the largest value, returen the k - th largest value
+export const getMax = (arr: number[], K = 1): number => {
   let len = arr.length;
-  let max = -Infinity;
+  const max = range(K).map(d => -Infinity);
 
   while (len--) {
-    max = arr[len] > max ? arr[len] : max;
+    if (arr[len] > max[0]) {
+      max[0] = arr[len];
+      max.sort();
+    }
   }
-  return max;
+  return max[0];
 };
 
-export const getMin = (arr: number[]): number => {
+export const getMin = (arr: number[], K = 1): number => {
   let len = arr.length;
-  let min = Infinity;
+  const min = range(K).map(d => Infinity);
 
   while (len--) {
-    min = arr[len] < min ? arr[len] : min;
+    if (arr[len] < min[K - 1]) {
+      min[K - 1] = arr[len];
+      min.sort();
+    }
   }
-  return min;
+  return min[K - 1];
 };
 
 /**
@@ -61,24 +69,13 @@ const value2rangeIdx = (v: number, min: number, max: number): number => {
   const step = (max - min) / STEP_NUM;
   return Math.floor((v - min) / step);
 };
-/**
- * @param samples
- * @returns historgram of each dimension
- */
-export const getSampleHist = (samples: number[][], sampleIds: string[]): TDistribution[] => {
-  const latentDim = samples[0].length;
-  var results = range(latentDim).map(i => {
-    const sampleValues = samples.map(sample => sample[i]);
-    return generateDistribution(sampleValues, false, STEP_NUM, sampleIds, [RANGE_MIN, RANGE_MAX]);
-  });
-  return results;
-};
 
 export const generateDistribution = (
   samples: string[] | number[],
   isCategorical: boolean,
   binNum?: number,
   sampleIds?: string[],
+  K?: number,
   valueRange?: number[] // users can specify a range to draw the histogram
 ): TDistribution => {
   // no meaningful data
@@ -91,7 +88,7 @@ export const generateDistribution = (
 
   // meaningful data
   if (isCategorical) return countingCategories(samples, sampleIds);
-  else return generateHistogram(samples as number[], binNum, sampleIds, valueRange);
+  else return generateHistogram(samples as number[], binNum, sampleIds, K, valueRange);
 };
 
 const countingCategories = (samples: string[] | number[], sampleIds: string[]): TDistribution => {
@@ -116,6 +113,7 @@ const generateHistogram = (
   samples: number[],
   binNum: number = STEP_NUM,
   sampleIds: string[],
+  K: number = 1,
   valueRange?: number[]
 ): TDistribution => {
   var histogram: number[] = range(STEP_NUM, 0);
@@ -126,8 +124,8 @@ const generateHistogram = (
 
   var [minV, maxV] = valueRange || [0, 0];
   if (!valueRange) {
-    minV = getMin(samples);
-    maxV = getMax(samples);
+    minV = getMin(samples, K);
+    maxV = getMax(samples, K);
   }
 
   samples.forEach((sample, sampleIdx) => {

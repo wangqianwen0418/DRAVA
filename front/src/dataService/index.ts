@@ -1,6 +1,4 @@
 import axios from 'axios';
-import { stratify } from 'd3-hierarchy';
-import { getSampleHist } from 'helpers';
 import Papa from 'papaparse';
 import { TResultRow, TCSVResultRow } from 'types';
 
