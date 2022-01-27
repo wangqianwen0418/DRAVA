@@ -12,7 +12,7 @@ import pytorch_lightning as pl
 from torchvision import transforms
 import torchvision.utils as vutils
 from torchvision.datasets import CelebA
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 from torch.optim import SGD, Adam, Adagrad
 from PIL import Image
 
@@ -485,10 +485,30 @@ class VAEModule(pl.LightningModule):
             root = os.path.join(self.params['data_path'], self.params['dataset'] )
             dataset = CustomImageDataset(root = root, transform=self.data_transforms())
             self.num_train_imgs = len(dataset)
-            return DataLoader(dataset,
-                            batch_size= self.params['batch_size'],
-                            shuffle = True,
-                            drop_last=True)
+
+            if self.params['weighted_sampler']:
+                # resampling training data based on the inital size
+                weights = torch.tensor([1, 3]) # upsampling by 3 if the size if larger than 20 * 10K
+
+                def get_weight(labels, sample_index, weights):
+                    label = labels.iloc[sample_index]
+                    return weights[ 1 if (label['end'] - label['start'] > 24) else 0 ]
+                size_sampler = WeightedRandomSampler(
+                    weights = [get_weight(dataset.img_labels, i, weights) for i in range(self.num_train_imgs)],
+                    num_samples = self.num_train_imgs,
+                    replacement = True
+                )
+                
+                return DataLoader(dataset,
+                                batch_size= self.params['batch_size'],
+                                # shuffle = True, # no shuffle is sample is used
+                                sampler = size_sampler,
+                                drop_last=True)
+            else:
+                return DataLoader(dataset,
+                                batch_size= self.params['batch_size'],
+                                shuffle = True, 
+                                drop_last=True)
         
         elif self.is_tensor_dataset(self.params['dataset']):
             print('start train data loading')

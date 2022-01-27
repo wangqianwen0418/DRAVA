@@ -2,17 +2,18 @@ model_params:
   name: 'BetaVAE_CONV'
   in_channels: 1
   latent_dim: 8 
-  hidden_dims: [16, 64, 256]
+  hidden_dims: [16, 32, 64, 128, 256, 512]
   loss_type: 'B'
   img_size: 64
   gamma: 10.0
   max_capacity: 25
   Capacity_max_iter: 10000
-  conv_sizes: [7,5,3]
-  recons_multi: 1
+  # conv_sizes: [7,5,3]
+  recons_multi: 100
+  is_masked: True
 
 exp_params:
-  dataset: TAD_HFFc6_chr7_10k
+  dataset: TAD_HFFc6_10k_chr1-5
   data_path: "./data/"
   img_size: 64
   optimizer: "adam"
