@@ -79,3 +79,6 @@ shutil.copy(args.filename, os.path.join(logger_path, 'config.yaml'))
 
 print(f"======= Training {config['model_params']['name']} =======")
 runner.fit(myModule)
+
+
+runner.test(myModule)

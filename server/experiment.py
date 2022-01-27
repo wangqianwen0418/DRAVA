@@ -181,25 +181,13 @@ class VAEModule(pl.LightningModule):
                                             optimizer_idx = optimizer_idx,
                                             batch_idx = batch_idx)
 
-        self.count_latent_dist(mu)
+        # save latent vectors of samples in this batch
         self.save_results(mu, labels, batch_idx)
         return loss
 
     def test_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
 
-        self.save_sample_dist(save_vector=True, save_label=True) 
-        self.save_latent_hist()
-
-        # # save z range
-        # f = open(os.path.join(self.logger_folder, 'z_range.csv'), 'w')
-        # csv_writer = csv.writer(f)
-        # ranges = []
-        # for dim in self.z_range:
-        #     row = [ dim[0][-1], dim[1][0] ]
-        #     csv_writer.writerow(row)
-        #     ranges.append(row)
-        # f.close()
 
         # save z range
         f = open(os.path.join(self.logger_folder, 'z_range.json'), 'w')
@@ -211,7 +199,7 @@ class VAEModule(pl.LightningModule):
         json.dump(ranges, f)
         f.close()
 
-        #
+        # save image reconstruction space
         self.save_simu_images(as_individual=True, ranges = ranges)
         print('test_loss', avg_loss)
 
@@ -254,16 +242,6 @@ class VAEModule(pl.LightningModule):
                     self.z_range[j][1].sort()
 
         f.close()
-
-    def count_latent_dist(self, mu):
-        """
-        count the value distribution at each latent dimension
-        """
-
-        latent_hist = [ torch.histc( mu[:, i], bins= self.bin_num, min=-3, max= 3) for i in range(self.model.latent_dim)]
-        latent_hist = torch.stack(latent_hist) # latent_dim * bin_size
-        latent_hist = latent_hist.to(self.curr_device)
-        self.latent_hist = latent_hist + self.latent_hist
 
     def save_sample_dist(self, save_vector=False, save_label=False):
         """
@@ -309,13 +287,6 @@ class VAEModule(pl.LightningModule):
         if save_label:
             with open(f'{filepath}/sample_labels.json', 'w') as f:
                 json.dump(test_label.tolist(), f)
-
-    def save_latent_hist(self):
-        """
-        save the value distribution of training images in each hidden dimension
-        """   
-        with open(f"{self.logger_folder}/hist.json", 'w') as f:
-            json.dump(self.latent_hist.tolist(), f)
 
 
     def save_simu_images(self, as_individual=False, ranges = []):
@@ -486,7 +457,7 @@ class VAEModule(pl.LightningModule):
             dataset = CustomImageDataset(root = root, transform=self.data_transforms())
             self.num_train_imgs = len(dataset)
 
-            if self.params['weighted_sampler']:
+            if 'weighted_sampler' in self.params and self.params['weighted_sampler']:
                 # resampling training data based on the inital size
                 weights = torch.tensor([1, 3]) # upsampling by 3 if the size if larger than 20 * 10K
 
