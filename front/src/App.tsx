@@ -4,7 +4,7 @@ import { Row, Col, Layout, Menu, Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 
 import { RANGE_MAX, RANGE_MIN, STEP_NUM } from 'Const';
-import { generateDistribution, range } from 'helpers';
+import { generateDistribution, getDimValues, range } from 'helpers';
 
 import z_ranges_sequence from 'assets/z_range_sequence.json';
 import z_ranges_matrix from 'assets/z_range_matrix.json';
@@ -203,39 +203,17 @@ export default class App extends React.Component<{}, State> {
       }
     }
     dimNames.forEach((dimName, idx) => {
+      const dimValues = getDimValues(samples, dimName);
       if (dimName.includes('dim')) {
-        const dimNum = parseInt(dimName.split('_')[1]);
+        // use the same range we used to generate simu images
         const range = Z_Ranges[dataset] ? Z_Ranges[dataset][idx] : [RANGE_MIN, RANGE_MAX];
-        row = generateDistribution(
-          samples.map(sample => sample['z'][dimNum]),
-          false,
-          STEP_NUM,
-          sampleIds,
-          1,
-          range
-        );
+        row = generateDistribution(dimValues, false, STEP_NUM, sampleIds, 1, range);
       } else if (dimName == 'size') {
-        row = generateDistribution(
-          samples.map(s => s.end - s.start),
-          false,
-          STEP_NUM,
-          sampleIds,
-          10
-        );
+        row = generateDistribution(dimValues, false, STEP_NUM, sampleIds, 10);
       } else if (dimName == 'level') {
-        row = generateDistribution(
-          samples.map(s => s['level']),
-          true,
-          STEP_NUM,
-          sampleIds
-        );
+        row = generateDistribution(dimValues, true, STEP_NUM, sampleIds);
       } else {
-        row = generateDistribution(
-          samples.map(s => s[dimName]),
-          false,
-          STEP_NUM,
-          sampleIds
-        );
+        row = generateDistribution(dimValues, false, STEP_NUM, sampleIds);
       }
       matrixData[dimName] = row;
     });
