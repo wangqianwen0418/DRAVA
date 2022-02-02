@@ -7,7 +7,7 @@ import { getMax, debounce } from 'helpers';
 import { STEP_NUM } from 'Const';
 
 import { scaleLinear, scaleLog, ScaleLogarithmic } from 'd3-scale';
-import { TDistribution, TResultRow, TFilter } from 'types';
+import { TDistribution, TFilter } from 'types';
 
 const { Option } = Select;
 
@@ -35,11 +35,16 @@ export default class Grid extends React.Component<Props, States> {
     super(props);
   }
 
-  // @compute
+  /**
+   * @compute
+   * */
   isSelected(dimName: string, col_idx: number): boolean {
     return this.props.filters[dimName].includes(col_idx);
   }
-  // @drawing
+
+  /**
+   * @drawing
+   * */
   getRow(
     row: TDistribution,
     dimName: string,
@@ -103,7 +108,10 @@ export default class Grid extends React.Component<Props, States> {
       );
     });
   }
-  // @drawing
+
+  /**
+   * @drawing
+   * */
   getAdditionalRow(
     row: TDistribution,
     dimName: string,
@@ -148,64 +156,69 @@ export default class Grid extends React.Component<Props, States> {
     });
   }
   // @drawing
-  getLinks(matrixData: { [k: string]: TDistribution }, stepWidth: number) {
-    const { filters } = this.props,
-      dims = Object.keys(filters);
-    const linkGroups: ReactNode[] = [];
+  // getLinks(matrixData: { [k: string]: TDistribution }, stepWidth: number) {
+  //   const { filters } = this.props,
+  //     dims = Object.keys(filters);
+  //   const linkGroups: ReactNode[] = [];
 
-    for (let i = 0; i < dims.length - 1; i++) {
-      const links: ReactNode[] = [];
-      const prevRow = matrixData[dims[i]],
-        nextRow = matrixData[dims[i + 1]];
+  //   for (let i = 0; i < dims.length - 1; i++) {
+  //     const links: ReactNode[] = [];
+  //     const prevRow = matrixData[dims[i]],
+  //       nextRow = matrixData[dims[i + 1]];
 
-      prevRow['groupedSamples'].forEach((prevSampleIds, prevIdx) => {
-        nextRow['groupedSamples'].forEach((nextSampleIds, nextIdx) => {
-          const isShow =
-            this.isSelected(dims[i], prevIdx) &&
-            this.isSelected(dims[i + 1], nextIdx) &&
-            (!dims[i].includes('dim') || !dims[i + 1].includes('dim'));
+  //     prevRow['groupedSamples'].forEach((prevSampleIds, prevIdx) => {
+  //       nextRow['groupedSamples'].forEach((nextSampleIds, nextIdx) => {
+  //         const isShow =
+  //           this.isSelected(dims[i], prevIdx) &&
+  //           this.isSelected(dims[i + 1], nextIdx) &&
+  //           (!dims[i].includes('dim') || !dims[i + 1].includes('dim'));
 
-          const insectSampleIds = prevSampleIds.filter(sampleId => nextSampleIds.includes(sampleId)),
-            prevX = this.spanWidth + prevIdx * (stepWidth + this.gap) + stepWidth / 2,
-            prevY = i * (this.barHeight * 2 + this.barLabelHeight + this.rowGap) + this.barHeight + this.barLabelHeight,
-            nextX = this.spanWidth + nextIdx * (stepWidth + this.gap) + stepWidth / 2,
-            nextY = prevY + (this.barHeight * 2 + this.barLabelHeight + this.rowGap);
+  //         const insectSampleIds = prevSampleIds.filter(sampleId => nextSampleIds.includes(sampleId)),
+  //           prevX = this.spanWidth + prevIdx * (stepWidth + this.gap) + stepWidth / 2,
+  //           prevY = i * (this.barHeight * 2 + this.barLabelHeight + this.rowGap) + this.barHeight + this.barLabelHeight,
+  //           nextX = this.spanWidth + nextIdx * (stepWidth + this.gap) + stepWidth / 2,
+  //           nextY = prevY + (this.barHeight * 2 + this.barLabelHeight + this.rowGap);
 
-          const link = (
-            <line
-              x1={prevX}
-              y1={prevY}
-              x2={nextX}
-              y2={nextY}
-              stroke="steelblue"
-              strokeWidth={2}
-              opacity={0.3}
-              key={`${prevIdx}_${nextIdx}`}
-            />
-          );
-          if (
-            (insectSampleIds.length / prevSampleIds.length > 0.1 ||
-              insectSampleIds.length / nextSampleIds.length > 0.1) &&
-            isShow
-          ) {
-            links.push(link);
-          }
-        });
-      });
-      linkGroups.push(
-        <g key={i} className={`row_${i}`}>
-          {links}
-        </g>
-      );
-    }
-    return <g className="links">{linkGroups}</g>;
-  }
-  // call props functions
+  //         const link = (
+  //           <line
+  //             x1={prevX}
+  //             y1={prevY}
+  //             x2={nextX}
+  //             y2={nextY}
+  //             stroke="steelblue"
+  //             strokeWidth={2}
+  //             opacity={0.3}
+  //             key={`${prevIdx}_${nextIdx}`}
+  //           />
+  //         );
+  //         if (
+  //           (insectSampleIds.length / prevSampleIds.length > 0.1 ||
+  //             insectSampleIds.length / nextSampleIds.length > 0.1) &&
+  //           isShow
+  //         ) {
+  //           links.push(link);
+  //         }
+  //       });
+  //     });
+  //     linkGroups.push(
+  //       <g key={i} className={`row_${i}`}>
+  //         {links}
+  //       </g>
+  //     );
+  //   }
+  //   return <g className="links">{linkGroups}</g>;
+  // }
+
+  /***
+   *  call props functions
+   * */
   onChangeDim(dimNames: string[]) {
     this.props.updateDims(dimNames);
   }
 
-  // call props function
+  /***
+   *  call props functions
+   * */
   onChangeDimNames(dimName: string, newName: string) {
     this.props.setDimUserNames({ [dimName]: newName });
   }
@@ -287,7 +300,7 @@ export default class Grid extends React.Component<Props, States> {
               </g>
             );
           })}
-          <g className="links">{this.getLinks(matrixData, stepWidth)}</g>
+          {/* <g className="links">{this.getLinks(matrixData, stepWidth)}</g> */}
         </svg>
       </Card>
     );
