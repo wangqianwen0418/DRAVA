@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import styles from './Grid.module.css';
+import styles from './LatentDim.module.css';
 import clsx from 'clsx';
 import { Card, Select, Tooltip } from 'antd';
 
@@ -83,16 +83,16 @@ export default class Grid extends React.Component<Props, States> {
           {/* histogram */}
           <text
             x={(stepWidth + this.gap) * 0.5}
-            y={this.barHeight + this.barLabelHeight - yScale(h)!}
             fontSize={8}
             textAnchor="middle"
+            y={this.barHeight + this.barLabelHeight - yScale(h) || 0}
           >
             {h > 0 ? h : ''}
           </text>
           <rect
-            height={yScale(h)}
+            height={yScale(h) || 0}
             width={stepWidth}
-            y={this.barHeight + this.barLabelHeight - yScale(h)!}
+            y={this.barHeight + this.barLabelHeight - yScale(h) || 0}
             fill="lightgray"
             className={clsx(this.isSelected(dimName, col_idx) && styles.isBarSelected)}
           />
@@ -214,14 +214,6 @@ export default class Grid extends React.Component<Props, States> {
     const { filters, height, width, matrixData, isDataLoading, dimUserNames } = this.props;
 
     const dims = Object.keys(filters);
-    // // TO-DO, maybe resort is not a smart way
-    // dims = dims.sort((a, b) => {
-    //   if (a.includes('dim') && b.includes('dim')) {
-    //     return parseInt(a.replace('dim_', '')) - parseInt(b.replace('dim_', ''));
-    //   } else return a.includes('dim') ? -1 : 1;
-    // });
-
-    const onSetFilter = debounce((dimName: string, col_idx: number) => this.props.setFilters(dimName, col_idx), 200);
 
     const rootStyle = getComputedStyle(document.documentElement);
     const cardPadding = parseInt(rootStyle.getPropertyValue('--card-body-padding')),
@@ -275,15 +267,6 @@ export default class Grid extends React.Component<Props, States> {
                 key={dimName}
                 transform={`translate(0, ${row_idx * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}
               >
-                {/* <text
-                  className="dim_annotation"
-                  y={this.barHeight + this.barLabelHeight}
-                  // onClick={() => onSetFilter(dimName, -1)}
-                  onClick={() => this.props.setFilters(dimName, -1)}
-                >
-                  {dimName}
-                </text> */}
-
                 <foreignObject className={styles.inputTextWrapper}>
                   <input
                     value={dimUserNames[dimName] || dimName}
@@ -304,7 +287,7 @@ export default class Grid extends React.Component<Props, States> {
               </g>
             );
           })}
-          {/* <g className="links">{this.getLinks(matrixData, stepWidth)}</g> */}
+          <g className="links">{this.getLinks(matrixData, stepWidth)}</g>
         </svg>
       </Card>
     );

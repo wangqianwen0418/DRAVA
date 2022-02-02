@@ -2,13 +2,13 @@ model_params:
   name: 'BetaVAE_CONV'
   in_channels: 1
   latent_dim: 8 
-  hidden_dims: [16, 32, 64, 128, 256, 512]
+  hidden_dims: [16, 64, 256]
   loss_type: 'B'
   img_size: 64
   gamma: 10.0
   max_capacity: 25
   Capacity_max_iter: 10000
-  # conv_sizes: [7,5,3]
+  conv_sizes: [7,5,3]
   recons_multi: 100
   is_masked: True
 
@@ -20,6 +20,7 @@ exp_params:
   batch_size: 196 
   LR: 0.0005
   weight_decay: 0.0
+  weighted_sampler: True
   # scheduler_gamma: 0.95
 
 trainer_params:

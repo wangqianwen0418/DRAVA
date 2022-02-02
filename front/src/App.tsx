@@ -9,7 +9,7 @@ import { generateDistribution, range } from 'helpers';
 import z_ranges_sequence from 'assets/z_range_sequence.json';
 import z_ranges_matrix from 'assets/z_range_matrix.json';
 
-import Grid from 'components/Grid';
+import Grid from 'components/LatentDim';
 import SampleBrowser from 'components/SampleBrowser';
 import GoslingVis from 'components/Gosling';
 
