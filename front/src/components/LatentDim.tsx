@@ -7,7 +7,9 @@ import { getMax, debounce } from 'helpers';
 import { STEP_NUM } from 'Const';
 
 import { scaleLinear, scaleLog, ScaleLogarithmic } from 'd3-scale';
-import { TDistribution, TFilter } from 'types';
+import { TDistribution, TFilter, TResultRow } from 'types';
+
+import { Correlations } from './AddCorrelation';
 
 const { Option } = Select;
 
@@ -15,6 +17,7 @@ interface Props {
   filters: TFilter;
   dataset: string;
   matrixData: { [dimName: string]: TDistribution };
+  samples: TResultRow[];
   height: number;
   width: number;
   setFilters: (dimName: string, col: number) => void;
@@ -25,7 +28,7 @@ interface Props {
 }
 interface States {}
 
-export default class Grid extends React.Component<Props, States> {
+export default class LatentDim extends React.Component<Props, States> {
   spanWidth = 80; // width used for left-side dimension annotation
   barHeight = 30; // height of bar chart
   gap = 3; //horizontal gap between thumbnails
@@ -224,7 +227,7 @@ export default class Grid extends React.Component<Props, States> {
   }
 
   render() {
-    const { filters, height, width, matrixData, isDataLoading, dimUserNames } = this.props;
+    const { filters, height, width, matrixData, isDataLoading, dimUserNames, samples } = this.props;
 
     const dims = Object.keys(filters);
 
@@ -280,7 +283,7 @@ export default class Grid extends React.Component<Props, States> {
                 key={dimName}
                 transform={`translate(0, ${row_idx * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}
               >
-                <foreignObject className={styles.inputTextWrapper}>
+                <foreignObject className={styles.inputTextWrapper} width={60} height={30}>
                   <input
                     value={dimUserNames[dimName] || dimName}
                     className={clsx(styles.inputText)}
@@ -300,7 +303,16 @@ export default class Grid extends React.Component<Props, States> {
               </g>
             );
           })}
+
           {/* <g className="links">{this.getLinks(matrixData, stepWidth)}</g> */}
+          <g transform={`translate(0, ${dims.length * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}>
+            <Correlations
+              samples={samples}
+              dimNames={Object.keys(matrixData)}
+              dimUserNames={dimUserNames}
+              width={width}
+            />
+          </g>
         </svg>
       </Card>
     );
