@@ -9,7 +9,7 @@ import { generateDistribution, getDimValues, range } from 'helpers';
 import z_ranges_sequence from 'assets/z_range_sequence.json';
 import z_ranges_matrix from 'assets/z_range_matrix.json';
 
-import Grid from 'components/LatentDim';
+import LatentDim from 'components/LatentDim';
 import SampleBrowser from 'components/SampleBrowser';
 import GoslingVis from 'components/Gosling';
 
@@ -290,11 +290,12 @@ export default class App extends React.Component<{}, State> {
               </Col>
 
               <Col span={12}>
-                <Grid
+                <LatentDim
                   dataset={dataset}
+                  samples={samples}
                   filters={filters}
                   matrixData={this.matrixData}
-                  height={appHeight}
+                  height={appHeight * 0.6}
                   width={colWidth}
                   isDataLoading={isDataLoading}
                   dimUserNames={dimUserNames}
