@@ -295,7 +295,7 @@ export default class App extends React.Component<{}, State> {
                   samples={samples}
                   filters={filters}
                   matrixData={this.matrixData}
-                  height={appHeight * 0.6}
+                  height={appHeight}
                   width={colWidth}
                   isDataLoading={isDataLoading}
                   dimUserNames={dimUserNames}

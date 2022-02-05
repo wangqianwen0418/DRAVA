@@ -20,7 +20,7 @@ const getScatter = (
     .range([margin, width - margin]);
   const yScale = scaleLinear()
     .domain([getMin(yValues), getMax(yValues)])
-    .range([margin, height - margin]);
+    .range([height - margin, margin]);
 
   const points = xValues.map((x, idx) => {
     const y = yValues[idx];
