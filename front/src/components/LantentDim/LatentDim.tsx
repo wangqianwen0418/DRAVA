@@ -11,7 +11,7 @@ import { TDistribution, TFilter, TResultRow } from 'types';
 
 import { Correlations } from './AddCorrelation';
 import { ConfigDim } from './ConfigDim';
-import { getRow } from './getRow';
+import { DimRow } from './DimRow';
 
 const { Option } = Select;
 
@@ -117,7 +117,7 @@ export default class LatentDim extends React.Component<Props, States> {
   }
 
   render() {
-    const { filters, height, width, matrixData, isDataLoading, dimUserNames, samples } = this.props;
+    const { filters, height, width, matrixData, isDataLoading, dimUserNames, samples, dataset } = this.props;
 
     const dims = Object.keys(filters);
 
@@ -166,19 +166,19 @@ export default class LatentDim extends React.Component<Props, States> {
         <svg height={cardInnerHeight} width={width - 2 * cardPadding} className="pcp">
           {/* get rows */}
           {dims.map((dimName, row_idx) => {
-            /* get each cell of a row */
-            const row = getRow(
-              matrixData[dimName],
-              dimName,
-              stepWidth,
-              yScale,
-              this.barHeight,
-              this.barLabelHeight,
-              this.gap,
-              this.spanWidth,
-              this.props.dataset,
-              this.isSelected,
-              this.props.setFilters
+            const row = (
+              <DimRow
+                row={matrixData[dimName]}
+                dimName={dimName}
+                stepWidth={stepWidth}
+                yScale={yScale}
+                barHeight={this.barHeight}
+                barLabelHeight={this.barLabelHeight}
+                gap={this.gap}
+                dataset={this.props.dataset}
+                isSelected={this.isSelected}
+                setFilters={this.props.setFilters}
+              />
             );
             return (
               <g
@@ -203,12 +203,13 @@ export default class LatentDim extends React.Component<Props, States> {
                     row={matrixData[dimName]}
                     dimName={dimName}
                     dimUserNames={dimUserNames}
+                    dataset={dataset}
                     setDimUserNames={this.props.setDimUserNames}
                   />
                 </g>
 
                 {/* get each cell of a row */}
-                {row}
+                <g transform={`translate(${this.spanWidth}, 0)`}>{row}</g>
               </g>
             );
           })}
