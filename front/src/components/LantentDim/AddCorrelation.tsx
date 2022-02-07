@@ -88,6 +88,7 @@ export const Correlations = (props: Props) => {
         onCancel={() => setModalVisible(false)}
         onOk={() => setModalVisible(false)}
         width={'80vw'}
+        destroyOnClose
       >
         {corrTable}
         {/* {scatters.map(scatter => `x: ${scatter[0]}, y:${scatter[1]}; `)} */}

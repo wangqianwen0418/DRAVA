@@ -1,0 +1,22 @@
+.latentImage {
+  display: inline-block;
+  border: 3px solid lightgray;
+  cursor: pointer;
+  opacity: 0.3;
+}
+
+.imageBorder {
+  stroke: lightgray;
+  stroke-width: 3px;
+}
+
+.isImageSelected {
+  /* border: 1px solid black; */
+  stroke: var(--selected-color);
+  opacity: 1;
+}
+
+.isBarSelected {
+  fill: var(--selected-color);
+  opacity: 0.8;
+}

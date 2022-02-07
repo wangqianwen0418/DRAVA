@@ -35,3 +35,8 @@
 .ant-card-body {
   padding: var(--card-body-padding) !important;
 }
+
+/* custome style css */
+.pointer_cursor {
+  cursor: pointer;
+}

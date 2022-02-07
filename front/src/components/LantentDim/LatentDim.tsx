@@ -10,6 +10,8 @@ import { scaleLinear, scaleLog, ScaleLogarithmic } from 'd3-scale';
 import { TDistribution, TFilter, TResultRow } from 'types';
 
 import { Correlations } from './AddCorrelation';
+import { ConfigDim } from './ConfigDim';
+import { getRow } from './getRow';
 
 const { Option } = Select;
 
@@ -36,6 +38,7 @@ export default class LatentDim extends React.Component<Props, States> {
   rowGap = 10; // vertical gap between rows
   constructor(props: Props) {
     super(props);
+    this.isSelected = this.isSelected.bind(this);
   }
 
   /**
@@ -45,119 +48,6 @@ export default class LatentDim extends React.Component<Props, States> {
     return this.props.filters[dimName].includes(col_idx);
   }
 
-  /**
-   * @drawing
-   * */
-  getRow(
-    row: TDistribution,
-    dimName: string,
-    stepWidth: number,
-    yScale: any
-    // onSetFilter: (dimName: string, col_idx: number) => void
-  ): ReactNode {
-    const imgSize = Math.min(stepWidth, this.barHeight);
-    const dimNum = dimName.split('_')[1];
-    return row['histogram'].map((h, col_idx) => {
-      const href = `assets/${this.props.dataset}_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`;
-      const image = (
-        <Tooltip title={<img width={64} src={href} />} destroyTooltipOnHide placement="top">
-          <g>
-            <image
-              href={href}
-              className={clsx(styles.latentImage, this.isSelected(dimName, col_idx) && styles.isImageSelected)}
-              x={this.gap / 2}
-              y={this.barHeight + this.barLabelHeight + this.gap + this.gap / 2}
-              width={imgSize}
-              height={imgSize}
-            />
-            <rect
-              className={clsx(styles.imageBorder, this.isSelected(dimName, col_idx) && styles.isImageSelected)}
-              y={this.barHeight + this.barLabelHeight + this.gap}
-              fill="none"
-              width={imgSize + this.gap}
-              height={imgSize + this.gap}
-            />
-          </g>
-        </Tooltip>
-      );
-
-      return (
-        <g
-          key={`bar_${col_idx}`}
-          // onClick={() => onSetFilter(dimName, col_idx)}
-          onClick={() => this.props.setFilters(dimName, col_idx)}
-          transform={`translate(${this.spanWidth + (stepWidth + this.gap) * col_idx}, 0)`}
-        >
-          {/* histogram */}
-          <text
-            x={(stepWidth + this.gap) * 0.5}
-            fontSize={8}
-            textAnchor="middle"
-            y={this.barHeight + this.barLabelHeight - yScale(h) || 0}
-          >
-            {h > 0 ? h : ''}
-          </text>
-          <rect
-            height={yScale(h) || 0}
-            width={stepWidth}
-            y={this.barHeight + this.barLabelHeight - yScale(h) || 0}
-            fill="lightgray"
-            className={clsx(this.isSelected(dimName, col_idx) && styles.isBarSelected)}
-          />
-
-          {/* thumbnails and their borders */}
-          {col_idx % 2 == 0 ? image : <></>}
-        </g>
-      );
-    });
-  }
-
-  /**
-   * @drawing
-   * */
-  getAdditionalRow(
-    row: TDistribution,
-    dimName: string,
-    stepWidth: number,
-    yScale: any
-    // onSetFilter: (dimName: string, col_idx: number) => void
-  ): ReactNode {
-    // const stepWidth = (width - 2 * cardPadding - spanWidth) / binNum - gap;
-    const gap = this.gap,
-      barHeight = this.barHeight,
-      barLabelHeight = this.barLabelHeight,
-      spanWidth = this.spanWidth;
-    return row['histogram'].map((h: number, col_idx: number) => {
-      return (
-        <g
-          key={`bar_${col_idx}`}
-          transform={`translate(${spanWidth + (stepWidth + gap) * col_idx}, 0)`}
-          // onClick={() => onSetFilter(dimName, col_idx)}
-          onClick={() => this.props.setFilters(dimName, col_idx)}
-        >
-          {/* histogram */}
-          <text
-            x={(stepWidth + gap) * 0.5}
-            y={barHeight + barLabelHeight - yScale(h)!}
-            fontSize={8}
-            textAnchor="middle"
-          >
-            {h > 0 ? h : ''}
-          </text>
-          <rect
-            height={yScale(h)}
-            width={stepWidth}
-            y={barHeight + barLabelHeight - yScale(h)!}
-            fill="lightgray"
-            className={clsx(this.isSelected(dimName, col_idx) && styles.isBarSelected)}
-          />
-          <text x={(stepWidth + gap) * 0.5} y={barHeight + barLabelHeight * 2} fontSize={8} textAnchor="middle">
-            {col_idx % 4 == 0 ? row['labels'][col_idx] : ''}
-          </text>
-        </g>
-      );
-    });
-  }
   // @drawing
   // getLinks(matrixData: { [k: string]: TDistribution }, stepWidth: number) {
   //   const { filters } = this.props,
@@ -213,14 +103,14 @@ export default class LatentDim extends React.Component<Props, States> {
   // }
 
   /***
-   *  call props functions
+   *  @call props functions
    * */
   onChangeDim(dimNames: string[]) {
     this.props.updateDims(dimNames);
   }
 
   /***
-   *  call props functions
+   *  @call props functions
    * */
   onChangeDimNames(dimName: string, newName: string) {
     this.props.setDimUserNames({ [dimName]: newName });
@@ -276,8 +166,20 @@ export default class LatentDim extends React.Component<Props, States> {
         <svg height={cardInnerHeight} width={width - 2 * cardPadding} className="pcp">
           {/* get rows */}
           {dims.map((dimName, row_idx) => {
-            const dimNum = parseInt(dimName.split('_')[1]);
-
+            /* get each cell of a row */
+            const row = getRow(
+              matrixData[dimName],
+              dimName,
+              stepWidth,
+              yScale,
+              this.barHeight,
+              this.barLabelHeight,
+              this.gap,
+              this.spanWidth,
+              this.props.dataset,
+              this.isSelected,
+              this.props.setFilters
+            );
             return (
               <g
                 key={dimName}
@@ -296,23 +198,30 @@ export default class LatentDim extends React.Component<Props, States> {
                   />
                 </foreignObject>
 
+                <g className="configure" transform={`translate(0, ${this.barHeight + this.barLabelHeight + this.gap})`}>
+                  <ConfigDim
+                    row={matrixData[dimName]}
+                    dimName={dimName}
+                    dimUserNames={dimUserNames}
+                    setDimUserNames={this.props.setDimUserNames}
+                  />
+                </g>
+
                 {/* get each cell of a row */}
-                {dimName.includes('dim_')
-                  ? this.getRow(matrixData[dimName], dimName, stepWidth, yScale)
-                  : this.getAdditionalRow(matrixData[dimName], dimName, stepWidth, yScale)}
+                {row}
               </g>
             );
           })}
 
           {/* <g className="links">{this.getLinks(matrixData, stepWidth)}</g> */}
-          <g transform={`translate(0, ${dims.length * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}>
+          {/* <g transform={`translate(0, ${dims.length * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}>
             <Correlations
               samples={samples}
               dimNames={Object.keys(matrixData)}
               dimUserNames={dimUserNames}
               width={width}
             />
-          </g>
+          </g> */}
         </svg>
       </Card>
     );
