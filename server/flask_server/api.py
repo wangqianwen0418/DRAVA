@@ -192,9 +192,14 @@ def get_simu_images():
         [z_min + j/(BIN_NUM-1)* (z_max - z_min) for j in range(BIN_NUM)]
     ).float()
     z_ = z_.to(device)
-    reconstructued = models[dataset].decode(z_)
-    print(reconstructued.shape)
-    return 'success'
+    reconstructued = models[dataset].decode(z_).cpu().data
+    results = []
+    for res in reconstructued:
+        buff = BytesIO()
+        torch.save(res, buff)
+        buff.seek(0) 
+        results.append(str(buff.read()))
+    return jsonify(results)
 
 ######################
 # functions called by the API
