@@ -1,0 +1,37 @@
+model_params:
+  name: 'BetaVAE_CONV'
+  in_channels: 1
+  latent_dim: 8 
+  hidden_dims: [16, 64, 256]
+  loss_type: 'B'
+  img_size: 64
+  gamma: 10.0
+  max_capacity: 25
+  Capacity_max_iter: 10000
+  conv_sizes: [7,5,3]
+  recons_multi: 100
+  is_masked: True
+
+exp_params:
+  dataset: TAD_HFFc6_10k_chr1-5
+  data_path: "./data/"
+  img_size: 64
+  optimizer: "adam"
+  batch_size: 196 
+  LR: 0.0005
+  weight_decay: 0.0
+  weighted_sampler: True
+  # scheduler_gamma: 0.95
+
+trainer_params:
+  gpus: 1
+  max_nb_epochs: 100
+  max_epochs: 2000
+
+logging_params:
+  save_dir: "logs"
+  name: "BetaVAE_TAD"
+  manual_seed: 1265
+
+# Note: weighted samplers (e.g., sampling more high resolution images from the training set) didn't see clear improvement in loss
+# but the simu images looks better
