@@ -48,7 +48,11 @@ class BetaVAE_CONV(BaseVAE):
                 for j in range(img_size):
                     self.mask[i,j] = ratio * abs(i-j)/63 + (1-ratio)
         self.mask = torch.from_numpy(self.mask).float()
-        self.mask = self.mask.to(torch.cuda.current_device())
+        if torch.cuda.is_available():
+            device = torch.cuda.current_device()
+        else:
+            device = torch.device("cpu")
+        self.mask = self.mask.to(device)
 
 
         # Build Encoder

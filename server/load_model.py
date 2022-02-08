@@ -55,7 +55,12 @@ assert os.path.exists(ckp_dir), 'the checkpoint folder does not exist'
 assert ckp_file_num>0, 'the checkpoint file does not exist'
 ckp_name = [f for f in os.listdir(ckp_dir)][ckp_file_num-1] # use the lastest checkpoint if there is more than one
 
-checkpoint = torch.load( os.path.join(ckp_dir, ckp_name) )
+if torch.cuda.is_available():
+    device = torch.cuda.current_device()
+else:
+    device = torch.device("cpu")
+
+checkpoint = torch.load( os.path.join(ckp_dir, ckp_name), map_location=device )
 new_state_dict = {}
 for k in checkpoint['state_dict']:
     new_k = k.replace('model.', '')

@@ -70,7 +70,11 @@ runner = Trainer(default_save_path=f"{tt_logger.save_dir}",
                     # checkpoint_callback=checkpoint_callback,
                     early_stop_callback = False,
                     **config['trainer_params'])
-                    
+
+if torch.cuda.is_available():
+    device = torch.cuda.current_device()
+else:
+    device = torch.device("cpu")                  
 
 
 # copy config file to the logger folder
@@ -94,7 +98,7 @@ else:
     
     ckp_name = [f for f in os.listdir(ckp_dir)][ckp_file_num-1] # use the lastest checkpoint if there is more than one
     print(f'==========found checkpoint {ckp_name }===========')
-    checkpoint = torch.load( os.path.join(ckp_dir, ckp_name) )
+    checkpoint = torch.load( os.path.join(ckp_dir, ckp_name) , map_location=device)
     new_state_dict = {}
     for k in checkpoint['state_dict']:
         new_k = k.replace('model.', '')

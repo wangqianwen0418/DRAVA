@@ -24,6 +24,11 @@ import sys
 sys.path.append('../../server')
 from models import *
 
+if torch.cuda.is_available():
+    device = torch.cuda.current_device()
+else:
+    device = torch.device("cpu")
+
 def load_model(config_file, checkpoint_file):
     with open(config_file, 'r') as file:
         try:
@@ -42,7 +47,7 @@ def load_model(config_file, checkpoint_file):
 
     # load state dict from check point
     
-    checkpoint = torch.load( checkpoint_file)
+    checkpoint = torch.load( checkpoint_file, map_location=device)
     new_state_dict = {}
     for k in checkpoint['state_dict']:
         new_k = k.replace('model.', '')
@@ -165,26 +170,31 @@ def get_simu_images():
     dataset = request.args.get('dataset', type=str)
     z=request.args.get('z', type=str)
 
-    device = torch.current_device()
+    
     if z:
         z= z.split(',')
-        z_ = [ z for _ in range(BIN_NUM)]
-        z_ = torch.stack(z_, dim =0)
-        mask = torch.tensor([j for j in range(BIN_NUM)])
+    else:
+        z = default_z[dataset]
+    z = torch.tensor(z)
+    z_ = [ z for _ in range(BIN_NUM)]
+    z_ = torch.stack(z_, dim =0)
+    mask = torch.tensor([j for j in range(BIN_NUM)])
 
-        if len(ranges[dataset])>0:
+    if len(ranges[dataset])>0:
 
-            z_min = ranges[dataset][dim][0]
-            z_max = ranges[dataset][dim][1]    
-        else:
-            z_min = -3
-            z_max = 3
+        z_min = ranges[dataset][dim][0]
+        z_max = ranges[dataset][dim][1]    
+    else:
+        z_min = -3
+        z_max = 3
 
-        z_[mask, dim] = torch.tensor(
-            [z_min + j/(BIN_NUM-1)* (z_max - z_min) for j in range(BIN_NUM)]
-        ).float()
-        z_ = z_.to(device)
-        models[dataset].decode(z_)
+    z_[mask, dim] = torch.tensor(
+        [z_min + j/(BIN_NUM-1)* (z_max - z_min) for j in range(BIN_NUM)]
+    ).float()
+    z_ = z_.to(device)
+    reconstructued = models[dataset].decode(z_)
+    print(reconstructued.shape)
+    return 'success'
 
 ######################
 # functions called by the API

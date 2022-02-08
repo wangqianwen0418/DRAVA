@@ -74,8 +74,12 @@ class VAEModule(pl.LightningModule):
         self.model = vae_model
         self.params = params
 
-
-        self.curr_device = torch.cuda.current_device()
+        if torch.cuda.is_available():
+            device = torch.cuda.current_device()
+        else:
+            device = torch.device("cpu")
+        self.curr_device = device
+        
         self.hold_graph = False
 
         self.bin_num = 11
