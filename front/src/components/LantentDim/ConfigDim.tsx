@@ -70,6 +70,7 @@ export const ConfigDim = (props: Props) => {
     </>
   );
 
+  const z = samples[0].z;
   const Row = (
     <DimRow
       row={row}
@@ -81,6 +82,7 @@ export const ConfigDim = (props: Props) => {
       gap={gap}
       imageSize={imageSize}
       dataset={props.dataset}
+      latentZ={z}
     />
   );
   return (

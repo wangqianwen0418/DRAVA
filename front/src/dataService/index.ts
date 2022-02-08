@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { BASE_URL } from 'Const';
 import Papa from 'papaparse';
 import { TResultRow, TCSVResultRow } from 'types';
 
@@ -65,4 +66,14 @@ export const queryRawSamples = async (samples: TResultRow) => {
     url: '',
     data: samples
   });
+};
+
+export const querySimuImages = async (dataset: string, dim: number, z?: number[]) => {
+  const z_suffix = `&z=${z?.join(',')}`;
+  const url = `${BASE_URL}/api/get_simu_images?dataset=${dataset}&dim=${dim}${z ? z_suffix : ''}`;
+  const res = await axios({
+    method: 'get',
+    url
+  });
+  return res.data;
 };

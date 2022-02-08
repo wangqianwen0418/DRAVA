@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TDistribution } from 'types';
 import { Tooltip } from 'antd';
 import clsx from 'clsx';
 import styles from './DimRow.module.css';
+import { querySimuImages } from 'dataService';
 
 type Props = {
   row: TDistribution;
@@ -14,6 +15,7 @@ type Props = {
   gap: number;
   dataset: string;
   imageSize?: number;
+  latentZ?: number[];
   isSelected?: (dimName: string, col_idx: number) => boolean;
   setFilters?: (dimName: string, col_idx: number) => void;
 };
@@ -34,18 +36,47 @@ const getLatentDim = (props: Props) => {
     dataset,
     isSelected,
     setFilters,
-    imageSize
+    imageSize,
+    latentZ
   } = props;
   const imgSize = imageSize || Math.min(stepWidth, barHeight);
   const dimNum = dimName.split('_')[1];
+  const [imageBytes, updateImageBytes] = useState<string[]>([]);
+  const [isLoading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    fetchImageBytes();
+  }, [latentZ]);
+
+  const fetchImageBytes = async () => {
+    setLoading(true);
+    const dimNum = parseInt(dimName.split('_')[1]);
+    const imageBytes = await querySimuImages(dataset, dimNum, latentZ);
+    updateImageBytes(imageBytes);
+    console.info(imageBytes);
+    setLoading(false);
+  };
+
   return row['histogram'].map((h, col_idx) => {
-    const href = `assets/${dataset}_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`;
+    // const href = (latentZ && imageBytes.length>0)? `data:image/png;base64, ${imageBytes[col_idx]}`: `assets/${dataset}_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`;
+    // const href = `data:image/png;base64, ${imageBytes[col_idx]}`;
+    const href = imageBytes[Math.floor(col_idx / 2)];
     const selectFlag = isSelected ? isSelected(dimName, col_idx) : true;
-    const image = (
+    const image = isLoading ? (
+      <circle
+        className="loader-path"
+        cx={imgSize / 2}
+        cy={imgSize / 2}
+        r={imgSize / 2}
+        fill="none"
+        stroke="steelblue"
+        strokeWidth="2"
+      />
+    ) : (
       // <Tooltip title={<img width={64} src={href} />} destroyTooltipOnHide placement="top">
       <g>
         <image
-          href={href}
+          xlinkHref={href}
           className={clsx(styles.latentImage, selectFlag && styles.isImageSelected)}
           x={gap / 2}
           y={barHeight + barLabelHeight + gap + gap / 2}

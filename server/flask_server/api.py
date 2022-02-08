@@ -3,6 +3,7 @@ import json
 import numpy as np
 from PIL import Image
 from io import BytesIO
+import base64
 from matplotlib import cm as colormap
 
 import flask
@@ -72,19 +73,19 @@ with open('saved_models/z_range_sequence.json', 'r') as f:
 ranges = {
     'sequence': range_sequence,
     'matrix': range_matrix,
-    'celeba': []
+    'celeb': []
 }
 
 models = {
     'sequence': sequence_model,
     'matrix': matrix_model,
-    'celeba': celeba_model
+    'celeb': celeba_model
 }
 
 default_z = {
     'sequence': [1.3912068605422974,1.3093589544296265,-1.4369394779205322,2.921229362487793,1.7272869348526,-1.0809800624847412],
     'matrix': [-0.9544838666915894,-0.47285228967666626,0.6794935464859009,-0.13928750157356262,0.23851758241653442,-1.178794264793396,-0.051679834723472595,0.8856348395347595],
-    'celeba': [0.35241496562957764,-1.446256399154663,0.6035149097442627,-1.4706382751464844,-0.6200129389762878,-0.44358429312705994,-1.6820268630981445,1.6138064861297607,-1.7537750005722046,-1.098387360572815,0.27564120292663574,2.4112865924835205,-0.7761713266372681,0.500797688961029,1.3642232418060303,1.607535719871521,-0.0050630271434783936,0.21523889899253845,-0.5679569244384766,-0.4611191749572754]
+    'celeb': [0.35241496562957764,-1.446256399154663,0.6035149097442627,-1.4706382751464844,-0.6200129389762878,-0.44358429312705994,-1.6820268630981445,1.6138064861297607,-1.7537750005722046,-1.098387360572815,0.27564120292663574,2.4112865924835205,-0.7761713266372681,0.500797688961029,1.3642232418060303,1.607535719871521,-0.0050630271434783936,0.21523889899253845,-0.5679569244384766,-0.4611191749572754]
 }
 
 sequence_data = np.load(safe_join('../data/', 'HFFc6_ATAC_chr7.npz'), encoding='bytes')['imgs']
@@ -153,7 +154,6 @@ def get_celeb_sample():
     dataset = 'celeba'
 
     id = request.args.get('id', type=str)
-    print(f'{int(id):06}.jpg')
     return send_from_directory(f'../data/{dataset}/img_align_celeba/', f'{int(id):06}.jpg')
 
 @api.route('/get_simu_images', methods=['GET'])
@@ -175,7 +175,6 @@ def get_simu_images():
         z= [float(i) for i in z.split(',')]
     else:
         z = default_z[dataset]
-    print(z)
     z = torch.tensor(z)
     z_ = [ z for _ in range(BIN_NUM)]
     z_ = torch.stack(z_, dim =0)
@@ -195,12 +194,22 @@ def get_simu_images():
     z_ = z_.to(device)
     reconstructued = models[dataset].decode(z_).cpu().data
     results = []
-    for res in reconstructued:
-        buff = BytesIO()
-        torch.save(res, buff)
-        buff.seek(0) 
-        results.append(str(buff.read()))
-    return results[0]
+    for res in reconstructued.numpy():
+        img_io = BytesIO()
+       
+        if dataset == 'matrix':
+            res = colormap.get_cmap('viridis')(res[0]) * 255
+            pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
+        else:
+            res = res[0]*255
+            res = res.astype(np.uint8)
+            pil_img = Image.fromarray(res)
+        pil_img.save(img_io, 'JPEG', quality=70)
+        img_io.seek(0)
+        v = base64.b64encode(img_io.getvalue()).decode()
+        results.append(f'data:image/png;base64,{v}')
+
+    return jsonify(results)
 
 ######################
 # functions called by the API
