@@ -172,9 +172,10 @@ def get_simu_images():
 
     
     if z:
-        z= z.split(',')
+        z= [float(i) for i in z.split(',')]
     else:
         z = default_z[dataset]
+    print(z)
     z = torch.tensor(z)
     z_ = [ z for _ in range(BIN_NUM)]
     z_ = torch.stack(z_, dim =0)
@@ -199,7 +200,7 @@ def get_simu_images():
         torch.save(res, buff)
         buff.seek(0) 
         results.append(str(buff.read()))
-    return jsonify(results)
+    return results[0]
 
 ######################
 # functions called by the API
