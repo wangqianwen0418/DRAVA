@@ -9,7 +9,7 @@ import { generateDistribution, getDimValues, range } from 'helpers';
 import z_ranges_sequence from 'assets/z_range_sequence.json';
 import z_ranges_matrix from 'assets/z_range_matrix.json';
 
-import LatentDim from 'components/LatentDim';
+import LatentDim from 'components/LantentDim/LatentDim';
 import SampleBrowser from 'components/SampleBrowser';
 import GoslingVis from 'components/Gosling';
 

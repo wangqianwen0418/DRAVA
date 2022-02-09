@@ -1,0 +1,46 @@
+.latentImage {
+  display: inline-block;
+  border: 3px solid lightgray;
+  cursor: pointer;
+  opacity: 0.3;
+}
+
+.dimHeader {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.imageBorder {
+  stroke: lightgray;
+  stroke-width: 3px;
+}
+
+.isImageSelected {
+  /* border: 1px solid black; */
+  stroke: var(--selected-color);
+  opacity: 1;
+}
+
+.isBarSelected {
+  fill: var(--selected-color);
+  opacity: 0.8;
+}
+
+.rowContainer {
+  padding-top: 10px;
+}
+
+.inputTextWrapper {
+  width: 60px;
+  height: 30px;
+  transform: translate(0px, 30px);
+}
+
+.inputText {
+  border: none;
+  user-select: none; /* standard syntax */
+  -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+  -moz-user-select: none; /* mozilla browsers */
+  -khtml-user-select: none; /* webkit (konqueror) browsers */
+  -ms-user-select: none; /* IE10+ */
+}
