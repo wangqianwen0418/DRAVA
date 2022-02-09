@@ -196,12 +196,15 @@ def get_simu_images():
     results = []
     for res in reconstructued.numpy():
         img_io = BytesIO()
-       
+        if (dataset != 'celeb'):
+            res = res[0] # image shape from [1, 64, 64] to [64, 64]
+        else:
+            res = np.rollaxis(res,0,3) # image shape from [3, 64, 64] to [64, 64, 3]
         if dataset == 'matrix':
-            res = colormap.get_cmap('viridis')(res[0]) * 255
+            res = colormap.get_cmap('viridis')(res) * 255
             pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
         else:
-            res = res[0]*255
+            res = res*255
             res = res.astype(np.uint8)
             pil_img = Image.fromarray(res)
         pil_img.save(img_io, 'JPEG', quality=70)
