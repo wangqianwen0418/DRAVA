@@ -30,7 +30,7 @@ export const ConfigDim = (props: Props) => {
   const { row, dimName, dimUserNames, setDimUserNames, dataset, samples } = props;
 
   const [isModalVisible, setModalVisible] = useState(false);
-  const [imageId, changeImageId] = useState(samples[0].id);
+  const [sampleIdx, changeSampleIdx] = useState(0);
 
   const iconWidth = 15;
   const imageSize = 64;
@@ -49,11 +49,19 @@ export const ConfigDim = (props: Props) => {
     </>
   );
 
-  const url = `${BASE_URL}/api/get_${dataset}_sample?id=${imageId}`;
-  const image = <img src={url} alt={`sample_${imageId}`} height="64" width="64" />;
+  const url = `${BASE_URL}/api/get_${dataset}_sample?id=${samples[sampleIdx].id}`;
+  const image = (
+    <img
+      src={url}
+      alt={`sample_${samples[sampleIdx].id}`}
+      height="64"
+      width="64"
+      style={{ border: 'solid 1px gray' }}
+    />
+  );
 
-  const options = samples.map(sample => (
-    <Option key={sample.id} value={sample.id}>
+  const options = samples.map((sample, idx) => (
+    <Option key={sample.id} value={idx}>
       {`${sample.id}.png`}
     </Option>
   ));
@@ -61,16 +69,19 @@ export const ConfigDim = (props: Props) => {
   const baselineSelector = (
     <>
       <label htmlFor="fname">Explore this Dimension based on an image </label>
-      <Select id="baseline" onChange={(id: string) => changeImageId(id)} style={{ width: '100px' }} value={imageId}>
+      <Select
+        id="baseline"
+        onChange={(idx: number) => changeSampleIdx(idx)}
+        style={{ width: '100px' }}
+        value={sampleIdx}
+      >
         {options}
       </Select>
-      <br />
       {image}
-      <Button type="default">Update</Button>
     </>
   );
 
-  const z = samples[0].z;
+  const z = samples[sampleIdx]['z'];
   const Row = (
     <DimRow
       row={row}
