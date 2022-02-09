@@ -53,7 +53,6 @@ const getLatentDim = (props: Props) => {
     const dimNum = parseInt(dimName.split('_')[1]);
     const imageBytes = await querySimuImages(dataset, dimNum, latentZ);
     updateImageBytes(imageBytes);
-    console.info(imageBytes);
     setLoading(false);
   };
 

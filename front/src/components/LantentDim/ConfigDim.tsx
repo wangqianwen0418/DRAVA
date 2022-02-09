@@ -53,6 +53,7 @@ export const ConfigDim = (props: Props) => {
   const image = (
     <img
       src={url}
+      className="pixelated"
       alt={`sample_${samples[sampleIdx].id}`}
       height="64"
       width="64"

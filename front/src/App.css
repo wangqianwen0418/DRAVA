@@ -48,3 +48,7 @@
   animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
   stroke-linecap: round;
 }
+
+.pixelated {
+  image-rendering: pixelated;
+}

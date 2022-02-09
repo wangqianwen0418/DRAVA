@@ -1,6 +1,7 @@
 import React from 'react';
 
 import styles from './SampleBrowser.module.css';
+import clsx from 'clsx';
 
 import { Card, Select } from 'antd';
 
@@ -61,7 +62,15 @@ export default class SampleBrowser extends React.Component<Props, State> {
     const id2Image = (id: string) => {
       const url = `${BASE_URL}/api/get_${dataset}_sample?id=${id}`;
       return (
-        <img loading="lazy" src={url} alt={`sample_${id}`} key={id} className={styles.sample} height="40" width="40" />
+        <img
+          loading="lazy"
+          src={url}
+          alt={`sample_${id}`}
+          key={id}
+          className={clsx(styles.sample, 'pixelated')}
+          height="40"
+          width="40"
+        />
       );
     };
 
