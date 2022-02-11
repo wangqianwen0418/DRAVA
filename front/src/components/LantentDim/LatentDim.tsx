@@ -28,7 +28,9 @@ interface Props {
   setDimUserNames: (dictName: { [key: string]: string }) => void;
   isDataLoading: boolean;
 }
-interface States {}
+interface States {
+  dimSampleIndex: number[]; // the index of samples used to generate simu images for each latent dimension
+}
 
 export default class LatentDim extends React.Component<Props, States> {
   spanWidth = 80; // width used for left-side dimension annotation
@@ -38,7 +40,11 @@ export default class LatentDim extends React.Component<Props, States> {
   rowGap = 10; // vertical gap between rows
   constructor(props: Props) {
     super(props);
+    this.state = {
+      dimSampleIndex: []
+    };
     this.isSelected = this.isSelected.bind(this);
+    this.changeDimSamples = this.changeDimSamples.bind(this);
   }
 
   /**
@@ -103,17 +109,26 @@ export default class LatentDim extends React.Component<Props, States> {
   // }
 
   /***
-   *  @call props functions
+   *  @call_props_functions
    * */
   onChangeDim(dimNames: string[]) {
     this.props.updateDims(dimNames);
   }
 
   /***
-   *  @call props functions
+   *  @call_props_functions
    * */
   onChangeDimNames(dimName: string, newName: string) {
     this.props.setDimUserNames({ [dimName]: newName });
+  }
+
+  /**
+   * @update_state
+   */
+  changeDimSamples(dimNum: number, newSampleIndex: number) {
+    const { dimSampleIndex } = this.state;
+    dimSampleIndex[dimNum] = newSampleIndex;
+    this.setState({ dimSampleIndex });
   }
 
   render() {
@@ -166,6 +181,7 @@ export default class LatentDim extends React.Component<Props, States> {
         <svg height={cardInnerHeight} width={width - 2 * cardPadding} className="pcp">
           {/* get rows */}
           {dims.map((dimName, row_idx) => {
+            const baseSampleIndex = this.state.dimSampleIndex[row_idx];
             const row = (
               <DimRow
                 row={matrixData[dimName]}
@@ -176,6 +192,7 @@ export default class LatentDim extends React.Component<Props, States> {
                 barLabelHeight={this.barLabelHeight}
                 gap={this.gap}
                 dataset={this.props.dataset}
+                latentZ={baseSampleIndex ? samples[baseSampleIndex].z : undefined}
                 isSelected={this.isSelected}
                 setFilters={this.props.setFilters}
               />
@@ -198,16 +215,24 @@ export default class LatentDim extends React.Component<Props, States> {
                   />
                 </foreignObject>
 
-                <g className="configure" transform={`translate(0, ${this.barHeight + this.barLabelHeight + this.gap})`}>
-                  <ConfigDim
-                    row={matrixData[dimName]}
-                    dimName={dimName}
-                    samples={samples}
-                    dimUserNames={dimUserNames}
-                    dataset={dataset}
-                    setDimUserNames={this.props.setDimUserNames}
-                  />
-                </g>
+                {/* only show configure for latent dim */}
+                {dimName.includes('dim_') && (
+                  <g
+                    className="configure"
+                    transform={`translate(0, ${this.barHeight + this.barLabelHeight + this.gap})`}
+                  >
+                    <ConfigDim
+                      row={matrixData[dimName]}
+                      dimName={dimName}
+                      samples={samples}
+                      dimUserNames={dimUserNames}
+                      dataset={dataset}
+                      baseSampleIndex={baseSampleIndex}
+                      changeDimSamples={this.changeDimSamples}
+                      setDimUserNames={this.props.setDimUserNames}
+                    />
+                  </g>
+                )}
 
                 {/* get each cell of a row */}
                 <g transform={`translate(${this.spanWidth}, 0)`}>{row}</g>

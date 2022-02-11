@@ -16,6 +16,8 @@ type Props = {
   dimUserNames: { [key: string]: string };
   dataset: string;
   samples: TResultRow[];
+  baseSampleIndex?: number;
+  changeDimSamples: (dimIndex: number, sampleIndex: number) => void;
   setDimUserNames: (dictName: { [key: string]: string }) => void;
 };
 
@@ -27,10 +29,10 @@ export const ConfigDim = (props: Props) => {
   const barLabelHeight = 14;
   const stepWidth = (modalWidth - 2 * padding) / STEP_NUM - gap;
 
-  const { row, dimName, dimUserNames, setDimUserNames, dataset, samples } = props;
+  const { row, dimName, dimUserNames, setDimUserNames, dataset, samples, changeDimSamples, baseSampleIndex } = props;
 
   const [isModalVisible, setModalVisible] = useState(false);
-  const [sampleIdx, changeSampleIdx] = useState(0);
+  const [sampleIdx, changeSampleIdx] = useState(baseSampleIndex || 0);
 
   const iconWidth = 15;
   const imageSize = 64;
@@ -97,6 +99,8 @@ export const ConfigDim = (props: Props) => {
       latentZ={z}
     />
   );
+
+  const dimNum = parseInt(dimName.split('_')[1]);
   return (
     <>
       <g className="configIcon pointer_cursor" fill="gray" onClick={() => setModalVisible(true)}>
@@ -108,7 +112,10 @@ export const ConfigDim = (props: Props) => {
         title={`Configure ${dimName}`}
         visible={isModalVisible}
         onCancel={() => setModalVisible(false)}
-        onOk={() => setModalVisible(false)}
+        onOk={() => {
+          changeDimSamples(dimNum, sampleIdx);
+          setModalVisible(false);
+        }}
         okText="Save"
         width={modalWidth}
         destroyOnClose

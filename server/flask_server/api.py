@@ -1,10 +1,12 @@
 from crypt import methods
 import json
+from operator import mod
 import numpy as np
 from PIL import Image
 from io import BytesIO
 import base64
 from matplotlib import cm as colormap
+import torchvision.utils as vutils
 
 import flask
 from flask import request, jsonify, safe_join, send_from_directory, send_file, Blueprint, current_app, g
@@ -25,12 +27,21 @@ import sys
 sys.path.append('../../server')
 from models import *
 
+def norm_range(t):
+    min = float(t.min())
+    max = float(t.max())
+    t.clamp_(min=min, max=max)
+    t.add_(-min).div_(max - min + 1e-5) # add 1e-5 in case min = max
+
 if torch.cuda.is_available():
     device = torch.cuda.current_device()
 else:
     device = torch.device("cpu")
 
+
 def load_model(config_file, checkpoint_file):
+    
+
     with open(config_file, 'r') as file:
         try:
             config = yaml.safe_load(file)
@@ -54,7 +65,7 @@ def load_model(config_file, checkpoint_file):
         new_k = k.replace('model.', '')
         new_state_dict[new_k] = checkpoint['state_dict'][k]
     model.load_state_dict(new_state_dict)
-
+    
     return model
 
 matrix_model = load_model('./saved_models/matrix_config.yaml', './saved_models/matrix.ckpt')
@@ -193,16 +204,22 @@ def get_simu_images():
     ).float()
     z_ = z_.to(device)
     reconstructued = models[dataset].decode(z_).cpu().data
+
+    for t in reconstructued:
+        norm_range(t)
     if dataset == 'sequence': # sequence dataset is only black and white
         reconstructued = (reconstructued>0.5).float()
     results = []
+
+
+
     for res in reconstructued.numpy():
         img_io = BytesIO()
         if (dataset != 'celeb'):
             res = res[0] # image shape from [1, 64, 64] to [64, 64]
         else:
             res = np.rollaxis(res,0,3) # image shape from [3, 64, 64] to [64, 64, 3]
-        if dataset == 'matrix':
+        if dataset == 'matrix': # changef from grayscale to a defined color map
             res = colormap.get_cmap('viridis')(res) * 255
             pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
         else:
