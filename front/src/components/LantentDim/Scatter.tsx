@@ -3,13 +3,16 @@ import * as React from 'react';
 import { TResultRow } from 'types';
 import { scaleLinear } from 'd3-scale';
 
-const getScatter = (
-  dim: [string, string],
-  height: number,
-  width: number,
-  samples: TResultRow[],
-  dimUserNames: { [oldName: string]: string }
-) => {
+export type Props = {
+  dim: [string, string];
+  height: number;
+  width: number;
+  samples: TResultRow[];
+  dimUserNames: { [oldName: string]: string };
+};
+
+const Scatter = (props: Props) => {
+  const { dim, height, width, samples, dimUserNames } = props;
   const margin = 15;
   const [dimX, dimY] = dim;
   const xValues = getDimValues(samples, dimX),
@@ -42,4 +45,4 @@ const getScatter = (
   );
 };
 
-export default getScatter;
+export default Scatter;

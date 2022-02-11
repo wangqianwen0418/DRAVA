@@ -110,7 +110,10 @@ export default class App extends React.Component<{}, State> {
     });
     this.onQueryResults(dataset);
   }
-  // @state update
+  /**
+   * update the shown dims by changing the keys in state.filters
+   * @state_update
+   * */
   updateDims(dimNames: string[]): void {
     const { filters } = this.state;
     const currentDimNames = Object.keys(filters);
@@ -127,7 +130,10 @@ export default class App extends React.Component<{}, State> {
     this.setState({ filters });
   }
 
-  // @state update
+  /**
+   * update the sample filters by changing the object values in state.filters
+   * @state_update
+   * */
   setFilters(dimName: string, col: number): void {
     const { filters, samples } = this.state;
     const dimIndex = Object.keys(this.matrixData).indexOf(dimName);
@@ -171,7 +177,10 @@ export default class App extends React.Component<{}, State> {
 
     this.setState({ filters });
   }
-  //@ state update
+  /**
+   * user rename dimensions
+   * @state_update
+   * */
   setDimUserNames(nameDict: { [key: string]: string }) {
     this.setState({
       dimUserNames: { ...this.state.dimUserNames, ...nameDict }

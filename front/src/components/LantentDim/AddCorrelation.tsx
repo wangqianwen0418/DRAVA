@@ -2,7 +2,7 @@ import { TFilter, TResultRow } from 'types';
 import { message, Modal, Select, Tooltip } from 'antd';
 import React, { useState } from 'react';
 
-import getScatter from './Scatter';
+import Scatter, { Props as ScatterProps } from './Scatter';
 import { getCorrelation } from 'helpers/getCorrelation';
 import { getDimValues } from 'helpers';
 
@@ -43,6 +43,13 @@ export const Correlations = (props: Props) => {
             <th className={styles.corrCell}> {dimUserNames[dimNameY] || dimNameY}</th>
             {dimNames.map((dimNameX, j) => {
               const corr = getCorrelation(getDimValues(samples, dimNameX), getDimValues(samples, dimNameY), 2);
+              const scatterProps: ScatterProps = {
+                dim: [dimNameX, dimNameY],
+                height: scatterHeight,
+                width: scatterWidth,
+                samples,
+                dimUserNames
+              };
               return (
                 <Tooltip
                   mouseEnterDelay={0.5}
@@ -50,7 +57,7 @@ export const Correlations = (props: Props) => {
                   key={`${i}_${j}`}
                   title={
                     <svg height={scatterHeight} width={scatterWidth}>
-                      {getScatter([dimNameX, dimNameY], scatterHeight, scatterWidth, samples, dimUserNames)}
+                      <Scatter {...scatterProps} />
                     </svg>
                   }
                 >
