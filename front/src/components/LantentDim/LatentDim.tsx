@@ -216,14 +216,18 @@ export default class LatentDim extends React.Component<Props, States> {
           })}
 
           {/* <g className="links">{this.getLinks(matrixData, stepWidth)}</g> */}
-          {/* <g transform={`translate(0, ${dims.length * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}>
-            <Correlations
-              samples={samples}
-              dimNames={Object.keys(matrixData)}
-              dimUserNames={dimUserNames}
-              width={width}
-            />
-          </g> */}
+          {dataset == 'matrix' ? (
+            <g transform={`translate(0, ${dims.length * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}>
+              <Correlations
+                samples={samples}
+                dimNames={Object.keys(matrixData)}
+                dimUserNames={dimUserNames}
+                width={width}
+              />
+            </g>
+          ) : (
+            <></>
+          )}
         </svg>
       </Card>
     );

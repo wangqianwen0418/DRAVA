@@ -68,8 +68,8 @@ const getLatentDim = (props: Props) => {
         cy={imgSize / 2}
         r={imgSize / 2}
         fill="none"
-        stroke="steelblue"
-        strokeWidth="2"
+        stroke="lightgray"
+        strokeWidth="3"
       />
     ) : (
       // <Tooltip title={<img width={64} src={href} />} destroyTooltipOnHide placement="top">
