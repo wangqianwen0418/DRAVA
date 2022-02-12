@@ -12,9 +12,10 @@ type Props = {
 const Pilling = (props: Props) => {
   const { items } = props;
   const pilingInitHandler = useCallback(element => {
-    createPilingExample(element, items);
-    // const piling: any = createPilingExample(element, items);
-    // return () => piling.destroy();
+    if (element !== null) {
+      const piling: any = createPilingExample(element, items);
+      return () => piling.destroy();
+    }
   }, []);
 
   return <div className={styles.piling_wrapper} ref={pilingInitHandler} />;
