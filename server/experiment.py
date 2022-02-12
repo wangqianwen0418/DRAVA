@@ -37,8 +37,12 @@ class CustomTensorDataset(Dataset):
 
 
 class CustomImageDataset(Dataset):
-    def __init__(self, root, transform=None, target_transform=None):
-        self.img_labels = pd.read_csv(os.path.join(root, 'label.csv'))
+    def __init__(self, root, transform=None, target_transform=None, chr=None):
+        df = pd.read_csv(os.path.join(root, 'label.csv'))
+        if (chr!= None):
+            self.img_labels = df[df['img'].str.contains(chr)] #e.g., chr = 'chr5'
+        else:
+            self.img_labels = df
         self.img_dir = root
         self.transform = transform
         self.target_transform = target_transform
@@ -264,6 +268,8 @@ class VAEModule(pl.LightningModule):
                 baseline = torch.tensor( 
                     [(ranges[i][0] + ranges[i][1])/2 for i in range(self.model.latent_dim)]
                     )
+            # baseline = torch.tensor([0.5784032344818115,0.1713341921567917,-0.27981624007225037,-0.4180270731449127,0.9767476916313171,-0.7862354516983032,0.7032433152198792,0.7099565863609314])
+            baseline = torch.tensor([1.3912068605422974,1.3093589544296265,-1.4369394779205322,2.921229362487793,1.7272869348526,-1.0809800624847412])
             z_ = [baseline for _ in range(self.bin_num)]
             z_ = torch.stack(z_, dim =0)
             mask = torch.tensor([j for j in range(self.bin_num)])
