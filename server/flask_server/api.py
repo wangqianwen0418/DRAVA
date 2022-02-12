@@ -65,7 +65,7 @@ def load_model(config_file, checkpoint_file):
         new_k = k.replace('model.', '')
         new_state_dict[new_k] = checkpoint['state_dict'][k]
     model.load_state_dict(new_state_dict)
-    
+
     return model
 
 matrix_model = load_model('./saved_models/matrix_config.yaml', './saved_models/matrix.ckpt')
@@ -211,6 +211,10 @@ def get_simu_images():
         reconstructued = (reconstructued>0.5).float()
     results = []
 
+    # vutils.save_image(reconstructued,
+    #                 f'./simu_image_{dataset}_{dim}.png',
+    #                 normalize=True,
+    #                 nrow=BIN_NUM)
 
 
     for res in reconstructued.numpy():
@@ -226,7 +230,7 @@ def get_simu_images():
             res = res*255
             res = res.astype(np.uint8)
             pil_img = Image.fromarray(res)
-        pil_img.save(img_io, 'JPEG', quality=70)
+        pil_img.save(img_io, 'png', quality=100)
         img_io.seek(0)
         v = base64.b64encode(img_io.getvalue()).decode()
         results.append(f'data:image/png;base64,{v}')

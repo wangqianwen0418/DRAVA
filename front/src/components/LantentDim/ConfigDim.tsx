@@ -42,14 +42,12 @@ export const ConfigDim = (props: Props) => {
   const maxV = getMax(row.histogram);
   const yScale = scaleLog().domain([0.1, maxV]).range([0, barHeight]);
 
+  const dimUserName = dimUserNames[dimName] || dimName;
+
   const inputName = (
     <>
       <label htmlFor="fname">Name: </label>
-      <input
-        value={dimUserNames[dimName] || dimName}
-        unselectable="on"
-        onChange={e => setDimUserNames({ [dimName]: e.target.value })}
-      />
+      <input value={dimUserName} unselectable="on" onChange={e => setDimUserNames({ [dimName]: e.target.value })} />
     </>
   );
 
@@ -111,7 +109,7 @@ export const ConfigDim = (props: Props) => {
       </g>
 
       <Modal
-        title={`Configure ${dimName}`}
+        title={`Configure ${dimUserName}`}
         visible={isModalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => {
@@ -128,12 +126,7 @@ export const ConfigDim = (props: Props) => {
         <svg width={modalWidth - 2 * padding} height={barHeight + imageSize + barLabelHeight + gap * 2}>
           {Row}
         </svg>
-        <Piling
-          items={samples.map(s => {
-            const url = `${BASE_URL}/api/get_${dataset}_sample?id=${s.id}`;
-            return { src: url };
-          })}
-        />
+        <Piling dimX={dimUserName} dataset={dataset} samples={samples} />
       </Modal>
     </>
   );

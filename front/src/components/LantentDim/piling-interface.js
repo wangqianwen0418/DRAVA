@@ -1,8 +1,11 @@
 import createPilingJs, { createImageRenderer } from 'piling.js';
 
 export default async function create(element, items) {
-    return createPilingJs(element, {
+    const piling = createPilingJs(element, {
         renderer: createImageRenderer(),
         items: items
     });
+    piling.arrangeBy('data', ['x', 'y']);
+    piling.groupBy('overlap');
+    return piling;
 }
