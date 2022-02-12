@@ -6,6 +6,8 @@ import { scaleLinear, scaleLog, ScaleLogarithmic } from 'd3-scale';
 import { getMax } from 'helpers';
 import { DimRow } from './DimRow';
 
+import Piling from './Piling';
+
 import { BASE_URL } from 'Const';
 
 const { Option } = Select;
@@ -126,6 +128,12 @@ export const ConfigDim = (props: Props) => {
         <svg width={modalWidth - 2 * padding} height={barHeight + imageSize + barLabelHeight + gap * 2}>
           {Row}
         </svg>
+        <Piling
+          items={samples.map(s => {
+            const url = `${BASE_URL}/api/get_${dataset}_sample?id=${s.id}`;
+            return { src: url };
+          })}
+        />
       </Modal>
     </>
   );
