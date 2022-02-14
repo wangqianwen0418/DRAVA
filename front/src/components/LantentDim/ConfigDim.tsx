@@ -15,6 +15,7 @@ const { Option } = Select;
 type Props = {
   row: TDistribution;
   dimName: string;
+  dimNames: string[];
   dimUserNames: { [key: string]: string };
   dataset: string;
   samples: TResultRow[];
@@ -31,7 +32,9 @@ export const ConfigDim = (props: Props) => {
   const barLabelHeight = 14;
   const stepWidth = (modalWidth - 2 * padding) / STEP_NUM - gap;
 
-  const { row, dimName, dimUserNames, setDimUserNames, dataset, samples, changeDimSamples, baseSampleIndex } = props;
+  const { row, dimUserNames, setDimUserNames, dataset, samples, changeDimSamples, baseSampleIndex, dimNames } = props;
+  const [dimX, changeDimX] = useState(props.dimName);
+  const [dimY, changeDimY] = useState('none');
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [sampleIdx, changeSampleIdx] = useState(baseSampleIndex || 0);
@@ -42,12 +45,54 @@ export const ConfigDim = (props: Props) => {
   const maxV = getMax(row.histogram);
   const yScale = scaleLog().domain([0.1, maxV]).range([0, barHeight]);
 
-  const dimUserName = dimUserNames[dimName] || dimName;
+  const dimUserName = dimUserNames[dimX] || dimX;
 
   const inputName = (
     <>
-      <label htmlFor="fname">Name: </label>
-      <input value={dimUserName} unselectable="on" onChange={e => setDimUserNames({ [dimName]: e.target.value })} />
+      <label htmlFor="fname">Rename: </label>
+      <input value={dimUserName} unselectable="on" onChange={e => setDimUserNames({ [dimX]: e.target.value })} />
+    </>
+  );
+
+  const dimXSelector = (
+    <>
+      <label>Configure </label>
+      <Select
+        style={{ width: '100px' }}
+        value={dimX}
+        onChange={(e: string) => {
+          changeDimX(e);
+        }}
+      >
+        {dimNames.map(dim => {
+          return (
+            <Option key={dim} value={dim}>
+              {dimUserNames[dim] || dim}
+            </Option>
+          );
+        })}
+      </Select>
+    </>
+  );
+
+  const ySelector = (
+    <>
+      <label>Oragnize samples vertically using</label>
+      <Select
+        style={{ width: '100px' }}
+        value={dimY}
+        onChange={(e: string) => {
+          changeDimY(e);
+        }}
+      >
+        {dimNames.map(dim => {
+          return (
+            <Option key={dim} value={dim}>
+              {dimUserNames[dim] || dim}
+            </Option>
+          );
+        })}
+      </Select>
     </>
   );
 
@@ -88,7 +133,7 @@ export const ConfigDim = (props: Props) => {
   const Row = (
     <DimRow
       row={row}
-      dimName={dimName}
+      dimName={dimX}
       stepWidth={stepWidth}
       yScale={yScale}
       barHeight={barHeight}
@@ -100,7 +145,13 @@ export const ConfigDim = (props: Props) => {
     />
   );
 
-  const dimNum = parseInt(dimName.split('_')[1]);
+  const dimXNum = parseInt(dimX.split('_')[1]);
+  const dimYNum = parseInt(dimY.split('_')[1]);
+
+  const items = samples.map(s => {
+    const url = `${BASE_URL}/api/get_${dataset}_sample?id=${s.id}`;
+    return { ...s, src: url, x: s.z[dimXNum], y: s.z[dimYNum] };
+  });
   return (
     <>
       <g className="configIcon pointer_cursor" fill="gray" onClick={() => setModalVisible(true)}>
@@ -109,11 +160,11 @@ export const ConfigDim = (props: Props) => {
       </g>
 
       <Modal
-        title={`Configure ${dimUserName}`}
+        title={dimXSelector}
         visible={isModalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => {
-          changeDimSamples(dimNum, sampleIdx);
+          changeDimSamples(dimXNum, sampleIdx);
           setModalVisible(false);
         }}
         okText="Save"
@@ -126,7 +177,10 @@ export const ConfigDim = (props: Props) => {
         <svg width={modalWidth - 2 * padding} height={barHeight + imageSize + barLabelHeight + gap * 2}>
           {Row}
         </svg>
-        <Piling dimX={dimUserName} dataset={dataset} samples={samples} />
+        <h3> All samples are horizontally oragnized by {dimX} </h3>
+        {ySelector}
+        {/* <Piling dimX={dimName} dimUserNames={ dimUserNames} dataset={dataset} samples={samples} /> */}
+        <Piling items={items} />
       </Modal>
     </>
   );
