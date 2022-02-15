@@ -150,7 +150,7 @@ export const ConfigDim = (props: Props) => {
 
   const items = samples.map(s => {
     const url = `${BASE_URL}/api/get_${dataset}_sample?id=${s.id}`;
-    return { ...s, src: url, x: s.z[dimXNum], y: s.z[dimYNum] };
+    return { ...s, src: url, x: s.z[dimXNum], y: s.z[dimYNum] || 0 }; // y = 0 in case dimYNum = null
   });
   return (
     <>
@@ -180,7 +180,7 @@ export const ConfigDim = (props: Props) => {
         <h3> All samples are horizontally oragnized by {dimX} </h3>
         {ySelector}
         {/* <Piling dimX={dimName} dimUserNames={ dimUserNames} dataset={dataset} samples={samples} /> */}
-        <Piling items={items} />
+        <Piling items={items} dimX={dimX} dimY={dimY} />
       </Modal>
     </>
   );
