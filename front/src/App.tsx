@@ -244,7 +244,7 @@ export default class App extends React.Component<{}, State> {
     const sider = (
       <Sider width={siderWidth} collapsible>
         <div className="logo" style={{ height: 32, margin: 16, textAlign: 'center', color: 'white' }}>
-          LOGO
+          Drava
         </div>
         <Menu
           theme="dark"

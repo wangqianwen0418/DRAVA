@@ -180,7 +180,7 @@ export const ConfigDim = (props: Props) => {
         <h3> All samples are horizontally oragnized by {dimX} </h3>
         {ySelector}
         {/* <Piling dimX={dimName} dimUserNames={ dimUserNames} dataset={dataset} samples={samples} /> */}
-        <Piling items={items} dimX={dimX} dimY={dimY} />
+        <Piling items={items} />
       </Modal>
     </>
   );

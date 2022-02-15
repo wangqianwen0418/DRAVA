@@ -1,5 +1,5 @@
 import createPilingExample from './piling-interface';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import styles from './Piling.module.css';
 
 import { TResultRow } from 'types';
@@ -13,16 +13,14 @@ type Props = {
 };
 const Pilling = (props: Props) => {
   const { items } = props;
+  const endMoving = () => console.info('end of moving');
 
-  const pilingInitHandler = useCallback(
-    element => {
-      if (element !== null) {
-        const piling: any = createPilingExample(element, items);
-        return () => piling.destroy();
-      }
-    },
-    [props.items]
-  );
+  const pilingInitHandler = useCallback(element => {
+    if (element !== null) {
+      createPilingExample(element, items, endMoving);
+    }
+    return;
+  }, []);
 
   return (
     <div className={styles.piling_container}>
