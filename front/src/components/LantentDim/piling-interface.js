@@ -29,11 +29,12 @@ const createImageRenderer = option => sources =>
     );
 
 export default async function create(element, items, pileDragEnd) {
-    const imageSize = 32;
+    const imageSize = 64;
 
     const piling = createPilingJs(element, {
         renderer: createImageRenderer({ imageSize }),
         items: items,
+        itemSize: imageSize,
         // pileBorderSize: 2,
         // pileOpacity: 0.5 //opaciy piles for the sequence dataset
         pileItemOffset: (item, i, pile) => {
