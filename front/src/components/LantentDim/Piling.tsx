@@ -1,12 +1,10 @@
 import createPilingExample from './piling-interface';
 import React, { useCallback, useEffect, useState } from 'react';
 import styles from './Piling.module.css';
-import { Button, Select } from 'antd';
+import { Button } from 'antd';
 import { BASE_URL } from 'Const';
 
 import { TResultRow } from 'types';
-
-const { Option } = Select;
 
 type Item = TResultRow & {
   src: string;
@@ -50,6 +48,7 @@ const Pilling = (props: Props) => {
     <div className={styles.piling_container}>
       <label>Oragnize samples vertically using</label>
       <select className="ySelector" style={{ width: '100px' }}>
+        <option value="none">none</option>
         {dimNames.map(dimName => {
           return (
             <option key={dimName} value={dimName}>
@@ -58,8 +57,8 @@ const Pilling = (props: Props) => {
           );
         })}
       </select>
-      <Button type="default" id="groupBtn">
-        Auto Group
+      <Button type="default" id="groupBtn" size="small">
+        Auto-Group
       </Button>
       <div className={styles.piling_wrapper} ref={pilingInitHandler} />
     </div>

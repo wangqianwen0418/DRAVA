@@ -34,7 +34,6 @@ export const ConfigDim = (props: Props) => {
 
   const { row, dimUserNames, setDimUserNames, dataset, samples, changeDimSamples, baseSampleIndex, dimNames } = props;
   const [dimX, changeDimX] = useState(props.dimName);
-  const [dimY, changeDimY] = useState('none');
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [sampleIdx, changeSampleIdx] = useState(baseSampleIndex || 0);
@@ -62,28 +61,6 @@ export const ConfigDim = (props: Props) => {
         value={dimX}
         onChange={(e: string) => {
           changeDimX(e);
-        }}
-      >
-        {dimNames.map(dim => {
-          return (
-            <Option key={dim} value={dim}>
-              {dimUserNames[dim] || dim}
-            </Option>
-          );
-        })}
-      </Select>
-    </>
-  );
-
-  const ySelector = (
-    <>
-      <label>Oragnize samples vertically using</label>
-      <Select
-        style={{ width: '100px' }}
-        id="ySelector"
-        value={dimY}
-        onChange={(e: string) => {
-          changeDimY(e);
         }}
       >
         {dimNames.map(dim => {
@@ -147,7 +124,6 @@ export const ConfigDim = (props: Props) => {
   );
 
   const dimXNum = parseInt(dimX.split('_')[1]);
-  const dimYNum = parseInt(dimY.split('_')[1]);
 
   return (
     <>
@@ -175,8 +151,7 @@ export const ConfigDim = (props: Props) => {
           {Row}
         </svg>
         <h3> All samples are horizontally oragnized by {dimX} </h3>
-        {ySelector}
-        {/* <Piling dimX={dimName} dimUserNames={ dimUserNames} dataset={dataset} samples={samples} /> */}
+
         <Piling dataset={dataset} samples={samples} dimX={dimX} dimNames={dimNames} dimUserNames={dimUserNames} />
       </Modal>
     </>
