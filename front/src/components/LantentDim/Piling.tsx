@@ -13,11 +13,11 @@ type Props = {
 };
 const Pilling = (props: Props) => {
   const { items } = props;
-  const endMoving = () => console.info('end of moving');
+  const pileDragEnd = (e: any) => console.info('end of piling drag, ', e.target.items);
 
   const pilingInitHandler = useCallback(element => {
     if (element !== null) {
-      createPilingExample(element, items, endMoving);
+      createPilingExample(element, items, pileDragEnd);
     }
     return;
   }, []);

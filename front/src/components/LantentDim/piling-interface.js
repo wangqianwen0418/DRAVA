@@ -1,12 +1,12 @@
 import createPilingJs, { createImageRenderer } from 'piling.js';
 
-export default async function create(element, items, endMoving) {
+export default async function create(element, items, pileDragEnd) {
     const piling = createPilingJs(element, {
         renderer: createImageRenderer(),
         items: items
     });
     piling.arrangeBy('data', ['x', 'y']);
     piling.groupBy('overlap');
-    piling.set('pileDragEnd', endMoving);
+    piling.subscribe('pileDragEnd', pileDragEnd);
     return piling;
 }
