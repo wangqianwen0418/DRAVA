@@ -70,6 +70,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
 
     const MatrixTrack = {
       title: 'HFFc6_Hi-C',
+      id: 'matrix-track',
       data: {
         url: 'https://server.gosling-lang.org/api/v1/tileset_info/?d=hffc6-hic-hg38',
         type: 'matrix'
@@ -96,6 +97,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
 
     const CTCFTrack = {
       title: 'CTCF',
+      id: 'ctcf-track',
       layout: 'linear',
       data: {
         url: 'https://s3.amazonaws.com/gosling-lang.org/data/HFFC6_CTCF.mRp.clN.bigWig',
@@ -118,6 +120,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
 
     const PeakTrack = {
       layout: 'linear',
+      id: 'peak-track',
       data: {
         url: 'https://s3.amazonaws.com/gosling-lang.org/data/HFFc6_Atacseq.mRp.clN.bigWig',
         type: 'bigwig',
@@ -154,7 +157,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
 
     return (
       <Card title="Genomic Browser" size="small" loading={isDataLoading}>
-        <GoslingComponent spec={spec as GoslingSpec} />
+        <GoslingComponent spec={spec as GoslingSpec} experimental={{ reactive: true }} />
       </Card>
     );
   }
