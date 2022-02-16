@@ -18,10 +18,17 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
     const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
 
     const samples = pcsv.data.map((row, i) => {
+      const zs = row['z'].split(',').map(d => parseFloat(d));
+      const dims = zs.reduce((pre, curr, idx) => {
+        const dimName = `dim_${idx}`;
+        return { ...pre, [dimName]: curr };
+      }, {});
+
       return {
         ...row,
         z: row['z'].split(',').map(d => parseFloat(d)),
-        id: (i + 1).toString()
+        id: (i + 1).toString(),
+        ...dims
       };
     });
     return samples;
@@ -42,13 +49,20 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
   const samples = pcsv.data
     .filter(d => parseInt(d.chr as any) === chr)
     .map((row, i) => {
+      const zs = row['z'].split(',').map(d => parseFloat(d));
+      const dims = zs.reduce((pre, curr, idx) => {
+        const dimName = `dim_${idx}`;
+        return { ...pre, [dimName]: curr };
+      }, {});
+
       return {
         ...row,
         chr: parseInt(row.chr as any),
         start: parseInt(row.start as any) * resolution,
         end: parseInt(row.end as any) * resolution,
         z: row['z'].split(',').map(d => parseFloat(d)),
-        id: (dataset == 'sequence' ? i : i + 1).toString()
+        id: (dataset == 'sequence' ? i : i + 1).toString(),
+        ...dims
       };
     })
     .filter(

@@ -80,6 +80,7 @@ export const ConfigDim = (props: Props) => {
       <label>Oragnize samples vertically using</label>
       <Select
         style={{ width: '100px' }}
+        id="ySelector"
         value={dimY}
         onChange={(e: string) => {
           changeDimY(e);
@@ -148,10 +149,6 @@ export const ConfigDim = (props: Props) => {
   const dimXNum = parseInt(dimX.split('_')[1]);
   const dimYNum = parseInt(dimY.split('_')[1]);
 
-  const items = samples.map(s => {
-    const url = `${BASE_URL}/api/get_${dataset}_sample?id=${s.id}`;
-    return { ...s, src: url, x: s.z[dimXNum], y: s.z[dimYNum] || 0 }; // y = 0 in case dimYNum = null
-  });
   return (
     <>
       <g className="configIcon pointer_cursor" fill="gray" onClick={() => setModalVisible(true)}>
@@ -180,7 +177,7 @@ export const ConfigDim = (props: Props) => {
         <h3> All samples are horizontally oragnized by {dimX} </h3>
         {ySelector}
         {/* <Piling dimX={dimName} dimUserNames={ dimUserNames} dataset={dataset} samples={samples} /> */}
-        <Piling items={items} />
+        <Piling dataset={dataset} samples={samples} dimX={dimX} dimNames={dimNames} dimUserNames={dimUserNames} />
       </Modal>
     </>
   );

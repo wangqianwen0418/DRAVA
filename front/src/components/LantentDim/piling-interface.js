@@ -28,8 +28,9 @@ const createImageRenderer = option => sources =>
         })
     );
 
-export default async function create(element, items, pileDragEnd) {
+export default async function create(element, pilingOptions) {
     const imageSize = 64;
+    const { items, pileDragEnd, dims } = pilingOptions;
 
     const piling = createPilingJs(element, {
         renderer: createImageRenderer({ imageSize }),
@@ -47,8 +48,16 @@ export default async function create(element, items, pileDragEnd) {
         },
         pileSizeBadge: pile => pile.items.length > 1
     });
-    piling.arrangeBy('data', ['x', 'y']);
-    piling.groupBy('overlap');
+
+    piling.groupBy('cluster', dims[0]);
+    piling.arrangeBy('data', dims);
+
     piling.subscribe('pileDragEnd', pileDragEnd);
-    return piling;
+
+    const actions = {
+        reArrange: dims => piling.arrangeBy('data', dims),
+        group: dim => piling.groupBy('cluster', dim)
+    };
+
+    return [piling, actions];
 }
