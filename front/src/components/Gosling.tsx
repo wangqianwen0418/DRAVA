@@ -142,7 +142,6 @@ export default class GoslingVis extends React.Component<Props, {}> {
 
     const spec = {
       title: '',
-      responsiveSize: { width: true },
       width: width - cardPadding * 2,
       height: height - cardPadding * 2 - cardHeadHeight - 24, // gosling vis axis: 24px
       tracks: [...(dataset == 'sequence' ? [PeakTrack] : [MatrixTrack, CTCFTrack]), labelTrack]
