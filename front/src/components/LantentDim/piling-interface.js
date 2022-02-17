@@ -30,7 +30,7 @@ const createImageRenderer = option => sources =>
 
 export default async function create(element, pilingOptions) {
     const imageSize = 64;
-    const { items, pileDragEnd, dims } = pilingOptions;
+    const { items, pileDragEnd, dims, getSvgGroup } = pilingOptions;
 
     const piling = createPilingJs(element, {
         renderer: createImageRenderer({ imageSize }),
@@ -53,6 +53,12 @@ export default async function create(element, pilingOptions) {
     piling.arrangeBy('data', dims);
 
     piling.subscribe('pileDragEnd', pileDragEnd);
+    piling.subscribe('zoom', camera => {
+        getSvgGroup().attr(
+            'transform',
+            `translate(${camera.translation[0]}, 0) scale(${camera.scaling} 1)` // only update translate x and scale
+        );
+    });
 
     const actions = {
         reArrange: dims => piling.arrangeBy('data', dims),

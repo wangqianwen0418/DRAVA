@@ -147,8 +147,8 @@ export const ConfigDim = (props: Props) => {
         {inputName}
         <br />
         {baselineSelector}
-        <svg width={modalWidth - 2 * padding} height={barHeight + imageSize + barLabelHeight + gap * 2}>
-          {Row}
+        <svg width={modalWidth - 2 * padding} height={barHeight + imageSize + barLabelHeight + gap * 2} id="configDim">
+          <g id={dimX}>{Row}</g>
         </svg>
         <h3> All samples are horizontally oragnized by {dimX} </h3>
 

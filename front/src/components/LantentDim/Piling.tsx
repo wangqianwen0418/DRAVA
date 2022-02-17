@@ -1,5 +1,6 @@
 import createPilingExample from './piling-interface';
 import React, { useCallback, useEffect, useState } from 'react';
+import { select as d3select } from 'd3-selection';
 import styles from './Piling.module.css';
 import { Button } from 'antd';
 import { BASE_URL } from 'Const';
@@ -28,7 +29,8 @@ const Pilling = (props: Props) => {
   const pilingOptions = {
     items,
     pileDragEnd,
-    dims: [dimX, 'none']
+    dims: [dimX, 'none'],
+    getSvgGroup: () => d3select('svg#configDim').select(`g#${dimX}`)
   };
 
   const pilingInitHandler = useCallback(async element => {
