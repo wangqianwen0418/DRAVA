@@ -80,7 +80,9 @@ export default class App extends React.Component<{}, State> {
     this.setFilters = this.setFilters.bind(this);
     this.updateDims = this.updateDims.bind(this);
     this.setDimUserNames = this.setDimUserNames.bind(this);
+    this.resize = this.resize.bind(this)
   }
+    
 
   async onQueryResults(dataset: string) {
     const samples = await queryResults(dataset);
@@ -97,20 +99,26 @@ export default class App extends React.Component<{}, State> {
 
     this.setState({ filters, samples, isDataLoading: false });
   }
+  resize(){
+      this.setState({ 
+        windowInnerSize: {
+          width: window.innerWidth,
+          height: window.innerHeight
+        }
+      }); 
+  }
   componentDidMount() {
     this.onQueryResults(this.state.dataset);
 
     window.addEventListener(
       'resize',
-        () => {
-            this.setState({ 
-              ...this.state, 
-              windowInnerSize: {
-                width: window.innerWidth,
-                height: window.innerHeight
-              }
-            });
-        }
+       this.resize
+    );
+  }
+  componentWillUnmount() {
+    window.removeEventListener(
+      'resize',
+       this.resize
     );
   }
   // @update state
