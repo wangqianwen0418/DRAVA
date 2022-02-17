@@ -16,7 +16,12 @@ interface Props {
 
 export default class GoslingVis extends React.Component<Props, {}> {
   shouldComponentUpdate(nextProps: Props) {
-    if (nextProps.dataset != this.props.dataset || nextProps.samples.length !== this.props.samples.length) {
+    if (
+      nextProps.dataset != this.props.dataset || 
+      nextProps.samples.length !== this.props.samples.length ||
+      nextProps.width != this.props.width ||
+      nextProps.height != this.props.height
+    ) {
       return true;
     }
     return false;
@@ -41,8 +46,11 @@ export default class GoslingVis extends React.Component<Props, {}> {
       cardPadding = parseInt(rootStyle.getPropertyValue('--card-body-padding')),
       cardHeadHeight = parseInt(rootStyle.getPropertyValue('--card-head-height'));
 
+    const goslingComponentWidth = width - cardPadding * 2;
+    const goslingComponentHeight = height - cardPadding * 2 - cardHeadHeight - 30 // gosling axis;
+
     const labelTrack: any = {
-      title: 'samples',
+      title: 'Samples',
       data: {
         values: labelJSON,
         type: 'json',
@@ -50,21 +58,16 @@ export default class GoslingVis extends React.Component<Props, {}> {
         genomicFields: ['start', 'end']
       },
       mark: 'rect',
-      size: { value: 12 },
-      height: 12,
-      x: {
-        field: 'start',
-        type: 'genomic',
-        axis: 'none',
-        domain: { chromosome: `chr${CHR}` }
-      },
+      height: 18,
+      x: { field: 'start', type: 'genomic' },
       xe: { field: 'end', type: 'genomic' },
-      stroke: { value: 'steelblue' },
-      strokeWidth: { value: 1 }
+      stroke: { value: '#E7BA65' },
+      strokeWidth: { value: 0.5 },
     };
 
     if (dataset == 'matrix') {
-      labelTrack['row'] = { field: 'level', type: 'nominal', legend: false };
+      labelTrack['title'] = 'Samples By Depth'
+      labelTrack['row'] = { field: 'level', type: 'nominal', legend: false, domain: ['1.0', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0'].reverse() };
       labelTrack['height'] = 12 * 8;
     }
 
@@ -79,11 +82,12 @@ export default class GoslingVis extends React.Component<Props, {}> {
       x: {
         field: 'position1',
         type: 'genomic',
-        axis: 'bottom'
+        domain: { chromosome: `chr${CHR}` },
       },
       y: {
         field: 'position2',
         type: 'genomic',
+        domain: { chromosome: `chr${CHR}` },
         axis: 'none'
       },
       color: {
@@ -91,8 +95,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
         type: 'quantitative',
         range: 'grey'
       },
-      width: 600,
-      height: 600
+      height: goslingComponentHeight - 20 - 12 * 8
     };
 
     const CTCFTrack = {
@@ -109,12 +112,10 @@ export default class GoslingVis extends React.Component<Props, {}> {
       mark: 'area',
       x: {
         field: 'position',
-        type: 'genomic',
-        domain: { chromosome: CHR.toString() },
-        axis: 'none'
+        type: 'genomic'
       },
       y: { field: 'peak', type: 'quantitative' },
-      color: { value: 'steelblue' },
+      color: { value: '#D6641E' },
       height: 20
     };
 
@@ -126,25 +127,23 @@ export default class GoslingVis extends React.Component<Props, {}> {
         type: 'bigwig',
         column: 'position',
         value: 'peak',
-        binSize: '2'
+        binSize: 2
       },
       mark: 'area',
       x: {
         field: 'position',
-        type: 'genomic',
-        domain: { chromosome: CHR.toString() },
-        axis: 'bottom'
+        type: 'genomic'
       },
       y: { field: 'peak', type: 'quantitative' },
-      color: { value: 'steelblue' },
+      color: { value: '#D6641E' },
       height: 40
     };
 
     const spec = {
-      title: '',
-      width: width - cardPadding * 2,
-      height: height - cardPadding * 2 - cardHeadHeight - 24, // gosling vis axis: 24px
-      tracks: [...(dataset == 'sequence' ? [PeakTrack] : [MatrixTrack, CTCFTrack]), labelTrack]
+      spacing: 0,
+      xDomain: { chromosome: CHR.toString() },
+      width: goslingComponentWidth,
+      tracks: dataset == 'sequence' ? [PeakTrack, labelTrack] : [labelTrack, CTCFTrack, MatrixTrack]
     };
 
     // validate the spec
@@ -157,7 +156,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
 
     return (
       <Card title="Genomic Browser" size="small" loading={isDataLoading}>
-        <GoslingComponent spec={spec as GoslingSpec} experimental={{ reactive: true }} />
+        <GoslingComponent spec={spec as GoslingSpec} experimental={{ reactive: true }}/>
       </Card>
     );
   }
