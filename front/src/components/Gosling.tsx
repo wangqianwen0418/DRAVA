@@ -48,6 +48,9 @@ export default class GoslingVis extends React.Component<Props, {}> {
 
     const goslingComponentWidth = width - cardPadding * 2;
     const goslingComponentHeight = height - cardPadding * 2 - cardHeadHeight - 30; // gosling axis;
+    const labelHeight = 18,
+      peakHeight = 30,
+      multiLabelHeight = 10 * 8;
 
     const labelTrack: any = {
       title: 'Samples',
@@ -58,7 +61,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
         genomicFields: ['start', 'end']
       },
       mark: 'rect',
-      height: 18,
+      height: labelHeight,
       x: { field: 'start', type: 'genomic' },
       xe: { field: 'end', type: 'genomic' },
       stroke: { value: 'steelblue' },
@@ -73,7 +76,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
         legend: false,
         domain: ['1.0', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0'].reverse()
       };
-      labelTrack['height'] = 12 * 8;
+      labelTrack['height'] = multiLabelHeight;
     }
 
     const MatrixTrack = {
@@ -100,7 +103,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
         type: 'quantitative',
         range: 'grey'
       },
-      height: goslingComponentHeight - 20 - 12 * 8
+      height: goslingComponentHeight - peakHeight - multiLabelHeight
     };
 
     const CTCFTrack = {
@@ -121,7 +124,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
       },
       y: { field: 'peak', type: 'quantitative' },
       color: { value: 'steelBlue' },
-      height: 20
+      height: peakHeight
     };
 
     const PeakTrack = {
@@ -141,14 +144,14 @@ export default class GoslingVis extends React.Component<Props, {}> {
       },
       y: { field: 'peak', type: 'quantitative' },
       color: { value: 'steelBlue' },
-      height: 40
+      height: peakHeight
     };
 
     const spec = {
       spacing: 0,
       xDomain: { chromosome: CHR.toString() },
       width: goslingComponentWidth,
-      tracks: dataset == 'sequence' ? [PeakTrack, labelTrack] : [labelTrack, CTCFTrack, MatrixTrack]
+      tracks: dataset == 'sequence' ? [labelTrack, PeakTrack] : [labelTrack, CTCFTrack, MatrixTrack]
     };
 
     // validate the spec
