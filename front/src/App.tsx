@@ -52,6 +52,7 @@ interface State {
   samples: TResultRow[];
   dimUserNames: { [key: string]: string }; // user can specify new names for latent dim
   isDataLoading: boolean;
+  windowInnerSize?: { width: number, height: number };
 }
 export default class App extends React.Component<{}, State> {
   /****
@@ -73,12 +74,15 @@ export default class App extends React.Component<{}, State> {
       dimUserNames: {},
       filters: {},
       samples: [],
-      isDataLoading: true
+      isDataLoading: true,
+      windowInnerSize: undefined
     };
     this.setFilters = this.setFilters.bind(this);
     this.updateDims = this.updateDims.bind(this);
     this.setDimUserNames = this.setDimUserNames.bind(this);
+    this.resize = this.resize.bind(this)
   }
+    
 
   async onQueryResults(dataset: string) {
     const samples = await queryResults(dataset);
@@ -95,8 +99,27 @@ export default class App extends React.Component<{}, State> {
 
     this.setState({ filters, samples, isDataLoading: false });
   }
+  resize(){
+      this.setState({ 
+        windowInnerSize: {
+          width: window.innerWidth,
+          height: window.innerHeight
+        }
+      }); 
+  }
   componentDidMount() {
     this.onQueryResults(this.state.dataset);
+
+    window.addEventListener(
+      'resize',
+       this.resize
+    );
+  }
+  componentWillUnmount() {
+    window.removeEventListener(
+      'resize',
+       this.resize
+    );
   }
   // @update state
   onClickMenu(e: MenuInfo): void {
@@ -230,7 +253,7 @@ export default class App extends React.Component<{}, State> {
   }
 
   render() {
-    const { filters, dataset, isDataLoading, dimUserNames, samples } = this.state;
+    const { filters, dataset, isDataLoading, dimUserNames, samples, windowInnerSize } = this.state;
 
     const filteredSamples = samples.filter(sample => this.filterMask[sample.id].every(d => d));
 
@@ -238,8 +261,8 @@ export default class App extends React.Component<{}, State> {
       headerHeight = 0,
       contentPadding = 10,
       gutter = 16,
-      appHeight = window.innerHeight - headerHeight - 2 * contentPadding,
-      colWidth = (window.innerWidth - siderWidth - contentPadding * 2) * 0.5 - gutter;
+      appHeight = (windowInnerSize ? windowInnerSize.height : window.innerHeight) - headerHeight - 2 * contentPadding,
+      colWidth = ((windowInnerSize ? windowInnerSize.width : window.innerWidth) - siderWidth - contentPadding * 2) * 0.5 - gutter;
 
     const sider = (
       <Sider width={siderWidth} collapsible>
