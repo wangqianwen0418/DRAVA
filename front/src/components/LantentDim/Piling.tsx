@@ -30,20 +30,28 @@ const Pilling = (props: Props) => {
     items,
     pileDragEnd,
     dims: [dimX, 'none'],
-    getSvgGroup: () => d3select('svg#configDim').select(`g#${dimX}`)
+    getSvgGroup: () => d3select('svg#configDim').select(`g#${dimX}`), // pass a function rather than a selection in case the svg components have been rendered yet
+    dataset
   };
 
   const pilingInitHandler = useCallback(async element => {
-    if (element !== null) {
-      const [piling, actions] = await createPilingExample(element, pilingOptions);
-      // register action
-      document.querySelector('.ySelector')?.addEventListener('change', event => {
-        const dimY = (event.target as any).value;
-        return actions.reArrange([dimX, dimY]);
-      });
-      document.getElementById('groupBtn')?.addEventListener('click', () => actions.group(dimX));
-    }
-    return;
+    if (element == null) return;
+
+    const [piling, actions] = await createPilingExample(element, pilingOptions);
+    // register action
+    const reArrange = (event: Event) => {
+      const dimY = (event.target as any).value;
+      return actions.reArrange([dimX, dimY]);
+    };
+    const autoGroup = () => actions.group(dimX);
+    document.querySelector('.ySelector')?.addEventListener('change', reArrange);
+    document.getElementById('groupBtn')?.addEventListener('click', autoGroup);
+
+    return () => {
+      piling.destory();
+      document.querySelector('.ySelector')?.removeEventListener('change', reArrange);
+      document.getElementById('groupBtn')?.removeEventListener('click', autoGroup);
+    };
   }, []);
 
   return (
