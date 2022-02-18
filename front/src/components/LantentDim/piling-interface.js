@@ -49,7 +49,6 @@ export default async function create(element, pilingOptions) {
     pileSizeBadge: pile => pile.items.length > 1
   });
 
-  piling.groupBy('overlap', 64);
   piling.arrangeBy('data', dims);
 
   piling.subscribe('pileDragEnd', pileDragEnd);
@@ -67,7 +66,7 @@ export default async function create(element, pilingOptions) {
 
   const actions = {
     reArrange: dims => piling.arrangeBy('data', dims),
-    group: dim => piling.groupBy('cluster', item => item['assignments'][dim])
+    group: dim => piling.groupBy('category', item => item['assignments'][dim])
   };
 
   return [piling, actions];
