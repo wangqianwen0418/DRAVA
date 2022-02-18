@@ -52,7 +52,7 @@ interface State {
   samples: TResultRow[];
   dimUserNames: { [key: string]: string }; // user can specify new names for latent dim
   isDataLoading: boolean;
-  windowInnerSize?: { width: number, height: number };
+  windowInnerSize?: { width: number; height: number };
 }
 export default class App extends React.Component<{}, State> {
   /****
@@ -80,9 +80,8 @@ export default class App extends React.Component<{}, State> {
     this.setFilters = this.setFilters.bind(this);
     this.updateDims = this.updateDims.bind(this);
     this.setDimUserNames = this.setDimUserNames.bind(this);
-    this.resize = this.resize.bind(this)
+    this.resize = this.resize.bind(this);
   }
-    
 
   async onQueryResults(dataset: string) {
     const samples = await queryResults(dataset);
@@ -99,27 +98,21 @@ export default class App extends React.Component<{}, State> {
 
     this.setState({ filters, samples, isDataLoading: false });
   }
-  resize(){
-      this.setState({ 
-        windowInnerSize: {
-          width: window.innerWidth,
-          height: window.innerHeight
-        }
-      }); 
+  resize() {
+    this.setState({
+      windowInnerSize: {
+        width: window.innerWidth,
+        height: window.innerHeight
+      }
+    });
   }
   componentDidMount() {
     this.onQueryResults(this.state.dataset);
 
-    window.addEventListener(
-      'resize',
-       this.resize
-    );
+    window.addEventListener('resize', this.resize);
   }
   componentWillUnmount() {
-    window.removeEventListener(
-      'resize',
-       this.resize
-    );
+    window.removeEventListener('resize', this.resize);
   }
   // @update state
   onClickMenu(e: MenuInfo): void {
@@ -262,7 +255,9 @@ export default class App extends React.Component<{}, State> {
       contentPadding = 10,
       gutter = 16,
       appHeight = (windowInnerSize ? windowInnerSize.height : window.innerHeight) - headerHeight - 2 * contentPadding,
-      colWidth = ((windowInnerSize ? windowInnerSize.width : window.innerWidth) - siderWidth - contentPadding * 2) * 0.5 - gutter;
+      colWidth =
+        ((windowInnerSize ? windowInnerSize.width : window.innerWidth) - siderWidth - contentPadding * 2) * 0.5 -
+        gutter;
 
     const sider = (
       <Sider width={siderWidth} collapsible>
