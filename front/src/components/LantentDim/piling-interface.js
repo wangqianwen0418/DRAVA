@@ -30,14 +30,14 @@ const createImageRenderer = option => sources =>
 
 export default async function create(element, pilingOptions) {
     const imageSize = 64;
-    const { items, pileDragEnd, dims, getSvgGroup } = pilingOptions;
+    const { items, pileDragEnd, dims, getSvgGroup, dataset } = pilingOptions;
 
     const piling = createPilingJs(element, {
         renderer: createImageRenderer({ imageSize }),
         items: items,
         itemSize: imageSize,
-        // pileBorderSize: 2,
-        // pileOpacity: 0.5 //opaciy piles for the sequence dataset
+        pileBorderSize: dataset === 'sequence' ? 2 : 0,
+        pileOpacity: dataset === 'sequence' ? 0.5 : 1, //opaciy piles for the sequence dataset
         pileItemOffset: (item, i, pile) => {
             const isNotLast = pile.items.length - 1 !== i;
             return [+isNotLast * (Math.random() * 12 - 6), +isNotLast * (Math.random() * 12 - 6)];
