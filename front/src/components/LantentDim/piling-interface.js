@@ -67,7 +67,7 @@ export default async function create(element, pilingOptions) {
 
   const actions = {
     reArrange: dims => piling.arrangeBy('data', dims),
-    group: dim => piling.groupBy('cluster', dims)
+    group: dim => piling.groupBy('cluster', item => item['assignments'][dim])
   };
 
   return [piling, actions];
