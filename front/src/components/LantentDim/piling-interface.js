@@ -54,10 +54,15 @@ export default async function create(element, pilingOptions) {
 
     piling.subscribe('pileDragEnd', pileDragEnd);
     piling.subscribe('zoom', camera => {
-        getSvgGroup().attr(
+        const svgGroup = getSvgGroup();
+        svgGroup.attr(
             'transform',
-            `translate(${camera.translation[0]}, 0) scale(${camera.scaling} 1)` // only update translate x and scale
+            `translate(${camera.translation[0]}, 0) scale(${camera.scaling} 1)` // only update translate x and scale x
         );
+        // to prevent the distortion of svg elements
+        svgGroup.selectAll('image').attr('transform', `scale(${1 / camera.scaling} 1)`);
+        svgGroup.selectAll('rect').attr('transform', `scale(${1 / camera.scaling} 1)`);
+        svgGroup.selectAll('text').attr('transform', `scale(${1 / camera.scaling} 1)`);
     });
 
     const actions = {
