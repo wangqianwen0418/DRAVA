@@ -28,24 +28,6 @@ const Z_Ranges: { [k: string]: number[][] } = {
   matrix: z_ranges_matrix
 };
 
-const uploadProps = {
-  name: 'file',
-  action: 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
-  headers: {
-    authorization: 'authorization-text'
-  },
-  onChange(info: any): void {
-    if (info.file.status !== 'uploading') {
-      console.info(info.file, info.fileList);
-    }
-    if (info.file.status === 'done') {
-      // message.success(`${info.file.name} file uploaded successfully`);
-    } else if (info.file.status === 'error') {
-      // message.error(`${info.file.name} file upload failed.`);
-    }
-  }
-};
-
 interface State {
   dataset: string;
   filters: TFilter;
@@ -117,6 +99,7 @@ export default class App extends React.Component<{}, State> {
   // @update state
   onClickMenu(e: MenuInfo): void {
     const dataset = e.key;
+    if (dataset == 'upload') return;
     this.setState({
       dataset,
       samples: [],
@@ -276,7 +259,7 @@ export default class App extends React.Component<{}, State> {
             <Menu.Item key="matrix">Matrix</Menu.Item>
             <Menu.Item key="celeb">Celeb</Menu.Item>
             <Menu.Item key="upload">
-              <Upload {...uploadProps}>
+              <Upload>
                 <UploadOutlined style={{ color: 'rgba(255, 255, 255, 0.65)' }} />
               </Upload>
             </Menu.Item>
