@@ -43,6 +43,7 @@ export default class App extends React.Component<{}, State> {
    * only update when query new dataset
    ****/
   matrixData: TMatrixData = {};
+  filteredSamples: TResultRow[] = [];
   constructor(prop: {}) {
     super(prop);
     this.state = {
@@ -67,7 +68,7 @@ export default class App extends React.Component<{}, State> {
     });
     const [matrixData, samplesWithAssign] = this.calculateMatrixData(samples, dataset);
     this.matrixData = matrixData;
-
+    this.filteredSamples = samples;
     this.setState({ filters, samples: samplesWithAssign, isDataLoading: false });
   }
   resize() {
@@ -104,7 +105,7 @@ export default class App extends React.Component<{}, State> {
    * @state_update
    * */
   updateDims(dimNames: string[]): void {
-    const { filters } = this.state;
+    const { filters, samples } = this.state;
     const currentDimNames = Object.keys(filters);
     const deleteDimNames = currentDimNames.filter(d => !dimNames.includes(d)),
       addDimNames = dimNames.filter(d => !currentDimNames.includes(d));
@@ -115,6 +116,9 @@ export default class App extends React.Component<{}, State> {
     addDimNames.forEach(n => {
       filters[n] = range(this.matrixData[n].histogram.length).map(d => true);
     });
+    if (deleteDimNames.length > 0) {
+      this.filteredSamples = this.getFilteredSamples(samples, filters);
+    }
 
     this.setState({ filters });
   }
@@ -136,6 +140,7 @@ export default class App extends React.Component<{}, State> {
       filters[dimName][col] = !filters[dimName][col];
     }
 
+    this.filteredSamples = this.getFilteredSamples(samples, filters);
     this.setState({ filters });
   }
   /**
@@ -195,17 +200,22 @@ export default class App extends React.Component<{}, State> {
     });
     return [matrixData, samples];
   }
-
-  render() {
-    const { filters, dataset, isDataLoading, dimUserNames, samples, windowInnerSize } = this.state;
-
-    // const filteredSamples = samples.filter(sample => this.filterMask[sample.id].every(d => d));
+  /**
+   *
+   * @compute
+   */
+  getFilteredSamples(samples: TResultRow[], filters: TFilter) {
     const filteredSamples = samples.filter(sample =>
       Object.keys(sample.assignments).every(dimName => {
         const col = sample.assignments[dimName];
         return filters[dimName] ? filters[dimName][col] : true;
       })
     );
+    return filteredSamples;
+  }
+
+  render() {
+    const { filters, dataset, isDataLoading, dimUserNames, samples, windowInnerSize } = this.state;
 
     const siderWidth = 150,
       headerHeight = 0,
@@ -255,7 +265,7 @@ export default class App extends React.Component<{}, State> {
                 ) : (
                   <GoslingVis
                     dataset={dataset}
-                    samples={filteredSamples}
+                    samples={this.filteredSamples}
                     width={colWidth}
                     height={appHeight * 0.5}
                     isDataLoading={isDataLoading}
@@ -264,7 +274,7 @@ export default class App extends React.Component<{}, State> {
 
                 <SampleBrowser
                   dataset={dataset}
-                  samples={filteredSamples}
+                  samples={this.filteredSamples}
                   height={appHeight * (dataset == 'celeb' ? 1 : 0.5)}
                   isDataLoading={isDataLoading}
                   matrixData={this.matrixData}
