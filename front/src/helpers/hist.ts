@@ -77,36 +77,42 @@ export const generateDistribution = (
   sampleIds?: string[],
   K?: number,
   valueRange?: number[] // users can specify a range to draw the histogram
-): TDistribution => {
+): { row: TDistribution; sampleAssignments: number[] } => {
   // no meaningful data
-  if (samples.length == 0) return { histogram: [], labels: [], groupedSamples: [] };
-  if (samples[0] == undefined) return { histogram: [], labels: [], groupedSamples: [] };
+  const noReturn = { row: { histogram: [], labels: [], groupedSamples: [] }, sampleAssignments: [] };
+  if (samples.length == 0) return noReturn;
+  if (samples[0] == undefined) return noReturn;
 
+  // meaningful data
   if (!sampleIds) {
     sampleIds = samples.map((d, idx) => idx.toString());
   }
-
-  // meaningful data
   if (isCategorical) return countingCategories(samples, sampleIds);
   else return generateHistogram(samples as number[], binNum, sampleIds, K, valueRange);
 };
 
-const countingCategories = (samples: string[] | number[], sampleIds: string[]): TDistribution => {
+const countingCategories = (
+  samples: string[] | number[],
+  sampleIds: string[]
+): { row: TDistribution; sampleAssignments: number[] } => {
   var labels: string[] = [];
   var histogram: number[] = [];
   var groupedSamples: string[][] = [];
+  var sampleAssignments: number[] = samples.map(_ => 0); // the assigned group index for each sample at this dim
   samples.forEach((sample, sampleIdx) => {
     const idx = labels.indexOf(sample.toString());
     if (idx == -1) {
       labels.push(sample.toString());
+      sampleAssignments[sampleIdx] = histogram.length;
       histogram.push(1);
       groupedSamples.push([sampleIds[sampleIdx]]);
     } else {
       histogram[idx] += 1;
+      sampleAssignments[sampleIdx] = idx;
       groupedSamples[idx].push(sampleIds[sampleIdx]);
     }
   });
-  return { histogram, labels, groupedSamples };
+  return { row: { histogram, labels, groupedSamples }, sampleAssignments };
 };
 
 const generateHistogram = (
@@ -115,9 +121,10 @@ const generateHistogram = (
   sampleIds: string[],
   K: number = 1,
   valueRange?: number[]
-): TDistribution => {
+): { row: TDistribution; sampleAssignments: number[] } => {
   var histogram: number[] = range(STEP_NUM, 0);
   var groupedSamples: string[][] = range(STEP_NUM).map(_ => []);
+  var sampleAssignments: number[] = samples.map(_ => 0); // the assigned group index for each sample at this dim
 
   // in case the csv parser process number to string
   samples = samples.map(d => parseFloat(d as any));
@@ -136,6 +143,7 @@ const generateHistogram = (
       idx = STEP_NUM - 1;
     }
     histogram[idx] += 1;
+    sampleAssignments[sampleIdx] = idx;
     groupedSamples[idx].push(sampleIds[sampleIdx]);
   });
 
@@ -145,12 +153,15 @@ const generateHistogram = (
   };
 
   return {
-    histogram,
-    groupedSamples,
-    labels: range(STEP_NUM).map(idx =>
-      [minV + (idx * (maxV - minV)) / STEP_NUM, minV + ((idx + 1) * (maxV - minV)) / STEP_NUM]
-        .map(d => shortNum(d))
-        .join('~')
-    )
+    row: {
+      histogram,
+      groupedSamples,
+      labels: range(STEP_NUM).map(idx =>
+        [minV + (idx * (maxV - minV)) / STEP_NUM, minV + ((idx + 1) * (maxV - minV)) / STEP_NUM]
+          .map(d => shortNum(d))
+          .join('~')
+      )
+    },
+    sampleAssignments
   };
 };

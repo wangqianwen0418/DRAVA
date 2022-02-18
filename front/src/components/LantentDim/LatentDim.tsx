@@ -51,7 +51,7 @@ export default class LatentDim extends React.Component<Props, States> {
    * @compute
    * */
   isSelected(dimName: string, col_idx: number): boolean {
-    return this.props.filters[dimName].includes(col_idx);
+    return this.props.filters[dimName][col_idx];
   }
 
   // @drawing

@@ -12,6 +12,7 @@ export type TResultRow = {
   start: number;
   end: number;
   z: number[]; // '[x, x, x,]',
+  assignments: { [dimName: string]: number }; // index of the assigned groups at each dim
   [key: string]: any;
 };
 
@@ -21,7 +22,7 @@ export type TDistribution = {
   labels: string[]; // name of each group
 };
 
-export type TFilter = { [dimName: string]: number[] };
+export type TFilter = { [dimName: string]: boolean[] };
 interface State {
   dataset: string;
   filters: TFilter;

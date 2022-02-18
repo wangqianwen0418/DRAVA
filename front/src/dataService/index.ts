@@ -28,6 +28,7 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
         ...row,
         z: row['z'].split(',').map(d => parseFloat(d)),
         id: (i + 1).toString(),
+        assignments: {},
         ...dims
       };
     });
@@ -62,6 +63,7 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
         end: parseInt(row.end as any) * resolution,
         z: row['z'].split(',').map(d => parseFloat(d)),
         id: (dataset == 'sequence' ? i : i + 1).toString(),
+        assignments: {},
         ...dims
       };
     })

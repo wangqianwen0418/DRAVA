@@ -42,13 +42,13 @@ export default class App extends React.Component<{}, State> {
    * calculated based on samples
    ****/
   matrixData: TMatrixData = {};
-  /***
-   * whether a sample is shown based on each latent dim filter
-   * if the flag from each dim is all true, show this sample
-   * size: samples.length x Object.keys(matrixData).length
-   * calculated based on samples, filters
-   */
-  filterMask: { [sampleId: string]: boolean[] } = {};
+  // /***
+  //  * whether a sample is shown based on each latent dim filter
+  //  * if the flag from each dim is all true, show this sample
+  //  * size: samples.length x Object.keys(matrixData).length
+  //  * calculated based on samples, filters
+  //  */
+  // filterMask: { [sampleId: string]: boolean[] } = {};
   constructor(prop: {}) {
     super(prop);
     this.state = {
@@ -69,16 +69,17 @@ export default class App extends React.Component<{}, State> {
     const samples = await queryResults(dataset);
     const filters: TFilter = {};
     range(samples[0]['z'].length).forEach(dimNum => {
-      filters[`dim_${dimNum}`] = range(STEP_NUM);
+      filters[`dim_${dimNum}`] = range(STEP_NUM).map(_ => true);
     });
-    this.matrixData = this.calculateMatrixData(samples, dataset);
+    const [matrixData, samplesWithAssign] = this.calculateMatrixData(samples, dataset);
+    this.matrixData = matrixData;
 
-    // default show all samples
-    samples.forEach(sample => {
-      this.filterMask[sample.id] = Object.keys(this.matrixData).map(_ => true);
-    });
+    // // default show all samples
+    // samples.forEach(sample => {
+    //   this.filterMask[sample.id] = Object.keys(this.matrixData).map(_ => true);
+    // });
 
-    this.setState({ filters, samples, isDataLoading: false });
+    this.setState({ filters, samples: samplesWithAssign, isDataLoading: false });
   }
   resize() {
     this.setState({
@@ -120,10 +121,14 @@ export default class App extends React.Component<{}, State> {
       addDimNames = dimNames.filter(d => !currentDimNames.includes(d));
 
     deleteDimNames.forEach(n => {
-      delete filters[n];
+      filters[n].forEach(d => {
+        d = false;
+      });
     });
     addDimNames.forEach(n => {
-      filters[n] = range(STEP_NUM);
+      filters[n].forEach(d => {
+        d = true;
+      });
     });
 
     this.setState({ filters });
@@ -139,39 +144,44 @@ export default class App extends React.Component<{}, State> {
 
     if (col === -1) {
       // set filters for the whole row
-      if (filters[dimName].length > 0) {
-        filters[dimName] = [];
+      if (filters[dimName].some(d => d)) {
+        filters[dimName].forEach(d => {
+          d = false;
+        });
         // update filter mask
         // this.filterMask = this.filterMask.map(d => {
         //   d[dimIndex] = false;
         //   return d;
         // });
-        Object.values(this.filterMask).forEach(d => {
-          d[dimIndex] = false;
-        });
+        // Object.values(this.filterMask).forEach(d => {
+        //   d[dimIndex] = false;
+        // });
       } else {
-        filters[dimName] = range(STEP_NUM);
-        // update filter mask
-        Object.values(this.filterMask).forEach(d => {
-          d[dimIndex] = true;
+        filters[dimName].forEach(d => {
+          d = true;
         });
+        // update filter mask
+        // Object.values(this.filterMask).forEach(d => {
+        //   d[dimIndex] = true;
+        // });
       }
     } else {
       // set filters for single grids
-      const idx = filters[dimName].indexOf(col);
-      if (idx === -1) {
-        filters[dimName].push(col);
-        // update filter mask
-        this.matrixData[dimName].groupedSamples[col].forEach(sampleId => {
-          this.filterMask[sampleId][dimIndex] = true;
-        });
-      } else {
-        filters[dimName].splice(idx, 1);
-        // update filter mask
-        this.matrixData[dimName].groupedSamples[col].forEach(sampleId => {
-          this.filterMask[sampleId][dimIndex] = false;
-        });
-      }
+      filters[dimName][col] = !filters[dimName][col];
+      // const idx = filters[dimName].indexOf(col);
+      // if (idx === -1) {
+      //   // filters[dimName].push(col);
+      //   // update filter mask
+      //   this.matrixData[dimName].groupedSamples[col].forEach(sampleId => {
+      //     this.filterMask[sampleId][dimIndex] = true;
+      //   });
+      // } else {
+      //   // filters[dimName].splice(idx, 1);
+      //   // update filter mask
+      //   this.matrixData[dimName].groupedSamples[col].forEach(sampleId => {
+      //     this.filterMask[sampleId][dimIndex] = false;
+      //   });
+      // }
     }
 
     this.setState({ filters });
@@ -186,10 +196,12 @@ export default class App extends React.Component<{}, State> {
     });
   }
   // @compute
-  calculateMatrixData(samples: TResultRow[], dataset: string): { [dimName: string]: TDistribution } {
+  calculateMatrixData(samples: TResultRow[], dataset: string): [{ [dimName: string]: TDistribution }, TResultRow[]] {
     console.info('call matrix calculation');
     var matrixData: { [k: string]: TDistribution } = {},
-      row: TDistribution = { histogram: [], labels: [], groupedSamples: [] };
+      row: TDistribution = { histogram: [], labels: [], groupedSamples: [] },
+      sampleAssignments: number[] = [],
+      distributionResults = { row, sampleAssignments };
     const sampleIds = samples.map(d => d.id);
 
     let dimNames: string[] = [];
@@ -215,23 +227,33 @@ export default class App extends React.Component<{}, State> {
       if (dimName.includes('dim')) {
         // use the same range we used to generate simu images
         const range = Z_Ranges[dataset] ? Z_Ranges[dataset][idx] : [RANGE_MIN, RANGE_MAX];
-        row = generateDistribution(dimValues, false, STEP_NUM, sampleIds, 1, range);
+        distributionResults = generateDistribution(dimValues, false, STEP_NUM, sampleIds, 1, range);
       } else if (dimName == 'size') {
-        row = generateDistribution(dimValues, false, STEP_NUM, sampleIds, 10);
+        distributionResults = generateDistribution(dimValues, false, STEP_NUM, sampleIds, 10);
       } else if (dimName == 'level') {
-        row = generateDistribution(dimValues, true, STEP_NUM, sampleIds);
+        distributionResults = generateDistribution(dimValues, true, STEP_NUM, sampleIds);
       } else {
-        row = generateDistribution(dimValues, false, STEP_NUM, sampleIds);
+        distributionResults = generateDistribution(dimValues, false, STEP_NUM, sampleIds);
       }
-      matrixData[dimName] = row;
+
+      matrixData[dimName] = distributionResults['row'];
+      samples.forEach((sample, idx) => {
+        sample.assignments[dimName] = distributionResults['sampleAssignments'][idx];
+      });
     });
-    return matrixData;
+    return [matrixData, samples];
   }
 
   render() {
     const { filters, dataset, isDataLoading, dimUserNames, samples, windowInnerSize } = this.state;
 
-    const filteredSamples = samples.filter(sample => this.filterMask[sample.id].every(d => d));
+    // const filteredSamples = samples.filter(sample => this.filterMask[sample.id].every(d => d));
+    const filteredSamples = samples.filter(sample =>
+      Object.keys(sample.assignments).every(dimName => {
+        const col = sample.assignments[dimName];
+        return filters[dimName] ? filters[dimName][col] : true;
+      })
+    );
 
     const siderWidth = 150,
       headerHeight = 0,
