@@ -40,15 +40,9 @@ export default class App extends React.Component<{}, State> {
   /****
    * the distribution of all samples on different dims
    * calculated based on samples
+   * only update when query new dataset
    ****/
   matrixData: TMatrixData = {};
-  // /***
-  //  * whether a sample is shown based on each latent dim filter
-  //  * if the flag from each dim is all true, show this sample
-  //  * size: samples.length x Object.keys(matrixData).length
-  //  * calculated based on samples, filters
-  //  */
-  // filterMask: { [sampleId: string]: boolean[] } = {};
   constructor(prop: {}) {
     super(prop);
     this.state = {
@@ -74,11 +68,6 @@ export default class App extends React.Component<{}, State> {
     const [matrixData, samplesWithAssign] = this.calculateMatrixData(samples, dataset);
     this.matrixData = matrixData;
 
-    // // default show all samples
-    // samples.forEach(sample => {
-    //   this.filterMask[sample.id] = Object.keys(this.matrixData).map(_ => true);
-    // });
-
     this.setState({ filters, samples: samplesWithAssign, isDataLoading: false });
   }
   resize() {
@@ -98,7 +87,7 @@ export default class App extends React.Component<{}, State> {
     window.removeEventListener('resize', this.resize);
   }
   // @update state
-  onClickMenu(e: MenuInfo): void {
+  onChangeDataset(e: MenuInfo): void {
     const dataset = e.key;
     if (dataset == 'upload') return;
     this.setState({
@@ -121,14 +110,10 @@ export default class App extends React.Component<{}, State> {
       addDimNames = dimNames.filter(d => !currentDimNames.includes(d));
 
     deleteDimNames.forEach(n => {
-      filters[n].forEach(d => {
-        d = false;
-      });
+      delete filters[n];
     });
     addDimNames.forEach(n => {
-      filters[n].forEach(d => {
-        d = true;
-      });
+      filters[n] = range(this.matrixData[n].histogram.length).map(d => true);
     });
 
     this.setState({ filters });
@@ -140,48 +125,15 @@ export default class App extends React.Component<{}, State> {
    * */
   setFilters(dimName: string, col: number): void {
     const { filters, samples } = this.state;
-    const dimIndex = Object.keys(this.matrixData).indexOf(dimName);
-
     if (col === -1) {
       // set filters for the whole row
       if (filters[dimName].some(d => d)) {
-        filters[dimName].forEach(d => {
-          d = false;
-        });
-        // update filter mask
-        // this.filterMask = this.filterMask.map(d => {
-        //   d[dimIndex] = false;
-        //   return d;
-        // });
-        // Object.values(this.filterMask).forEach(d => {
-        //   d[dimIndex] = false;
-        // });
+        filters[dimName] = filters[dimName].map(d => false);
       } else {
-        filters[dimName].forEach(d => {
-          d = true;
-        });
-        // update filter mask
-        // Object.values(this.filterMask).forEach(d => {
-        //   d[dimIndex] = true;
-        // });
+        filters[dimName] = filters[dimName].map(d => true);
       }
     } else {
-      // set filters for single grids
       filters[dimName][col] = !filters[dimName][col];
-      // const idx = filters[dimName].indexOf(col);
-      // if (idx === -1) {
-      //   // filters[dimName].push(col);
-      //   // update filter mask
-      //   this.matrixData[dimName].groupedSamples[col].forEach(sampleId => {
-      //     this.filterMask[sampleId][dimIndex] = true;
-      //   });
-      // } else {
-      //   // filters[dimName].splice(idx, 1);
-      //   // update filter mask
-      //   this.matrixData[dimName].groupedSamples[col].forEach(sampleId => {
-      //     this.filterMask[sampleId][dimIndex] = false;
-      //   });
-      // }
     }
 
     this.setState({ filters });
@@ -274,7 +226,7 @@ export default class App extends React.Component<{}, State> {
           mode="inline"
           defaultOpenKeys={['dataset']}
           selectedKeys={[dataset]}
-          onClick={this.onClickMenu.bind(this)}
+          onClick={this.onChangeDataset.bind(this)}
         >
           <SubMenu key="dataset" title="Dataset">
             <Menu.Item key="sequence">Sequence</Menu.Item>
