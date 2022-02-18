@@ -202,18 +202,15 @@ export default class LatentDim extends React.Component<Props, States> {
                 key={dimName}
                 transform={`translate(0, ${row_idx * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}
               >
-                <foreignObject className={styles.inputTextWrapper} width={60} height={30}>
-                  <input
-                    value={dimUserNames[dimName] || dimName}
-                    className={clsx(styles.inputText)}
-                    unselectable="on"
-                    onChange={e => this.onChangeDimNames(dimName, e.target.value)}
-                    onDoubleClick={e => {
-                      e.preventDefault();
-                      this.props.setFilters(dimName, -1);
-                    }}
-                  />
-                </foreignObject>
+                <text
+                  y={this.barHeight + this.barLabelHeight}
+                  onClick={e => {
+                    e.preventDefault();
+                    this.props.setFilters(dimName, -1);
+                  }}
+                >
+                  {dimUserNames[dimName] || dimName}
+                </text>
 
                 {/* only show configure for latent dim */}
                 {dimName.includes('dim_') && (
