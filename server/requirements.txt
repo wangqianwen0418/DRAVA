@@ -86,3 +86,6 @@ Werkzeug==2.0.1
 wheel==0.36.2
 yarl==1.6.3
 zipp==3.5.0
+matplotlib==3.5.1
+Flask==2.0.3
+flask-cors==3.0.10
