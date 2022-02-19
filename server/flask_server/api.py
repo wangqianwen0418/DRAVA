@@ -26,6 +26,7 @@ import torch.backends.cudnn as cudnn
 import sys
 sys.path.append('../../server')
 from models import *
+from experiment import VAEModule
 
 def norm_range(t):
     min = float(t.min())
@@ -59,14 +60,18 @@ def load_model(config_file, checkpoint_file):
 
     # load state dict from check point
     
-    checkpoint = torch.load( checkpoint_file, map_location=device)
+    if torch.cuda.is_available():
+        checkpoint = torch.load( checkpoint_file) # the checkpoint file is generated from GPU
+    else:
+        checkpoint = torch.load( checkpoint_file, map_location=device)
     new_state_dict = {}
     for k in checkpoint['state_dict']:
         new_k = k.replace('model.', '')
         new_state_dict[new_k] = checkpoint['state_dict'][k]
     model.load_state_dict(new_state_dict)
-
-    return model
+    net = VAEModule(model, config['exp_params'])
+    net.freeze()
+    return net
 
 matrix_model = load_model('./saved_models/matrix_config.yaml', './saved_models/matrix.ckpt')
 celeba_model = load_model('./saved_models/celeba_config.yaml', './saved_models/celeba.ckpt')
@@ -176,35 +181,19 @@ def get_simu_images():
     :return a list of images of byte array 
     e.g., base_url/api/get_simu_images?dataset=matrix&dim=2&z='0.2,0.3,-0.2,-0.3'
     '''
+
     BIN_NUM = current_app.config['BIN_NUM']
     dim = request.args.get('dim', type=int)
     dataset = request.args.get('dataset', type=str)
     z=request.args.get('z', type=str)
 
-    
     if z:
         z= [float(i) for i in z.split(',')]
     else:
         z = default_z[dataset]
-    z = torch.tensor(z)
-    z_ = [ z for _ in range(BIN_NUM)]
-    z_ = torch.stack(z_, dim =0)
-    mask = torch.tensor([j for j in range(BIN_NUM)])
 
-    if len(ranges[dataset])>0:
-
-        z_min = ranges[dataset][dim][0]
-        z_max = ranges[dataset][dim][1]    
-    else:
-        z_min = -3
-        z_max = 3
-
-    z_[mask, dim] = torch.tensor(
-        [z_min + j/(BIN_NUM-1)* (z_max - z_min) for j in range(BIN_NUM)]
-    ).float()
-    z_ = z_.to(device)
-    reconstructued = models[dataset].decode(z_).cpu().data
-
+    reconstructued = models[dataset].get_simu_images(dim, z)
+    
     for t in reconstructued:
         norm_range(t)
     if dataset == 'sequence': # sequence dataset is only black and white
