@@ -187,7 +187,7 @@ def get_simu_images():
     else:
         z = default_z[dataset]
 
-    reconstructued = models[dataset].get_simu_images(dim, z)
+    reconstructued = models[dataset].get_simu_images(dim, z, ranges[dataset][dim])
 
     for t in reconstructued:
         norm_range(t)

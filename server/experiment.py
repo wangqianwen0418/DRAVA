@@ -316,7 +316,7 @@ class VAEModule(pl.LightningModule):
                             normalize=True,
                             nrow=self.bin_num)
 
-    def get_simu_images(self, dimIndex, baseline = [], ranges = []):
+    def get_simu_images(self, dimIndex, baseline = [], z_range = []):
         """
         return an image grid,
         each row is a hidden dimension, 
@@ -326,9 +326,9 @@ class VAEModule(pl.LightningModule):
 
         if len(baseline) > 0:
             baseline = torch.tensor(baseline)
-        elif len(ranges)>0:
+        elif len(z_range)>0:
             baseline = torch.tensor( 
-                [(ranges[i][0] + ranges[i][1])/2 for i in range(self.model.latent_dim)]
+                [(z_range[0] + z_range[1])/2 for i in range(self.model.latent_dim)]
                 )
         else: baseline = torch.randn( self.model.latent_dim) - 0.5
         
@@ -336,20 +336,15 @@ class VAEModule(pl.LightningModule):
         z = torch.stack(z, dim =0)
         mask = torch.tensor([j for j in range(self.bin_num)])
 
-        if len(ranges) == 0:
+        if len(z_range) == 0:
             z_min = -3
             z_max = 3
         else:
-            z_min = ranges[dimIndex][0]
-            z_max = ranges[dimIndex][1]    
+            z_min = z_range[0]
+            z_max = z_range[1]    
         z[mask, dimIndex] = torch.tensor(
             [z_min + j/(self.bin_num-1)* (z_max - z_min) for j in range(self.bin_num)]
         ).float()
-
-
-        # z = torch.stack(z)
-        z = z.to(self.curr_device) # the shape of z: [ latent_dim * bin_size, latent_dim ]
-
         recons = self.model.decode(z)
 
         if self.is_tensor_dataset(self.params['dataset']):
@@ -358,10 +353,10 @@ class VAEModule(pl.LightningModule):
             recons_imgs = recons.cpu().data
         
         
-        vutils.save_image(recons_imgs,
-                            './test_simu.png',
-                            normalize=True,
-                            nrow=self.bin_num)
+        # vutils.save_image(recons_imgs,
+        #                     './test_simu.png',
+        #                     normalize=True,
+        #                     nrow=self.bin_num)
 
         return recons_imgs
     
