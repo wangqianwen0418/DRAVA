@@ -59,7 +59,10 @@ def load_model(config_file, checkpoint_file):
 
     # load state dict from check point
     
-    checkpoint = torch.load( checkpoint_file, map_location=device)
+    if torch.cuda.is_available():
+        checkpoint = torch.load( checkpoint_file)
+    else:
+        checkpoint = torch.load( checkpoint_file, map_location=device)
     new_state_dict = {}
     for k in checkpoint['state_dict']:
         new_k = k.replace('model.', '')
@@ -202,7 +205,9 @@ def get_simu_images():
     z_[mask, dim] = torch.tensor(
         [z_min + j/(BIN_NUM-1)* (z_max - z_min) for j in range(BIN_NUM)]
     ).float()
-    z_ = z_.to(device)
+    
+    if not torch.cuda.is_available():
+        z_ = z_.to(device)
     reconstructued = models[dataset].decode(z_).cpu().data
 
     for t in reconstructued:
