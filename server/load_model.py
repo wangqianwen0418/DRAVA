@@ -13,7 +13,7 @@ from pytorch_lightning.logging import TestTubeLogger
 
 parser = argparse.ArgumentParser(description='Generic runner for VAE models')
 parser.add_argument('--config',  '-c',
-                    dest="filename",
+                    dest="config_file",
                     metavar='FILE',
                     help =  'path to the config file',
                     default='configs/vae.yaml')
@@ -24,8 +24,11 @@ parser.add_argument('-v',
                     help='model version number',
                     default='0')
 
+parser.add_argument('-ckp',
+                    dest='ckp')
+
 args = parser.parse_args()
-with open(args.filename, 'r') as file:
+with open(args.config_file, 'r') as file:
     try:
         config = yaml.safe_load(file)
     except yaml.YAMLError as exc:
@@ -48,19 +51,25 @@ model = vae_models[config['model_params']['name']](**config['model_params'])
 
 
 # load state dict from check point
-logger_path = f"{tt_logger.save_dir}/{tt_logger.name}/version_{args.version_num}"
-ckp_dir = f"{logger_path}/checkpoints/"
-ckp_file_num = len(os.listdir(ckp_dir))
-assert os.path.exists(ckp_dir), 'the checkpoint folder does not exist'
-assert ckp_file_num>0, 'the checkpoint file does not exist'
-ckp_name = [f for f in os.listdir(ckp_dir)][ckp_file_num-1] # use the lastest checkpoint if there is more than one
+if args.ckp:
+    checkpoint = torch.load( args.ckp )
 
-if torch.cuda.is_available():
-    device = torch.cuda.current_device()
 else:
-    device = torch.device("cpu")
+    logger_path = f"{tt_logger.save_dir}/{tt_logger.name}/version_{args.version_num}"
+    ckp_dir = f"{logger_path}/checkpoints/"
+    ckp_file_num = len(os.listdir(ckp_dir))
+    assert os.path.exists(ckp_dir), 'the checkpoint folder does not exist'
+    assert ckp_file_num>0, 'the checkpoint file does not exist'
+    ckp_name = [f for f in os.listdir(ckp_dir)][ckp_file_num-1] # use the lastest checkpoint if there is more than one
 
-checkpoint = torch.load( os.path.join(ckp_dir, ckp_name), map_location=device )
+    if torch.cuda.is_available():
+        device = torch.cuda.current_device()
+        checkpoint = torch.load( os.path.join(ckp_dir, ckp_name) )
+    else:
+        device = torch.device("cpu")
+        checkpoint = torch.load( os.path.join(ckp_dir, ckp_name), map_location=device )
+
+
 new_state_dict = {}
 for k in checkpoint['state_dict']:
     new_k = k.replace('model.', '')
