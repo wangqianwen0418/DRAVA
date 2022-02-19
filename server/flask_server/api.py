@@ -146,11 +146,6 @@ def get_sequence_sample():
     '''
     e.g., base_url/api/get_sequence_sample?id=xx
     '''
-    global sequence_data
-    dataset = 'HFFc6_ATAC_chr7.npz'
-    if len(sequence_data) == 0:
-        print('reload npz')
-        sequence_data = np.load(safe_join('../data/', dataset), encoding='bytes')['imgs']
     id = request.args.get('id', type=str)
     img = sequence_data[int(id)]*255
     pil_img = Image.fromarray(img.astype(np.uint8))
@@ -193,17 +188,12 @@ def get_simu_images():
         z = default_z[dataset]
 
     reconstructued = models[dataset].get_simu_images(dim, z)
-    
+
     for t in reconstructued:
         norm_range(t)
     if dataset == 'sequence': # sequence dataset is only black and white
         reconstructued = (reconstructued>0.5).float()
     results = []
-
-    # vutils.save_image(reconstructued,
-    #                 f'./simu_image_{dataset}_{dim}.png',
-    #                 normalize=True,
-    #                 nrow=BIN_NUM)
 
 
     for res in reconstructued.numpy():
