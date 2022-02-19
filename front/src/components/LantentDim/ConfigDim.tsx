@@ -20,7 +20,7 @@ type Props = {
   dataset: string;
   samples: TResultRow[];
   baseSampleIndex?: number;
-  changeDimSamples: (dimIndex: number, sampleIndex: number) => void;
+  changeDimSamples: (dimName: string, sampleIndex: number) => void;
   setDimUserNames: (dictName: { [key: string]: string }) => void;
 };
 
@@ -123,8 +123,6 @@ export const ConfigDim = (props: Props) => {
     />
   );
 
-  const dimXNum = parseInt(dimX.split('_')[1]);
-
   return (
     <>
       <g className="configIcon pointer_cursor" fill="gray" onClick={() => setModalVisible(true)}>
@@ -137,7 +135,7 @@ export const ConfigDim = (props: Props) => {
         visible={isModalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => {
-          changeDimSamples(dimXNum, sampleIdx);
+          changeDimSamples(dimX, sampleIdx);
           setModalVisible(false);
         }}
         okText="Save"

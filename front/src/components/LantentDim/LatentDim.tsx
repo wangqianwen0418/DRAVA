@@ -29,7 +29,7 @@ interface Props {
   isDataLoading: boolean;
 }
 interface States {
-  dimSampleIndex: number[]; // the index of samples used to generate simu images for each latent dimension
+  dimSampleIndex: { [dimName: string]: number | undefined }; // the index of samples used to generate simu images for each latent dimension
 }
 
 export default class LatentDim extends React.Component<Props, States> {
@@ -41,7 +41,7 @@ export default class LatentDim extends React.Component<Props, States> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      dimSampleIndex: []
+      dimSampleIndex: {}
     };
     this.isSelected = this.isSelected.bind(this);
     this.changeDimSamples = this.changeDimSamples.bind(this);
@@ -125,9 +125,9 @@ export default class LatentDim extends React.Component<Props, States> {
   /**
    * @update_state
    */
-  changeDimSamples(dimNum: number, newSampleIndex: number) {
+  changeDimSamples(dimName: string, newSampleIndex: number) {
     const { dimSampleIndex } = this.state;
-    dimSampleIndex[dimNum] = newSampleIndex;
+    dimSampleIndex[dimName] = newSampleIndex;
     this.setState({ dimSampleIndex });
   }
 
@@ -161,7 +161,7 @@ export default class LatentDim extends React.Component<Props, States> {
       >
         {Object.keys(matrixData).map(dimName => (
           <Option key={dimName} value={dimName}>
-            {dimName}
+            {dimUserNames[dimName] || dimName}
           </Option>
         ))}
       </Select>
