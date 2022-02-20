@@ -32,22 +32,36 @@ export default async function create(element, pilingOptions) {
   const imageSize = 64;
   const { items, pileDragEnd, dims, getSvgGroup, dataset } = pilingOptions;
 
-  const piling = createPilingJs(element, {
-    renderer: createImageRenderer({ imageSize }),
-    items: items,
-    itemSize: imageSize,
-    pileBorderSize: dataset === 'sequence' ? 2 : 0,
-    pileOpacity: dataset === 'sequence' ? 0.5 : 1, //opaciy piles for the sequence dataset
-    pileItemOffset: (item, i, pile) => {
-      const isNotLast = pile.items.length - 1 !== i;
-      return [+isNotLast * (Math.random() * 12 - 6), +isNotLast * (Math.random() * 12 - 6)];
-    },
-    pileItemRotation: (item, i, pile) => {
-      const isNotLast = pile.items.length - 1 !== i;
-      return +isNotLast * (Math.random() * 12 - 6);
-    },
-    pileSizeBadge: pile => pile.items.length > 1
-  });
+  var spec;
+
+  if (dataset == 'sequence') {
+    spec = {
+      renderer: createImageRenderer({ imageSize }),
+      items: items,
+      itemSize: imageSize,
+      pileBorderSize: 2,
+      pileItemOpacity: (item, i, pile) => 1 - i / pile.items.length, //opaciy piles for the sequence dataset
+      pileSizeBadge: pile => pile.items.length > 1,
+      pileItemOffset: [0, 0]
+    };
+  } else {
+    spec = {
+      renderer: createImageRenderer({ imageSize }),
+      items: items,
+      itemSize: imageSize,
+      pileItemOffset: (item, i, pile) => {
+        const isNotLast = pile.items.length - 1 !== i;
+        return [+isNotLast * (Math.random() * 12 - 6), +isNotLast * (Math.random() * 12 - 6)];
+      },
+      pileItemRotation: (item, i, pile) => {
+        const isNotLast = pile.items.length - 1 !== i;
+        return +isNotLast * (Math.random() * 12 - 6);
+      },
+      pileSizeBadge: pile => pile.items.length > 1
+    };
+  }
+
+  const piling = createPilingJs(element, spec);
 
   piling.arrangeBy('data', dims);
 
