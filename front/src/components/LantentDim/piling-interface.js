@@ -39,16 +39,16 @@ export default async function create(element, pilingOptions) {
       renderer: createImageRenderer({ imageSize }),
       items: items,
       itemSize: imageSize,
-      pileBorderSize: 2,
       pileItemOpacity: (item, i, pile) => 1 - i / pile.items.length, //opaciy piles for the sequence dataset
       pileSizeBadge: pile => pile.items.length > 1,
-      pileItemOffset: [0, 0]
+      pileItemOffset: [0, 0] //force all items overlaid
     };
   } else {
     spec = {
       renderer: createImageRenderer({ imageSize }),
       items: items,
       itemSize: imageSize,
+      // items in a pile is randomly rotated and offset
       pileItemOffset: (item, i, pile) => {
         const isNotLast = pile.items.length - 1 !== i;
         return [+isNotLast * (Math.random() * 12 - 6), +isNotLast * (Math.random() * 12 - 6)];

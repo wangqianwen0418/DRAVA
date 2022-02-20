@@ -148,6 +148,11 @@ def get_sequence_sample():
     '''
     id = request.args.get('id', type=str)
     img = sequence_data[int(id)]*255
+    # add a border
+    img[0, :] = 20
+    img[63, :] = 20
+    img[:, 0] = 20
+    img[:, 63] = 20
     pil_img = Image.fromarray(img.astype(np.uint8))
     
     
