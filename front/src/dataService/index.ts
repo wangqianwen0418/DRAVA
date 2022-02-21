@@ -116,11 +116,11 @@ const querySequenceResults = async () => {
     })
     .filter(
       // only samples whose latent dim have large values
-      row => row['z'].some(d => Math.abs(d) > 2)
+      row => row['z'].some(d => Math.abs(d) > 1.5)
       // .reduce((a, b) => Math.abs(a) + Math.abs(b), 0) > 0.8
     );
 
-  // only keep one samples if two samples overlap
+  // only keep one sample with larger latent values if two samples overlap
   var newSamples: TResultRow[] = [samples[0]];
   var lastSample = samples[0];
   for (let i = 1; i < samples.length; i++) {
@@ -129,7 +129,7 @@ const querySequenceResults = async () => {
       if (getAbsSum(sample.z) > getAbsSum(lastSample.z)) {
         newSamples.pop();
         newSamples.push(sample);
-        // do not change the last sample, in case there are more than two overlapped samples
+        lastSample = sample;
         // TO_DO: think about what is the best to handle overlapped samples
       }
     } else {

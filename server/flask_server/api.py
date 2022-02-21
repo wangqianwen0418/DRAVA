@@ -192,7 +192,10 @@ def get_simu_images():
     else:
         z = default_z[dataset]
 
-    reconstructued = models[dataset].get_simu_images(dim, z, ranges[dataset][dim])
+
+    zRange = ranges[dataset][dim] if dataset!='celeb' else [-3, 3]
+
+    reconstructued = models[dataset].get_simu_images(dim, z, zRange)
 
     for t in reconstructued:
         norm_range(t)
