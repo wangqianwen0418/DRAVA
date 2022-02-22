@@ -15,6 +15,7 @@ server/data/seq_generator/*
 logs/
 *.out
 *.tmp
+.DS_Store
 
 __pycache__/
 .ipynb_checkpoints/

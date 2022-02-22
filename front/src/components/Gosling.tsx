@@ -86,25 +86,52 @@ export default class GoslingVis extends React.Component<Props, {}> {
         url: 'https://server.gosling-lang.org/api/v1/tileset_info/?d=hffc6-hic-hg38',
         type: 'matrix'
       },
-      mark: 'rect',
+      mark: 'bar',
       x: {
-        field: 'position1',
+        field: 'xs',
         type: 'genomic',
         domain: { chromosome: `chr${CHR}` }
       },
+      xe: {
+        field: 'xe',
+        type: 'genomic'
+      },
       y: {
-        field: 'position2',
+        field: 'ys',
         type: 'genomic',
         domain: { chromosome: `chr${CHR}` },
         axis: 'none'
       },
+      ye: {
+        field: 'ye',
+        type: 'genomic',
+        axis: 'none'
+      },
       color: {
         field: 'value',
-        type: 'quantitative',
-        range: 'grey'
+        type: 'quantitative'
       },
       height: goslingComponentHeight - peakHeight - multiLabelHeight
     };
+
+    const annotationOnMatrix = {
+      data: {
+        values: labelJSON,
+        type: 'json',
+        chromosomeField: 'chromosome',
+        genomicFields: ['start', 'end']
+      },
+      mark: 'bar',
+      x: { field: 'start', type: 'genomic' },
+      xe: { field: 'end', type: 'genomic' },
+      y: { field: 'start', type: 'genomic' },
+      ye: { field: 'end', type: 'genomic' },
+      stroke: { value: '#E6A01B' },
+      strokeWidth: { value: 2 },
+      color: { value: 'none' },
+      opacity: { value: 1 },
+      overlayOnPreviousTrack: true
+    }
 
     const CTCFTrack = {
       title: 'CTCF',
@@ -122,7 +149,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
         field: 'position',
         type: 'genomic'
       },
-      y: { field: 'peak', type: 'quantitative' },
+      y: { field: 'peak', type: 'quantitative', axis: 'none' },
       color: { value: 'steelBlue' },
       height: peakHeight
     };
@@ -148,10 +175,11 @@ export default class GoslingVis extends React.Component<Props, {}> {
     };
 
     const spec = {
+      responsiveSize: { width: true },
       spacing: 0,
       xDomain: { chromosome: CHR.toString() },
       width: goslingComponentWidth,
-      tracks: dataset == 'sequence' ? [labelTrack, PeakTrack] : [labelTrack, CTCFTrack, MatrixTrack]
+      tracks: dataset == 'sequence' ? [labelTrack, PeakTrack] : [labelTrack, CTCFTrack, MatrixTrack, annotationOnMatrix]
     };
 
     // validate the spec
