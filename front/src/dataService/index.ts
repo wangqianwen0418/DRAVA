@@ -2,6 +2,7 @@ import axios from 'axios';
 import { BASE_URL } from 'Const';
 import Papa from 'papaparse';
 import { TResultRow, TCSVResultRow } from 'types';
+import { getAbsSum, getSum } from 'helpers';
 
 export const whatCHR = (dataset: string) => {
   return dataset == 'sequence' ? 7 : 5;
@@ -9,34 +10,44 @@ export const whatCHR = (dataset: string) => {
 
 export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
   if (dataset == 'celeb') {
-    const url = '/assets/results_celeba.csv';
-    const response = await axios({
-      method: 'get',
-      url,
-      responseType: 'text'
-    });
-    const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
-
-    const samples = pcsv.data.map((row, i) => {
-      const zs = row['z'].split(',').map(d => parseFloat(d));
-      const dims = zs.reduce((pre, curr, idx) => {
-        const dimName = `dim_${idx}`;
-        return { ...pre, [dimName]: curr };
-      }, {});
-
-      return {
-        ...row,
-        z: row['z'].split(',').map(d => parseFloat(d)),
-        id: (i + 1).toString(),
-        assignments: {},
-        ...dims
-      };
-    });
-    return samples;
+    return queryCelebResults();
+  } else if (dataset == 'matrix') {
+    return queryMatrixResults();
+  } else {
+    return querySequenceResults();
   }
+};
 
-  const url = dataset == 'sequence' ? '/assets/results_chr7_atac.csv' : '/assets/results_chr1-5_10k_onTad.csv';
-  const chr = whatCHR(dataset);
+const queryCelebResults = async () => {
+  const url = '/assets/results_celeba.csv';
+  const response = await axios({
+    method: 'get',
+    url,
+    responseType: 'text'
+  });
+  const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
+
+  const samples = pcsv.data.map((row, i) => {
+    const zs = row['z'].split(',').map(d => parseFloat(d));
+    const dims = zs.reduce((pre, curr, idx) => {
+      const dimName = `dim_${idx}`;
+      return { ...pre, [dimName]: curr };
+    }, {});
+
+    return {
+      ...row,
+      z: row['z'].split(',').map(d => parseFloat(d)),
+      id: (i + 1).toString(),
+      assignments: {},
+      ...dims
+    };
+  });
+  return samples;
+};
+
+const queryMatrixResults = async () => {
+  const url = '/assets/results_chr1-5_10k_onTad.csv';
+  const chr = whatCHR('matrix');
 
   const response = await axios({
     method: 'get',
@@ -45,7 +56,7 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
   });
 
   const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
-  const resolution = dataset == 'sequence' ? 1 : 10000;
+  const resolution = 10000;
 
   const samples = pcsv.data
     .filter(d => parseInt(d.chr as any) === chr)
@@ -62,18 +73,73 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
         start: parseInt(row.start as any) * resolution,
         end: parseInt(row.end as any) * resolution,
         z: row['z'].split(',').map(d => parseFloat(d)),
-        id: (dataset == 'sequence' ? i : i + 1).toString(),
+        id: (i + 1).toString(),
+        size: parseInt((row.end - row.start) as any) * resolution,
+        assignments: {},
+        ...dims
+      };
+    });
+
+  return samples;
+};
+
+const querySequenceResults = async () => {
+  const url = '/assets/results_chr7_atac.csv';
+  const chr = whatCHR('sequence');
+
+  const response = await axios({
+    method: 'get',
+    url,
+    responseType: 'text'
+  });
+
+  const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
+
+  const samples = pcsv.data
+    .filter(d => parseInt(d.chr as any) === chr)
+    .map((row, i) => {
+      const zs = row['z'].split(',').map(d => parseFloat(d));
+      const dims = zs.reduce((pre, curr, idx) => {
+        const dimName = `dim_${idx}`;
+        return { ...pre, [dimName]: curr };
+      }, {});
+
+      return {
+        ...row,
+        chr: parseInt(row.chr as any),
+        start: parseInt(row.start as any),
+        end: parseInt(row.end as any),
+        z: row['z'].split(',').map(d => parseFloat(d)),
+        id: i.toString(),
         assignments: {},
         ...dims
       };
     })
     .filter(
       // only samples whose latent dim have large values
-      row => dataset !== 'sequence' || row['z'].some(d => Math.abs(d) > 1.5)
+      row => row['z'].some(d => Math.abs(d) > 1.5)
       // .reduce((a, b) => Math.abs(a) + Math.abs(b), 0) > 0.8
     );
 
-  return samples;
+  // only keep one sample with larger latent values if two samples overlap
+  var newSamples: TResultRow[] = [samples[0]];
+  var lastSample = samples[0];
+  for (let i = 1; i < samples.length; i++) {
+    const sample = samples[i];
+    if (parseInt(sample.id) == parseInt(lastSample.id) + 1) {
+      if (getAbsSum(sample.z) > getAbsSum(lastSample.z)) {
+        newSamples.pop();
+        newSamples.push(sample);
+        lastSample = sample;
+        // TO_DO: think about what is the best to handle overlapped samples
+      }
+    } else {
+      newSamples.push(sample);
+      lastSample = sample;
+    }
+  }
+
+  return newSamples;
 };
 
 export const queryRawSamples = async (samples: TResultRow) => {

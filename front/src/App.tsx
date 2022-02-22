@@ -263,6 +263,21 @@ export default class App extends React.Component<{}, State> {
           <Content style={{ padding: contentPadding, backgroundColor: 'white' }}>
             <Row gutter={gutter}>
               <Col span={12}>
+                <LatentDim
+                  dataset={dataset}
+                  samples={samples}
+                  filters={filters}
+                  matrixData={this.matrixData}
+                  height={appHeight}
+                  width={colWidth}
+                  isDataLoading={isDataLoading}
+                  dimUserNames={dimUserNames}
+                  setDimUserNames={this.setDimUserNames}
+                  updateDims={this.updateDims}
+                  setFilters={this.setFilters}
+                />
+              </Col>
+              <Col span={12}>
                 {dataset == 'celeb' ? (
                   <></>
                 ) : (
@@ -283,22 +298,6 @@ export default class App extends React.Component<{}, State> {
                   matrixData={this.matrixData}
                   dimUserNames={dimUserNames}
                   filters={filters}
-                />
-              </Col>
-
-              <Col span={12}>
-                <LatentDim
-                  dataset={dataset}
-                  samples={samples}
-                  filters={filters}
-                  matrixData={this.matrixData}
-                  height={appHeight}
-                  width={colWidth}
-                  isDataLoading={isDataLoading}
-                  dimUserNames={dimUserNames}
-                  setDimUserNames={this.setDimUserNames}
-                  updateDims={this.updateDims}
-                  setFilters={this.setFilters}
                 />
               </Col>
             </Row>

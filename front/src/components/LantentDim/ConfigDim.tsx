@@ -87,7 +87,7 @@ export const ConfigDim = (props: Props) => {
   );
 
   const options = samples.map((sample, idx) => (
-    <Option key={sample.id} value={idx}>
+    <Option key={sample.id} value={idx} label={`${sample.id}.png`}>
       {`${sample.id}.png`}
     </Option>
   ));
@@ -97,6 +97,8 @@ export const ConfigDim = (props: Props) => {
       <label htmlFor="fname">Explore this Dimension based on an image </label>
       <Select
         id="baseline"
+        showSearch
+        optionFilterProp="label"
         onChange={(idx: number) => changeSampleIdx(idx)}
         style={{ width: '100px' }}
         value={sampleIdx}
