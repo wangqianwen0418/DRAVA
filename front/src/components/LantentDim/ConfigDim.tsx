@@ -33,7 +33,8 @@ export const ConfigDim = (props: Props) => {
   const stepWidth = (modalWidth - 2 * padding) / STEP_NUM - gap;
 
   const { row, dimUserNames, setDimUserNames, dataset, samples, changeDimSamples, baseSampleIndex, dimNames } = props;
-  const [dimX, changeDimX] = useState(props.dimName);
+  const [dimX, changeDimX] = useState(`${props.dimName}`);
+  // const { dimName: dimX } = props;
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [sampleIdx, changeSampleIdx] = useState(baseSampleIndex || 0);
@@ -54,24 +55,22 @@ export const ConfigDim = (props: Props) => {
   );
 
   const dimXSelector = (
-    <>
-      <label>Configure </label>
-      <Select
-        style={{ width: '100px' }}
-        value={dimX}
-        onChange={(e: string) => {
-          changeDimX(e);
-        }}
-      >
-        {dimNames.map(dim => {
-          return (
-            <Option key={dim} value={dim}>
-              {dimUserNames[dim] || dim}
-            </Option>
-          );
-        })}
-      </Select>
-    </>
+    <select
+      id="xSelector"
+      style={{ width: '100px' }}
+      value={dimX}
+      onChange={(e: any) => {
+        changeDimX(e.target.value);
+      }}
+    >
+      {dimNames.map(dim => {
+        return (
+          <option key={dim} value={dim}>
+            {dimUserNames[dim] || dim}
+          </option>
+        );
+      })}
+    </select>
   );
 
   const url = `${BASE_URL}/api/get_${dataset}_sample?id=${samples[sampleIdx].id}`;
@@ -133,7 +132,8 @@ export const ConfigDim = (props: Props) => {
       </g>
 
       <Modal
-        title={dimXSelector}
+        // title={dimXSelector}
+        title="Dim Configuration"
         visible={isModalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => {
@@ -150,7 +150,7 @@ export const ConfigDim = (props: Props) => {
         <svg width={modalWidth - 2 * padding} height={barHeight + imageSize + barLabelHeight + gap * 2} id="configDim">
           <g id={dimX}>{Row}</g>
         </svg>
-        <h3> All samples are horizontally oragnized by {dimX} </h3>
+        <h3> All samples are horizontally oragnized by {dimXSelector} </h3>
 
         <Piling dataset={dataset} samples={samples} dimX={dimX} dimNames={dimNames} dimUserNames={dimUserNames} />
       </Modal>
