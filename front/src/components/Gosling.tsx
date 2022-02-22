@@ -14,6 +14,9 @@ interface Props {
   isDataLoading: boolean;
 }
 
+const ORANGE = '#E6A01B',
+  LIGHT_ORANGE = '#fbd58f';
+
 export default class GoslingVis extends React.Component<Props, {}> {
   shouldComponentUpdate(nextProps: Props) {
     if (
@@ -62,10 +65,11 @@ export default class GoslingVis extends React.Component<Props, {}> {
       },
       mark: 'rect',
       height: labelHeight,
+      color: { value: LIGHT_ORANGE },
       x: { field: 'start', type: 'genomic' },
       xe: { field: 'end', type: 'genomic' },
-      stroke: { value: 'steelblue' },
-      strokeWidth: { value: 1 }
+      stroke: { value: ORANGE },
+      strokeWidth: { value: 2 }
     };
 
     if (dataset == 'matrix') {
@@ -76,6 +80,8 @@ export default class GoslingVis extends React.Component<Props, {}> {
         legend: false,
         domain: ['1.0', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0'].reverse()
       };
+      // labelTrack['stroke'] = { value: 'steelBlue' };
+      // labelTrack['color'] = { value: ORANGE };
       labelTrack['height'] = multiLabelHeight;
     }
 
@@ -126,12 +132,12 @@ export default class GoslingVis extends React.Component<Props, {}> {
       xe: { field: 'end', type: 'genomic' },
       y: { field: 'start', type: 'genomic' },
       ye: { field: 'end', type: 'genomic' },
-      stroke: { value: '#E6A01B' },
+      stroke: { value: ORANGE },
       strokeWidth: { value: 2 },
       color: { value: 'none' },
       opacity: { value: 1 },
       overlayOnPreviousTrack: true
-    }
+    };
 
     const CTCFTrack = {
       title: 'CTCF',
