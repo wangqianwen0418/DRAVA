@@ -187,9 +187,10 @@ class VAEModule(pl.LightningModule):
                                             M_N = self.params['batch_size']/ self.num_val_imgs,
                                             optimizer_idx = optimizer_idx,
                                             batch_idx = batch_idx)
+        recons_loss = self.model.recons_loss(*results)
 
         # save latent vectors of samples in this batch
-        self.save_results(mu, labels, batch_idx)
+        self.save_results(mu, recons_loss, labels, batch_idx)
         return loss
 
     def test_end(self, outputs):
@@ -211,7 +212,7 @@ class VAEModule(pl.LightningModule):
 
         return {'test_loss': avg_loss}
 
-    def save_results(self, mu, labels, batch_idx):
+    def save_results(self, mu, recons_loss, labels, batch_idx):
         """
         save results in a csw file, columns are [labels] + [latent_z]
         """
@@ -222,20 +223,20 @@ class VAEModule(pl.LightningModule):
             result_writer = csv.writer(f)
 
             if self.params['dataset'] == 'celeba':
-                header = ['z']
+                header = ['z', 'recons_loss']
             else: 
-                header = ['chr', 'start', 'end', 'level', 'mean', 'score'][0: len(labels[0])] + ['z']
+                header = ['chr', 'start', 'end', 'level', 'mean', 'score'][0: len(labels[0])] + ['z', 'recons_loss']
             result_writer.writerow(header)
         else: 
             f = open(os.path.join(filepath, 'results.csv'), 'a')
             result_writer = csv.writer(f)
 
-
+        recons_loss = recons_loss.tolist()
         for i, m in enumerate(mu.tolist()):
             if self.params['dataset'] == 'celeba':
-                row = [','.join([str(d) for d in m])]
+                row = [','.join([str(d) for d in m]), recons_loss[i]]
             else:
-                row = labels[i].tolist() + [','.join([str(d) for d in m])]
+                row = labels[i].tolist() + [','.join([str(d) for d in m]), recons_loss[i]]
 
             result_writer.writerow(row)
 
@@ -260,16 +261,12 @@ class VAEModule(pl.LightningModule):
 
         z = []
         for i in range(self.model.latent_dim):
-            baseline = torch.randn( self.model.latent_dim) - 0.5
-            # baseline = torch.zeros( self.model.latent_dim)
-            # baseline = torch.ones( self.model.latent_dim) 
-            # baseline = torch.randn( self.model.latent_dim)
             if len(ranges)>0:
                 baseline = torch.tensor( 
                     [(ranges[i][0] + ranges[i][1])/2 for i in range(self.model.latent_dim)]
                     )
-            # baseline = torch.tensor([0.5784032344818115,0.1713341921567917,-0.27981624007225037,-0.4180270731449127,0.9767476916313171,-0.7862354516983032,0.7032433152198792,0.7099565863609314])
-            baseline = torch.tensor([1.3912068605422974,1.3093589544296265,-1.4369394779205322,2.921229362487793,1.7272869348526,-1.0809800624847412])
+            else: 
+                baseline = torch.randn( self.model.latent_dim) - 0.5
             z_ = [baseline for _ in range(self.bin_num)]
             z_ = torch.stack(z_, dim =0)
             mask = torch.tensor([j for j in range(self.bin_num)])

@@ -150,6 +150,16 @@ class BetaVAE(BaseVAE):
 
         return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss}
 
+    def recons_loss(self,
+                    *args,
+                    **kwargs) -> dict:
+        recons = args[0]
+        input = args[1]
+
+        recons_loss =F.mse_loss(recons, input, reduction='none') # reduction ='none' will return the mse loss for each sample
+        recons_loss = recons_loss.view(recons_loss.size(0), -1).mean(1) # average except along dim 0
+        return recons_loss
+
     def sample(self,
                num_samples:int,
                current_device: int, **kwargs) -> Tensor:
