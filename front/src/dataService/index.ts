@@ -56,7 +56,7 @@ const queryMatrixResults = async () => {
   });
 
   const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
-  const resolution = 10000;
+  const resolution = 10000; //10k
 
   const samples = pcsv.data
     .filter(d => parseInt(d.chr as any) === chr)
@@ -117,8 +117,9 @@ const querySequenceResults = async () => {
     })
     .filter(
       // only samples whose latent dim have large values
-      row => row['z'].some(d => Math.abs(d) > 1.5)
-      // .reduce((a, b) => Math.abs(a) + Math.abs(b), 0) > 0.8
+      // TO-DO: need a baseline to know which metric is better
+      // row => row['z'].some(d => Math.abs(d) > 1.5)
+      row => getAbsSum(row['z']) > 5
     );
 
   // only keep one sample with larger latent values if two samples overlap

@@ -166,6 +166,7 @@ export default class App extends React.Component<{}, State> {
       samples[0].z.forEach((_, idx) => {
         dimNames.push(`dim_${idx}`);
       });
+      dimNames.push('recons_loss');
       if (dataset == 'matrix') {
         dimNames = dimNames.concat([
           'size',
