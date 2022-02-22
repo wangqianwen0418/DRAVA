@@ -74,6 +74,7 @@ const queryMatrixResults = async () => {
         end: parseInt(row.end as any) * resolution,
         z: row['z'].split(',').map(d => parseFloat(d)),
         id: (i + 1).toString(),
+        size: parseInt((row.end - row.start) as any) * resolution,
         assignments: {},
         ...dims
       };
