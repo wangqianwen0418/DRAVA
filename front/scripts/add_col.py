@@ -7,7 +7,7 @@ df = pd.read_csv(filename.replace('.csv', '_origin.csv'))
 # add ctct values at edge
 
 import pyBigWig
-bw = pyBigWig.open('../public/assets/HFFC6_CTCF.mRp.clN.bigWig')
+bw = pyBigWig.open('./HFFC6_CTCF.mRp.clN.bigWig')
 
 col_ctcf_left = []
 col_ctcf_right = []
@@ -36,7 +36,7 @@ df['ctcf_left'] = col_ctcf_left
 df['ctcf_right'] = col_ctcf_right
 df.to_csv(filename, index=False)
 # %%
-bw = pyBigWig.open('../public/assets/HFFc6_ATAC.bigWig')
+bw = pyBigWig.open('./HFFc6_ATAC.bigWig')
 
 col_atac_left = []
 col_atac_right = []
