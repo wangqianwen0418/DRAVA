@@ -219,7 +219,7 @@ export default class LatentDim extends React.Component<Props, States> {
                     transform={`translate(0, ${this.barHeight + this.barLabelHeight + this.gap})`}
                   >
                     <ConfigDim
-                      row={matrixData[dimName]}
+                      matrixData={matrixData}
                       dimName={dimName}
                       dimNames={Object.keys(matrixData)}
                       samples={samples}

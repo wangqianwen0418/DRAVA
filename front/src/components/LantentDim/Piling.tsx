@@ -30,7 +30,7 @@ const Pilling = (props: Props) => {
     items,
     pileDragEnd,
     dims: [dimX, 'none'],
-    getSvgGroup: () => d3select('svg#configDim').select(`g#${dimX}`), // pass a function rather than a selection in case the svg components have been rendered yet
+    getSvgGroup: () => d3select('svg#configDim').select(`g`), // pass a function rather than a selection in case the svg components have been rendered yet
     dataset
   };
 
