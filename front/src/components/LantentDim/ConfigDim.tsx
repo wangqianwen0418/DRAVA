@@ -37,6 +37,8 @@ export const ConfigDim = (props: Props) => {
   // const { dimName: dimX } = props;
 
   const [isModalVisible, setModalVisible] = useState(false);
+  const baselineOptions = [...samples].sort((a, b) => +b['recons_loss'] - +a['recons_loss']).slice(0, 40);
+
   const [sampleIdx, changeSampleIdx] = useState(baseSampleIndex || 0);
 
   const iconWidth = 15;
@@ -85,8 +87,8 @@ export const ConfigDim = (props: Props) => {
     />
   );
 
-  const options = samples.map((sample, idx) => (
-    <Option key={sample.id} value={idx} label={`${sample.id}.png`}>
+  const options = baselineOptions.map(sample => (
+    <Option key={sample.id} value={sample.index} label={`${sample.id}.png`}>
       {`${sample.id}.png`}
     </Option>
   ));

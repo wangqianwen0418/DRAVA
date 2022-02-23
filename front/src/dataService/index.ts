@@ -39,7 +39,8 @@ const queryCelebResults = async () => {
       z: row['z'].split(',').map(d => parseFloat(d)),
       id: (i + 1).toString(),
       assignments: {},
-      ...dims
+      ...dims,
+      index: i
     };
   });
   return samples;
@@ -74,6 +75,7 @@ const queryMatrixResults = async () => {
         end: parseInt(row.end as any) * resolution,
         z: row['z'].split(',').map(d => parseFloat(d)),
         id: (i + 1).toString(),
+        index: i,
         size: parseInt((row.end - row.start) as any) * resolution,
         assignments: {},
         ...dims
@@ -123,7 +125,7 @@ const querySequenceResults = async () => {
     );
 
   // only keep one sample with larger latent values if two samples overlap
-  var newSamples: TResultRow[] = [samples[0]];
+  var newSamples: Partial<TResultRow>[] = [samples[0]];
   var lastSample = samples[0];
   for (let i = 1; i < samples.length; i++) {
     const sample = samples[i];
@@ -139,8 +141,9 @@ const querySequenceResults = async () => {
       lastSample = sample;
     }
   }
+  newSamples = newSamples.map((d, i) => ({ ...d, index: i }));
 
-  return newSamples;
+  return newSamples as TResultRow[];
 };
 
 export const queryRawSamples = async (samples: TResultRow) => {
