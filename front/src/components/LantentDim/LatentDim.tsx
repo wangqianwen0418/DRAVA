@@ -181,7 +181,7 @@ export default class LatentDim extends React.Component<Props, States> {
         <svg height={cardInnerHeight} width={width - 2 * cardPadding} className="pcp">
           {/* get rows */}
           {dims.map((dimName, row_idx) => {
-            const baseSampleIndex = this.state.dimSampleIndex[row_idx];
+            const baseSampleIndex = this.state.dimSampleIndex[dimName];
             const row = (
               <DimRow
                 row={matrixData[dimName]}
@@ -192,7 +192,7 @@ export default class LatentDim extends React.Component<Props, States> {
                 barLabelHeight={this.barLabelHeight}
                 gap={this.gap}
                 dataset={this.props.dataset}
-                latentZ={baseSampleIndex ? samples[baseSampleIndex].z : undefined}
+                latentZ={baseSampleIndex != undefined ? samples[baseSampleIndex].z : undefined}
                 isSelected={this.isSelected}
                 setFilters={this.props.setFilters}
               />
