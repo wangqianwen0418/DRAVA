@@ -38,3 +38,4 @@ https://pytorch-lightning.readthedocs.io/en/0.6.0/
 
 ## host on aws ec2
 ec2-user@ec2-3-16-49-23.us-east-2.compute.amazonaws.com
+http://3.16.49.23:8080/

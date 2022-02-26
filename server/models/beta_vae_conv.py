@@ -96,8 +96,7 @@ class BetaVAE_CONV(BaseVAE):
                                        hidden_dims[i + 1],
                                        kernel_size,
                                        stride = stride,
-                                       padding=padding,
-                                       output_padding=1),
+                                       padding=padding, output_padding=1),
                     nn.BatchNorm2d(hidden_dims[i + 1]),
                     nn.LeakyReLU())
             )
@@ -110,8 +109,8 @@ class BetaVAE_CONV(BaseVAE):
                             nn.ConvTranspose2d(hidden_dims[-1],
                                                out_channels,
                                                kernel_size=conv_sizes[-1],
-                                               stride=2,
-                                               padding=1,
+                                               stride=stride,
+                                               padding= padding,
                                                output_padding=1),
                             nn.BatchNorm2d(out_channels),
                             nn.ReLU())
