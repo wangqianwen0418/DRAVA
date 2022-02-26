@@ -9,7 +9,7 @@ model_params:
   max_capacity: 25
   Capacity_max_iter: 10000
   recons_multi: 1
-  is_masked: True
+  is_masked: False
 
 exp_params:
   dataset: IDC_regular_ps50_idx5
@@ -23,7 +23,7 @@ exp_params:
   # scheduler_gamma: 0.95
 
 trainer_params:
-  gpus: 1
+  gpus: 0
   max_nb_epochs: 100
   max_epochs: 10
 

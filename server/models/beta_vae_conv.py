@@ -46,7 +46,7 @@ class BetaVAE_CONV(BaseVAE):
         if is_masked:
             for i in range(img_size):
                 for j in range(img_size):
-                    self.mask[i,j] = ratio * abs(i-j)/63 + (1-ratio)
+                    self.mask[i,j] = ratio * abs(i-j)/(img_size-1) + (1-ratio)
         self.mask = torch.from_numpy(self.mask).float()
         if torch.cuda.is_available():
             device = torch.cuda.current_device()
@@ -94,8 +94,8 @@ class BetaVAE_CONV(BaseVAE):
                     nn.ConvTranspose2d(hidden_dims[i],
                                        hidden_dims[i + 1],
                                        kernel_size,
-                                       stride = 2,
-                                       padding=1,
+                                       stride = stride,
+                                       padding=padding,
                                        output_padding=1),
                     nn.BatchNorm2d(hidden_dims[i + 1]),
                     nn.LeakyReLU())

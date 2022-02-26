@@ -79,11 +79,10 @@ class IDC_Dataset(Dataset):
         return len(self.img_labels)
 
     def __getitem__(self, idx):
-        img_path = os.path.join(self.img_dir, f'{self.img_labels.iloc[idx, 0]}.jpg')
+        img_path = os.path.join(self.img_dir, f'{self.img_labels.iloc[idx, 1]}')
         image = Image.open(img_path)
         # 
-        label = self.img_labels.iloc[idx, 1]
-        label = label.to_numpy(dtype='int')
+        label = self.img_labels.iloc[idx, 2]
 
         if self.transform:
             image = self.transform(image)
@@ -655,7 +654,13 @@ class VAEModule(pl.LightningModule):
                                             transforms.RandomApply([transforms.RandomHorizontalFlip(1), transforms.RandomVerticalFlip(1)], 0.5),
                                             transforms.ToTensor(),
                                             SetRange])
-
+        elif self.is_IDC_dataset(self.params['dataset']) :
+            SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
+            transform = transforms.Compose([transforms.RandomHorizontalFlip(),
+                                            transforms.RandomVerticalFlip(),
+                                            transforms.ToTensor(),
+                                            SetRange])
+        
         elif self.params['dataset'] == 'celeba':
             SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
@@ -683,6 +688,11 @@ class VAEModule(pl.LightningModule):
         elif self.is_hic_dataset(self.params['dataset']):
             SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
             transform = transforms.Compose([transforms.Resize(self.params['img_size'], Image.NEAREST),
+                                            transforms.ToTensor(),
+                                            SetRange])
+        elif self.is_IDC_dataset(self.params['dataset']) :
+            SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
+            transform = transforms.Compose([
                                             transforms.ToTensor(),
                                             SetRange])
         else:
