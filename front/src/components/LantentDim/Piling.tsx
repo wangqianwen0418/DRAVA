@@ -30,7 +30,7 @@ const Pilling = (props: Props) => {
     items,
     pileDragEnd,
     dims: [dimX, 'none'],
-    getSvgGroup: () => d3select('svg#configDim').select(`g#${dimX}`), // pass a function rather than a selection in case the svg components have been rendered yet
+    getSvgGroup: () => d3select('svg#configDim').select(`g`), // pass a function rather than a selection in case the svg components have been rendered yet
     dataset
   };
 
@@ -39,25 +39,36 @@ const Pilling = (props: Props) => {
 
     const [piling, actions] = await createPilingExample(element, pilingOptions);
     // register action
-    const reArrange = (event: Event) => {
-      const dimY = (event.target as any).value;
+    const reArrangeY = (event: any) => {
+      const dimY = event.target.value;
+      return actions.reArrange([dimX, dimY]);
+    };
+
+    const reArrangeX = (event: any) => {
+      const dimX = event.target.value;
+      const dimY = (document.getElementById('ySelector') as any).value;
       return actions.reArrange([dimX, dimY]);
     };
     const autoGroup = () => actions.group(dimX);
-    document.querySelector('.ySelector')?.addEventListener('change', reArrange);
+
+    document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);
+    document.querySelector('#xSelector')?.addEventListener('change', reArrangeX);
     document.getElementById('groupBtn')?.addEventListener('click', autoGroup);
+    document.getElementById('splitBtn')?.addEventListener('click', actions.splitAll);
 
     return () => {
       piling.destory();
-      document.querySelector('.ySelector')?.removeEventListener('change', reArrange);
+      document.querySelector('#ySelector')?.removeEventListener('change', reArrangeY);
+      document.querySelector('#xSelector')?.removeEventListener('change', reArrangeX);
       document.getElementById('groupBtn')?.removeEventListener('click', autoGroup);
+      document.getElementById('splitBtn')?.removeEventListener('click', actions.splitAll);
     };
   }, []);
 
   return (
     <div className={styles.piling_container}>
       <label>Oragnize samples vertically using</label>
-      <select className="ySelector" style={{ width: '100px' }}>
+      <select id="ySelector" style={{ width: '100px' }}>
         <option value="none">none</option>
         {dimNames.map(dimName => {
           return (
@@ -69,6 +80,9 @@ const Pilling = (props: Props) => {
       </select>
       <Button type="default" id="groupBtn" size="small">
         Auto-Group
+      </Button>
+      <Button type="default" id="splitBtn" size="small">
+        Split-All
       </Button>
       <div className={styles.piling_wrapper} ref={pilingInitHandler} />
     </div>

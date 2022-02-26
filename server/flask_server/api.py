@@ -83,13 +83,16 @@ with open('saved_models/z_range_matrix.json', 'r') as f:
 with open('saved_models/z_range_sequence.json', 'r') as f:
     range_sequence = json.load(f)
 
+with open('saved_models/z_range_celeba.json', 'r') as f:
+    range_celeba = json.load(f)
+
 # with open('saved_models/z_range_celeba.json', 'r') as f:
 #     range_celeba = json.load(f)
 
 ranges = {
     'sequence': range_sequence,
     'matrix': range_matrix,
-    'celeb': []
+    'celeb': range_celeba
 }
 
 models = {
@@ -193,7 +196,7 @@ def get_simu_images():
         z = default_z[dataset]
 
 
-    zRange = ranges[dataset][dim] if dataset!='celeb' else [-3, 3]
+    zRange = ranges[dataset][dim]
 
     reconstructued = models[dataset].get_simu_images(dim, z, zRange)
 

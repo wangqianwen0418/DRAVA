@@ -13,7 +13,8 @@ import { BASE_URL } from 'Const';
 const { Option } = Select;
 
 type Props = {
-  row: TDistribution;
+  // row: TDistribution;
+  matrixData: { [dimName: string]: TDistribution };
   dimName: string;
   dimNames: string[];
   dimUserNames: { [key: string]: string };
@@ -32,16 +33,22 @@ export const ConfigDim = (props: Props) => {
   const barLabelHeight = 14;
   const stepWidth = (modalWidth - 2 * padding) / STEP_NUM - gap;
 
-  const { row, dimUserNames, setDimUserNames, dataset, samples, changeDimSamples, baseSampleIndex, dimNames } = props;
-  const [dimX, changeDimX] = useState(props.dimName);
+  const { matrixData, dimUserNames, setDimUserNames, dataset, samples, changeDimSamples, baseSampleIndex, dimNames } =
+    props;
+  const [dimX, changeDimX] = useState(`${props.dimName}`);
+  // const { dimName: dimX } = props;
 
   const [isModalVisible, setModalVisible] = useState(false);
+  const baselineOptions = [...samples]
+    .sort((a, b) => +a['recons_loss'] - +b['recons_loss'])
+    .slice(0, samples.length / 4);
+
   const [sampleIdx, changeSampleIdx] = useState(baseSampleIndex || 0);
 
   const iconWidth = 15;
   const imageSize = 64;
 
-  const maxV = getMax(row.histogram);
+  const maxV = getMax(matrixData[dimX].histogram);
   const yScale = scaleLog().domain([0.1, maxV]).range([0, barHeight]);
 
   const dimUserName = dimUserNames[dimX] || dimX;
@@ -54,24 +61,24 @@ export const ConfigDim = (props: Props) => {
   );
 
   const dimXSelector = (
-    <>
-      <label>Configure </label>
-      <Select
-        style={{ width: '100px' }}
-        value={dimX}
-        onChange={(e: string) => {
-          changeDimX(e);
-        }}
-      >
-        {dimNames.map(dim => {
+    <select
+      id="xSelector"
+      style={{ width: '100px' }}
+      value={dimX}
+      onChange={(e: any) => {
+        changeDimX(e.target.value);
+      }}
+    >
+      {dimNames
+        .filter(d => d.includes('dim'))
+        .map(dim => {
           return (
-            <Option key={dim} value={dim}>
+            <option key={dim} value={dim}>
               {dimUserNames[dim] || dim}
-            </Option>
+            </option>
           );
         })}
-      </Select>
-    </>
+    </select>
   );
 
   const url = `${BASE_URL}/api/get_${dataset}_sample?id=${samples[sampleIdx].id}`;
@@ -86,8 +93,8 @@ export const ConfigDim = (props: Props) => {
     />
   );
 
-  const options = samples.map((sample, idx) => (
-    <Option key={sample.id} value={idx} label={`${sample.id}.png`}>
+  const options = baselineOptions.map(sample => (
+    <Option key={sample.id} value={sample.index} label={`${sample.id}.png`}>
       {`${sample.id}.png`}
     </Option>
   ));
@@ -101,6 +108,7 @@ export const ConfigDim = (props: Props) => {
         optionFilterProp="label"
         onChange={(idx: number) => changeSampleIdx(idx)}
         style={{ width: '100px' }}
+        placeholder="select an image"
         value={sampleIdx}
       >
         {options}
@@ -112,7 +120,7 @@ export const ConfigDim = (props: Props) => {
   const z = samples[sampleIdx]['z'];
   const Row = (
     <DimRow
-      row={row}
+      row={matrixData[dimX]}
       dimName={dimX}
       stepWidth={stepWidth}
       yScale={yScale}
@@ -133,7 +141,8 @@ export const ConfigDim = (props: Props) => {
       </g>
 
       <Modal
-        title={dimXSelector}
+        // title={dimXSelector}
+        title="Dim Configuration"
         visible={isModalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => {
@@ -148,10 +157,10 @@ export const ConfigDim = (props: Props) => {
         <br />
         {baselineSelector}
         <svg width={modalWidth - 2 * padding} height={barHeight + imageSize + barLabelHeight + gap * 2} id="configDim">
-          <g id={dimX}>{Row}</g>
+          <g>{Row}</g>
         </svg>
-        <h3> All samples are horizontally oragnized by {dimX} </h3>
-
+        <span style={{ fontSize: '20px', fontWeight: 700 }}> All samples are horizontally oragnized by </span>{' '}
+        {dimXSelector}
         <Piling dataset={dataset} samples={samples} dimX={dimX} dimNames={dimNames} dimUserNames={dimUserNames} />
       </Modal>
     </>

@@ -7,7 +7,8 @@ export type TCSVResultRow = {
 };
 
 export type TResultRow = {
-  id: string;
+  id: string; // id is the sample index in the whole dataset
+  index: number; // index is the sample index in all shown data
   chr: number;
   start: number;
   end: number;

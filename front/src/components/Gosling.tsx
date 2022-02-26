@@ -156,7 +156,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
         type: 'genomic'
       },
       y: { field: 'peak', type: 'quantitative', axis: 'none' },
-      color: { value: 'steelBlue' },
+      color: { value: 'gray' },
       height: peakHeight
     };
 
@@ -176,7 +176,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
         type: 'genomic'
       },
       y: { field: 'peak', type: 'quantitative' },
-      color: { value: 'steelBlue' },
+      color: { value: 'gray' },
       height: peakHeight
     };
 

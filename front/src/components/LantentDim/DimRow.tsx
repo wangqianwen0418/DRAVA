@@ -21,10 +21,10 @@ type Props = {
 };
 
 export const DimRow = (props: Props) => {
-  return <g>{props.dimName.includes('dim_') ? getLatentDim(props) : getAdditionalDim(props)}</g>;
+  return props.dimName.includes('dim_') ? <LatentDim {...props} /> : <AdditionalDim {...props} />;
 };
 
-const getLatentDim = (props: Props) => {
+const LatentDim = (props: Props) => {
   const {
     row,
     dimName,
@@ -39,6 +39,9 @@ const getLatentDim = (props: Props) => {
     imageSize,
     latentZ
   } = props;
+
+  console.info(dimName);
+
   const imgSize = imageSize || Math.min(stepWidth, barHeight);
   const dimNum = parseInt(dimName.split('_')[1]);
   const [imageBytes, updateImageBytes] = useState<string[]>([]);
@@ -46,7 +49,7 @@ const getLatentDim = (props: Props) => {
 
   useEffect(() => {
     fetchImageBytes();
-  }, [latentZ]);
+  }, [latentZ, dimName]);
 
   const fetchImageBytes = async () => {
     setLoading(true);
@@ -55,7 +58,7 @@ const getLatentDim = (props: Props) => {
     setLoading(false);
   };
 
-  return row['histogram'].map((h, col_idx) => {
+  const Row = row['histogram'].map((h, col_idx) => {
     // const href = (latentZ && imageBytes.length>0)? `data:image/png;base64, ${imageBytes[col_idx]}`: `assets/${dataset}_simu/${dimNum}_${Math.floor(col_idx / 2)}.png`;
     // const href = `data:image/png;base64, ${imageBytes[col_idx]}`;
     const href = imageBytes[Math.floor(col_idx / 2)];
@@ -121,11 +124,12 @@ const getLatentDim = (props: Props) => {
       </g>
     );
   });
+  return <g className={dimName}> {Row} </g>;
 };
 
-const getAdditionalDim = (props: Props) => {
+const AdditionalDim = (props: Props) => {
   const { row, dimName, stepWidth, yScale, barHeight, barLabelHeight, gap, isSelected, setFilters } = props;
-  return row['histogram'].map((h: number, col_idx: number) => {
+  const Row = row['histogram'].map((h: number, col_idx: number) => {
     const selectFlag = isSelected ? isSelected(dimName, col_idx) : true;
     return (
       <g
@@ -150,4 +154,5 @@ const getAdditionalDim = (props: Props) => {
       </g>
     );
   });
+  return <g className={dimName}> {Row}</g>;
 };

@@ -16,6 +16,8 @@ logs/
 *.out
 *.tmp
 .DS_Store
+*.bigwig
+build/
 
 __pycache__/
 .ipynb_checkpoints/
