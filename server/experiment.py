@@ -252,7 +252,7 @@ class VAEModule(pl.LightningModule):
             f = open(os.path.join(filepath, 'results.csv'), 'w')
             result_writer = csv.writer(f)
 
-            if self.params['dataset'] == 'celeba':
+            if self.params['dataset'] == 'celeba' or self.is_IDC_dataset(self.params['dataset']):
                 header = ['z', 'recons_loss']
             else: 
                 header = ['chr', 'start', 'end', 'level', 'mean', 'score'][0: len(labels[0])] + ['z', 'recons_loss']
@@ -263,7 +263,7 @@ class VAEModule(pl.LightningModule):
 
         recons_loss = recons_loss.tolist()
         for i, m in enumerate(mu.tolist()):
-            if self.params['dataset'] == 'celeba':
+            if self.params['dataset'] == 'celeba' or self.is_IDC_dataset(self.params['dataset']):
                 row = [','.join([str(d) for d in m]), recons_loss[i]]
             else:
                 row = labels[i].tolist() + [','.join([str(d) for d in m]), recons_loss[i]]
@@ -658,6 +658,7 @@ class VAEModule(pl.LightningModule):
             SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                             transforms.RandomVerticalFlip(),
+                                            transforms.Resize(self.params['img_size']),
                                             transforms.ToTensor(),
                                             SetRange])
         
@@ -692,7 +693,7 @@ class VAEModule(pl.LightningModule):
                                             SetRange])
         elif self.is_IDC_dataset(self.params['dataset']) :
             SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
-            transform = transforms.Compose([
+            transform = transforms.Compose([transforms.Resize(self.params['img_size']),
                                             transforms.ToTensor(),
                                             SetRange])
         else:
