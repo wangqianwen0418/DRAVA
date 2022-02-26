@@ -36,7 +36,7 @@ class CustomTensorDataset(Dataset):
 
 
 
-class CustomImageDataset(Dataset):
+class HiC_Dataset(Dataset):
     def __init__(self, root, transform=None, target_transform=None, chr=None):
         df = pd.read_csv(os.path.join(root, 'label.csv'))
         if (chr!= None):
@@ -60,6 +60,30 @@ class CustomImageDataset(Dataset):
         except Exception:
             label[0] = 7 # chr 7 dataset
         label = label.to_numpy(dtype='float')
+
+        if self.transform:
+            image = self.transform(image)
+        if self.target_transform:
+            label = self.target_transform(label)
+        return image, label
+
+class IDC_Dataset(Dataset):
+    def __init__(self, root, transform=None, target_transform=None, chr=None):
+        df = pd.read_csv(os.path.join(root, 'label.csv'))
+        self.img_labels = df
+        self.img_dir = root
+        self.transform = transform
+        self.target_transform = target_transform
+
+    def __len__(self):
+        return len(self.img_labels)
+
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.img_dir, f'{self.img_labels.iloc[idx, 0]}.jpg')
+        image = Image.open(img_path)
+        # 
+        label = self.img_labels.iloc[idx, 1]
+        label = label.to_numpy(dtype='int')
 
         if self.transform:
             image = self.transform(image)
@@ -111,6 +135,13 @@ class VAEModule(pl.LightningModule):
     def is_hic_dataset(self, dataset_name):
         # whether to use custom image data loader for hi c data
         if dataset_name in ['TAD_GM12878', 'TAD_HFFc6_chr7_10k','TAD_HFFc6_10k_chr1-5']:
+            return True
+        else:
+            return False
+    
+    def is_IDC_dataset(self, dataset_name):
+        # whether to use custom image data loader for hi c data
+        if dataset_name in ['IDC_regular_ps50_idx5']:
             return True
         else:
             return False
@@ -459,9 +490,18 @@ class VAEModule(pl.LightningModule):
                             shuffle = True,
                             drop_last=True)
 
+        elif self.is_IDC_dataset(self.params['dataset']):
+            root = os.path.join(self.params['data_path'], self.params['dataset'] )
+            dataset = IDC_Dataset(root = root, transform=self.data_transforms())
+            self.num_train_imgs = len(dataset)
+            return DataLoader(dataset,
+                                batch_size= self.params['batch_size'],
+                                shuffle = True, 
+                                drop_last=True)
+
         elif self.is_hic_dataset(self.params['dataset']):
             root = os.path.join(self.params['data_path'], self.params['dataset'] )
-            dataset = CustomImageDataset(root = root, transform=self.data_transforms())
+            dataset = HiC_Dataset(root = root, transform=self.data_transforms())
             self.num_train_imgs = len(dataset)
 
             if 'weighted_sampler' in self.params and self.params['weighted_sampler']:
@@ -532,7 +572,7 @@ class VAEModule(pl.LightningModule):
                                                  drop_last=True)
             self.num_val_imgs = len(self.sample_dataloader)
             return self.sample_dataloader
-        elif self.is_hic_dataset(self.params['dataset']) or self.is_tensor_dataset(self.params['dataset']):
+        elif self.is_hic_dataset(self.params['dataset']) or self.is_tensor_dataset(self.params['dataset']) or self.is_IDC_dataset(self.params['dataset']):
             print('start val data loading')
             # since the two datasets are small, use the train data loader for val
             self.sample_dataloader = self.train_dataloader()
@@ -559,7 +599,19 @@ class VAEModule(pl.LightningModule):
         elif self.is_hic_dataset(self.params['dataset']):
 
             root = os.path.join(self.params['data_path'], self.params['dataset'] )
-            dataset = CustomImageDataset(root = root, transform=self.test_data_transforms())
+            dataset = HiC_Dataset(root = root, transform=self.test_data_transforms())
+            self.test_sample_dataloader = DataLoader(dataset,
+                            batch_size= self.params['batch_size'],
+                            shuffle = False,
+                            drop_last = False)
+
+            self.num_test_imgs = len(self.test_sample_dataloader)
+            return self.test_sample_dataloader
+
+        elif self.is_IDC_dataset(self.params['dataset']):
+
+            root = os.path.join(self.params['data_path'], self.params['dataset'] )
+            dataset = IDC_Dataset(root = root, transform=self.test_data_transforms())
             self.test_sample_dataloader = DataLoader(dataset,
                             batch_size= self.params['batch_size'],
                             shuffle = False,

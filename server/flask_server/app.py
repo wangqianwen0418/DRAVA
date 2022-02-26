@@ -32,7 +32,7 @@ parser.add_argument('--host', default='0.0.0.0',
                     help='Port in which to run the API')
 parser.add_argument('--port', default=8001,
                     help='Port in which to run the API')
-parser.add_argument('--debug', action="store_const", default=True, const=True,
+parser.add_argument('--debug', action='store_true',
                     help='If true, run Flask in debug mode')
 
 _args, unknown = parser.parse_known_args()
