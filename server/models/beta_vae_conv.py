@@ -20,6 +20,7 @@ class BetaVAE_CONV(BaseVAE):
                  gamma:float = 1000.,
                  loss_type:str = 'B',
                  img_size:int = 64,
+                 mask_ratio = 0.5,
                  max_capacity: int = 25, # works similar to the beta in original beta vae
                  Capacity_max_iter: int = 1e5,
                  **kwargs) -> None:
@@ -42,11 +43,11 @@ class BetaVAE_CONV(BaseVAE):
 
         # for matrix images, we use a mask otherwise the diagonal is emphasized too much
         self.mask = np.ones( (img_size, img_size) )
-        ratio = 0.5
+
         if is_masked:
             for i in range(img_size):
                 for j in range(img_size):
-                    self.mask[i,j] = ratio * abs(i-j)/63 + (1-ratio)
+                    self.mask[i,j] = mask_ratio * abs(i-j)/63 + (1-mask_ratio)
         self.mask = torch.from_numpy(self.mask).float()
         if torch.cuda.is_available():
             device = torch.cuda.current_device()
@@ -94,8 +95,8 @@ class BetaVAE_CONV(BaseVAE):
                     nn.ConvTranspose2d(hidden_dims[i],
                                        hidden_dims[i + 1],
                                        kernel_size,
-                                       stride = 2,
-                                       padding=1,
+                                       stride = stride,
+                                       padding=padding,
                                        output_padding=1),
                     nn.BatchNorm2d(hidden_dims[i + 1]),
                     nn.LeakyReLU())

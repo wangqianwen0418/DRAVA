@@ -1,22 +1,20 @@
 model_params:
   name: 'BetaVAE_CONV'
-  in_channels: 1
-  mask_ratio: 0.8
-  latent_dim: 8 
-  hidden_dims: [16, 64, 256]
+  in_channels: 3
+  latent_dim: 12 
+  hidden_dims: [32, 64, 128, 256, 512]
   loss_type: 'B'
-  img_size: 64
+  img_size: 50
   gamma: 10.0
   max_capacity: 25
   Capacity_max_iter: 10000
-  conv_sizes: [7,5,3]
-  recons_multi: 100
-  is_masked: True
+  recons_multi: 1
+  is_masked: False
 
 exp_params:
-  dataset: TAD_HFFc6_10k_chr1-5
+  dataset: IDC_regular_ps50_idx5
   data_path: "./data/"
-  img_size: 64
+  img_size: 50
   optimizer: "adam"
   batch_size: 196 
   LR: 0.002
@@ -25,9 +23,9 @@ exp_params:
   # scheduler_gamma: 0.95
 
 trainer_params:
-  gpus: 1
+  gpus: 0
   max_nb_epochs: 100
-  max_epochs: 2000
+  max_epochs: 10
 
 logging_params:
   save_dir: "logs"
