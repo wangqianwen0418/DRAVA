@@ -7,7 +7,7 @@ model_params:
   img_size: 64
   gamma: 100.0
   max_capacity: 20
-  Capacity_max_iter: 1500000
+  Capacity_max_iter: 100000
   distribution: bernoulli
   recons_multi: 1
   is_masked: False
@@ -25,7 +25,7 @@ exp_params:
 trainer_params:
   gpus: 1
   max_nb_epochs: 100
-  max_epochs: 40
+  max_epochs: 100
 
 logging_params:
   save_dir: "logs"
