@@ -174,6 +174,8 @@ export default class App extends React.Component<{}, State> {
           'ctcf_mean',
           'ctcf_left',
           'ctcf_right',
+          'Peak Score (LanceOtron)',
+          'Peak Area (LanceOtron)',
           'atac_mean',
           'atac_left',
           'atac_right'
