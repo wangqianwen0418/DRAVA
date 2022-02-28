@@ -15,6 +15,7 @@ class BetaVAE_MLP(BaseVAE):
                  hidden_dims: List = None,
                  beta: int = 4,
                  gamma:float = 1000.,
+                 distribution = 'gaussian',
                  max_capacity: int = 25, # works similar to the beta in original beta vae
                  Capacity_max_iter: int = 1e5,
                  **kwargs) -> None:
@@ -23,6 +24,7 @@ class BetaVAE_MLP(BaseVAE):
         self.latent_dim = latent_dim
         self.beta = beta
         self.gamma = gamma
+        self.distribution = distribution
         self.loss_type = kwargs.get('loss_type', 'B')
         self.C_max = torch.Tensor([max_capacity])
         self.C_stop_iter = Capacity_max_iter
@@ -121,7 +123,13 @@ class BetaVAE_MLP(BaseVAE):
         log_var = args[3]
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
-        recons_loss = F.mse_loss(recons, input) * 100
+        if self.distribution == 'bernoulli':
+            recons_loss = F.binary_cross_entropy_with_logits(recons, input)
+        elif self.distribution == 'gaussian':
+            recons_loss =F.mse_loss(recons, input) 
+        else:
+            raise ValueError(f'distribution {self.distribution} not implemented')
+
         # print(mu, 'mu')
         # print(log_var, 'log var')
         # print(recons, 'recons')

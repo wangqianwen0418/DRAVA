@@ -82,10 +82,10 @@ class IDC_Dataset(Dataset):
         return len(self.img_labels)
 
     def __getitem__(self, idx):
-        img_path = os.path.join(self.img_dir, f'{self.img_labels.iloc[idx, 1]}')
+        img_path = os.path.join(self.img_dir, f'{self.img_labels.iloc[idx, 0]}')
         image = Image.open(img_path)
         # 
-        label = self.img_labels.iloc[idx, 2]
+        label = self.img_labels.iloc[idx, 1]
 
         if self.transform:
             image = self.transform(image)

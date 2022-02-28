@@ -185,9 +185,11 @@ class BetaVAE_CONV(BaseVAE):
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
         if self.distribution == 'bernoulli':
-            recons_loss = F.binary_cross_entropy_with_logits(recons, input, size_average=False)
-        else:
+            recons_loss = F.binary_cross_entropy_with_logits(recons, input)
+        elif self.distribution == 'gaussian':
             recons_loss =F.mse_loss(recons * self.mask, input * self.mask) * self.recons_multi
+        else:
+            raise ValueError(f'distribution {self.distribution} not implemented')
 
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 
