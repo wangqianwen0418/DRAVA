@@ -47,3 +47,19 @@ square_img_df['image'] = square_imgs
 square_img_df['label'] = square_y
 square_img_df.to_csv('./IDC_regular_ps50_idx5/label_square.csv', index=False)
 # %%
+# add image path to the result file
+result_file = '../../front/public/assets/results_IDC_all.csv'
+label_file = './IDC_regular_ps50_idx5/label.csv'
+patient_id = '16166'
+
+result_df = pd.read_csv(result_file)
+label_df = pd.read_csv(label_file)
+patient_df = pd.DataFrame()
+
+result_df['img_path'] = label_df['image']
+result_df['label'] = label_df['label']
+result_df = result_df[result_df['img_path'].str.startswith(f'{patient_id}/')]
+result_df = result_df.sample(frac=1) # shuffle rows
+
+result_df.to_csv('../../front/public/assets/results_IDC.csv', index=False)
+# %%
