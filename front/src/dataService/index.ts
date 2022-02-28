@@ -13,9 +13,40 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
     return queryCelebResults();
   } else if (dataset == 'matrix') {
     return queryMatrixResults();
-  } else {
+  } else if (dataset == 'sequence') {
     return querySequenceResults();
+  } else if (dataset == 'IDC') {
+    return queryIDCResults();
   }
+  return [];
+};
+
+const queryIDCResults = async () => {
+  const url = '/assets/results_IDC.csv';
+  const response = await axios({
+    method: 'get',
+    url,
+    responseType: 'text'
+  });
+  const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
+
+  const samples = pcsv.data.map((row, i) => {
+    const zs = row['z'].split(',').map(d => parseFloat(d));
+    const dims = zs.reduce((pre, curr, idx) => {
+      const dimName = `dim_${idx}`;
+      return { ...pre, [dimName]: curr };
+    }, {});
+
+    return {
+      ...row,
+      z: row['z'].split(',').map(d => parseFloat(d)),
+      id: row['img_path'],
+      assignments: {},
+      ...dims,
+      index: i
+    };
+  });
+  return samples;
 };
 
 const queryCelebResults = async () => {

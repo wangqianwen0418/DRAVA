@@ -47,7 +47,7 @@ export default class App extends React.Component<{}, State> {
   constructor(prop: {}) {
     super(prop);
     this.state = {
-      dataset: 'matrix',
+      dataset: 'IDC',
       dimUserNames: {},
       filters: {},
       samples: [],
@@ -246,6 +246,7 @@ export default class App extends React.Component<{}, State> {
             <Menu.Item key="sequence">Sequence</Menu.Item>
             <Menu.Item key="matrix">Matrix</Menu.Item>
             <Menu.Item key="celeb">Celeb</Menu.Item>
+            <Menu.Item key="IDC">IDC</Menu.Item>
             <Menu.Item key="upload">
               <Upload>
                 <UploadOutlined style={{ color: 'rgba(255, 255, 255, 0.65)' }} />
@@ -279,7 +280,7 @@ export default class App extends React.Component<{}, State> {
                 />
               </Col>
               <Col span={12}>
-                {dataset == 'celeb' ? (
+                {['celeb', 'IDC'].includes(dataset) ? (
                   <></>
                 ) : (
                   <GoslingVis
@@ -294,7 +295,7 @@ export default class App extends React.Component<{}, State> {
                 <SampleBrowser
                   dataset={dataset}
                   samples={this.filteredSamples}
-                  height={appHeight * (dataset == 'celeb' ? 1 : 0.5)}
+                  height={appHeight * (['celeb', 'IDC'].includes(dataset) ? 1 : 0.5)}
                   isDataLoading={isDataLoading}
                   matrixData={this.matrixData}
                   dimUserNames={dimUserNames}
