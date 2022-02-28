@@ -1,25 +1,25 @@
 model_params:
   name: 'BetaVAE_CONV'
-  in_channels: 3
-  latent_dim: 12 
+  in_channels: 1
+  latent_dim: 10 
   hidden_dims: [32, 64, 128, 256]
   loss_type: 'B'
   img_size: 64
-  gamma: 10.0
-  max_capacity: 25
-  Capacity_max_iter: 10000
+  gamma: 100.0
+  max_capacity: 20
+  Capacity_max_iter: 1500000
+  distribution: bernoulli
   recons_multi: 1
   is_masked: False
 
 exp_params:
-  dataset: IDC_regular_ps50_idx5
+  dataset: dsprites
   data_path: "./data/"
   img_size: 64
   optimizer: "adam"
   batch_size: 196 
   LR: 0.0005
   weight_decay: 0.0
-  weighted_sampler: True
   # scheduler_gamma: 0.95
 
 trainer_params:

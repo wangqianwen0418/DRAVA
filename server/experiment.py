@@ -23,12 +23,15 @@ from utils import data_loader
 
 
 class CustomTensorDataset(Dataset):
-    def __init__(self, data_tensor, labels):
+    def __init__(self, data_tensor, labels = None):
         self.data_tensor = data_tensor
         self.labels = labels
 
     def __getitem__(self, index):
-        return self.data_tensor[index], self.labels[index]
+        if self.labels ==  None:
+            return self.data_tensor[index], 0
+        else:
+            return self.data_tensor[index], self.labels[index]
 
     def __len__(self):
         return self.data_tensor.size(0)
@@ -88,6 +91,7 @@ class IDC_Dataset(Dataset):
             image = self.transform(image)
         if self.target_transform:
             label = self.target_transform(label)
+            
         return image, label
 
 # extend the pytorch lightning module
@@ -439,7 +443,8 @@ class VAEModule(pl.LightningModule):
         optimizer = optimizer_dict[self.params['optimizer']](
                                 self.model.parameters(), 
                                 lr=self.params['LR'],
-                                weight_decay=self.params['weight_decay']
+                                weight_decay=self.params['weight_decay'],
+                                betas = (0.9, 0.999)
                                 )
         
         optims.append(optimizer)
@@ -518,7 +523,7 @@ class VAEModule(pl.LightningModule):
                 
                 return DataLoader(dataset,
                                 batch_size= self.params['batch_size'],
-                                # shuffle = True, # no shuffle is sample is used
+                                # shuffle = True, # no shuffle if sampler is used
                                 sampler = size_sampler,
                                 drop_last=True)
             else:
@@ -536,8 +541,12 @@ class VAEModule(pl.LightningModule):
                 subprocess.call(['./download_dsprites.sh'])
                 print('Finished')
             data = np.load(root, encoding='bytes')
-            tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
-            labels = torch.from_numpy(data['labels'])
+            if self.params['dataset'] == 'dsprites':
+                tensor = torch.from_numpy(data['imgs']).unsqueeze(1)
+                labels = None
+            else:
+                tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
+                labels = torch.from_numpy(data['labels'])
 
             # transform = self.data_transforms()
             # tensor = transform(tensor)
@@ -576,7 +585,7 @@ class VAEModule(pl.LightningModule):
             # since the two datasets are small, use the train data loader for val
             self.sample_dataloader = self.train_dataloader()
             self.num_val_imgs = self.num_train_imgs
-            return self.train_dataloader()
+            return self.sample_dataloader
         else:
             raise ValueError('Undefined dataset type')
     
@@ -614,7 +623,7 @@ class VAEModule(pl.LightningModule):
             self.test_sample_dataloader = DataLoader(dataset,
                             batch_size= self.params['batch_size'],
                             shuffle = False,
-                            drop_last = False)
+                            drop_last = True)
 
             self.num_test_imgs = len(self.test_sample_dataloader)
             return self.test_sample_dataloader
@@ -627,8 +636,13 @@ class VAEModule(pl.LightningModule):
                 subprocess.call(['./download_dsprites.sh'])
                 print('Finished')
             data = np.load(root, encoding='bytes')
-            tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
-            labels = torch.from_numpy(data['labels'])
+            if self.params['dataset'] == 'dsprites':
+                tensor = torch.from_numpy(data['imgs']).unsqueeze(1)
+                labels = None
+            else:
+                tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
+                labels = torch.from_numpy(data['labels'])
+
 
             # transform = self.data_transforms()
             # tensor = transform(tensor)
@@ -658,7 +672,7 @@ class VAEModule(pl.LightningModule):
             SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                             transforms.RandomVerticalFlip(),
-                                            transforms.Resize(self.params['img_size']),
+                                            transforms.Resize((self.params['img_size'], self.params['img_size'])),
                                             transforms.ToTensor(),
                                             SetRange])
         
@@ -693,7 +707,7 @@ class VAEModule(pl.LightningModule):
                                             SetRange])
         elif self.is_IDC_dataset(self.params['dataset']) :
             SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
-            transform = transforms.Compose([transforms.Resize(self.params['img_size']),
+            transform = transforms.Compose([transforms.Resize((self.params['img_size'], self.params['img_size'])),
                                             transforms.ToTensor(),
                                             SetRange])
         else:

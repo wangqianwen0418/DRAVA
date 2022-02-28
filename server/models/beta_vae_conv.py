@@ -7,6 +7,16 @@ from .types_ import *
 import math
 import numpy as np
 
+# a debug helper
+class PrintLayer(nn.Module):
+    def __init__(self):
+        super(PrintLayer, self).__init__()
+    
+    def forward(self, x):
+        # Do your print / debug stuff here
+        print(x.shape)
+        return x
+
 
 class BetaVAE_CONV(BaseVAE):
 
@@ -21,6 +31,7 @@ class BetaVAE_CONV(BaseVAE):
                  loss_type:str = 'B',
                  img_size:int = 64,
                  mask_ratio = 0.5,
+                 distribution = 'gaussian',
                  max_capacity: int = 25, # works similar to the beta in original beta vae
                  Capacity_max_iter: int = 1e5,
                  **kwargs) -> None:
@@ -31,6 +42,7 @@ class BetaVAE_CONV(BaseVAE):
         self.gamma = gamma
         self.loss_type = loss_type
         
+        self.distribution = distribution
         conv_sizes =  kwargs.get('conv_sizes', [ 3 for i in hidden_dims])
         self.recons_multi = kwargs.get('recons_multi', 1)
         is_masked = kwargs.get('is_masked', False)
@@ -68,6 +80,7 @@ class BetaVAE_CONV(BaseVAE):
                     nn.Conv2d(in_channels, h_dim,
                               kernel_size, stride, padding, dilation = dilation),
                     nn.BatchNorm2d(h_dim),
+                    # PrintLayer(),
                     nn.LeakyReLU())
             )
             in_channels = h_dim
@@ -98,6 +111,7 @@ class BetaVAE_CONV(BaseVAE):
                                        stride = stride,
                                        padding=padding, output_padding=1),
                     nn.BatchNorm2d(hidden_dims[i + 1]),
+                    # PrintLayer(),
                     nn.LeakyReLU())
             )
 
@@ -170,7 +184,10 @@ class BetaVAE_CONV(BaseVAE):
         log_var = args[3]
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
-        recons_loss =F.mse_loss(recons * self.mask, input * self.mask) * self.recons_multi
+        if self.distribution == 'bernoulli':
+            recons_loss = F.binary_cross_entropy_with_logits(recons, input, size_average=False)
+        else:
+            recons_loss =F.mse_loss(recons * self.mask, input * self.mask) * self.recons_multi
 
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 
