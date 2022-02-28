@@ -98,7 +98,12 @@ else:
     
     ckp_name = [f for f in os.listdir(ckp_dir)][ckp_file_num-1] # use the lastest checkpoint if there is more than one
     print(f'==========found checkpoint {ckp_name }===========')
-    checkpoint = torch.load( os.path.join(ckp_dir, ckp_name) , map_location=device)
+    if torch.cuda.is_available():
+        device = torch.cuda.current_device()
+        checkpoint = torch.load( os.path.join(ckp_dir, ckp_name) )
+    else:
+        device = torch.device("cpu")
+        checkpoint = torch.load( os.path.join(ckp_dir, ckp_name), map_location=device )
     new_state_dict = {}
     for k in checkpoint['state_dict']:
         new_k = k.replace('model.', '')
