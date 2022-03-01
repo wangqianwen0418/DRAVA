@@ -56,7 +56,7 @@ def generate_IDC_label():
 def add_image_path():
     result_file = '../../front/public/assets/results_IDC_all.csv'
     label_file = './IDC_regular_ps50_idx5/label.csv'
-    patient_id = '16166'
+    patient_id = '9036'
 
     result_df = pd.read_csv(result_file)
     label_df = pd.read_csv(label_file)

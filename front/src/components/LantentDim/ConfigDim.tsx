@@ -40,7 +40,7 @@ export const ConfigDim = (props: Props) => {
 
   const [isModalVisible, setModalVisible] = useState(false);
   const baselineOptions = [...samples]
-    .sort((a, b) => +a['recons_loss'] - +b['recons_loss'])
+    // .sort((a, b) => +a['recons_loss'] - +b['recons_loss'])
     .slice(0, samples.length / 4);
 
   const [sampleIdx, changeSampleIdx] = useState(baseSampleIndex || 0);
@@ -95,7 +95,7 @@ export const ConfigDim = (props: Props) => {
 
   const options = baselineOptions.map(sample => (
     <Option key={sample.id} value={sample.index} label={`${sample.id}.png`}>
-      {`${sample.id}.png`}
+      {dataset == 'IDC' ? sample.id.split('/')[2] : `${sample.id}.png`}
     </Option>
   ));
 
@@ -107,7 +107,7 @@ export const ConfigDim = (props: Props) => {
         showSearch
         optionFilterProp="label"
         onChange={(idx: number) => changeSampleIdx(idx)}
-        style={{ width: '100px' }}
+        style={{ width: 'auto' }}
         placeholder="select an image"
         value={sampleIdx}
       >
