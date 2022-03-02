@@ -163,7 +163,7 @@ class BetaVAE_CONV2(BaseVAE):
         assert batch_size != 0
 
         if self.distribution == 'bernoulli':
-            recons_loss = F.binary_cross_entropy_with_logits(recons, input, reduction='sum').div(batch_size)
+            recons_loss = F.binary_cross_entropy_with_logits(recons, input)
         elif self.distribution == 'gaussian':
             recons_loss =F.mse_loss(recons, input) 
         else:

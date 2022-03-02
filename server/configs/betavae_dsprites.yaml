@@ -2,7 +2,6 @@ model_params:
   name: 'BetaVAE_CONV2'
   in_channels: 1
   latent_dim: 10 
-  # hidden_dims: [32, 32, 64, 64]
   loss_type: 'B'
   img_size: 64
   gamma: 1000.0
