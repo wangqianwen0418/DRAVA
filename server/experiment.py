@@ -15,6 +15,8 @@ import torchvision.utils as vutils
 from torchvision.datasets import CelebA
 from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 from torch.optim import SGD, Adam, Adagrad
+import torch.nn.functional as F
+
 from PIL import Image
 
 from models import BaseVAE
@@ -28,10 +30,10 @@ class CustomTensorDataset(Dataset):
         self.labels = labels
 
     def __getitem__(self, index):
-        if self.labels ==  None:
-            return self.data_tensor[index], 0
-        else:
+            
+        if torch.is_tensor(self.labels):
             return self.data_tensor[index], self.labels[index]
+        return self.data_tensor[index], 0
 
     def __len__(self):
         return self.data_tensor.size(0)
@@ -148,6 +150,13 @@ class VAEModule(pl.LightningModule):
             return True
         else:
             return False
+
+    def is_genomic_dataset(self, dataset_name):
+        # whether to use custom image data loader for hi c data
+        if dataset_name in ['HFFc6_ATAC_chr7', 'HFFc6_ATAC_chr1-8', 'ENCFF158GBQ'] or self.is_hic_dataset(dataset_name):
+            return True
+        else:
+            return False
     
     def forward(self, input: Tensor, **kwargs) -> Tensor:
         return self.model(input, **kwargs)
@@ -256,10 +265,11 @@ class VAEModule(pl.LightningModule):
             f = open(os.path.join(filepath, 'results.csv'), 'w')
             result_writer = csv.writer(f)
 
-            if self.params['dataset'] == 'celeba' or self.is_IDC_dataset(self.params['dataset']):
-                header = ['z', 'recons_loss']
-            else: 
+            if self.is_genomic_dataset(self.params['dataset']):
                 header = ['chr', 'start', 'end', 'level', 'mean', 'score'][0: len(labels[0])] + ['z', 'recons_loss']
+            else: 
+                header = ['z', 'recons_loss']
+                
             result_writer.writerow(header)
         else: 
             f = open(os.path.join(filepath, 'results.csv'), 'a')
@@ -267,10 +277,11 @@ class VAEModule(pl.LightningModule):
 
         recons_loss = recons_loss.tolist()
         for i, m in enumerate(mu.tolist()):
-            if self.params['dataset'] == 'celeba' or self.is_IDC_dataset(self.params['dataset']):
-                row = [','.join([str(d) for d in m]), recons_loss[i]]
-            else:
+            
+            if self.is_genomic_dataset(self.params['dataset']):
                 row = labels[i].tolist() + [','.join([str(d) for d in m]), recons_loss[i]]
+            else:
+                row = [','.join([str(d) for d in m]), recons_loss[i]]
 
             result_writer.writerow(row)
 
@@ -324,6 +335,8 @@ class VAEModule(pl.LightningModule):
         filepath = f"{self.logger_folder}/imgs"
         Path(filepath).mkdir(parents=True, exist_ok=True)
 
+        # if self.is_tensor_dataset(self.params['dataset']):
+        #     recons_imgs = F.sigmoid (recons).cpu().data
         if self.is_tensor_dataset(self.params['dataset']):
             recons_imgs = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
         else:
@@ -378,6 +391,8 @@ class VAEModule(pl.LightningModule):
         ).float()
         recons = self.model.decode(z)
 
+        # if self.is_tensor_dataset(self.params['dataset']):
+        #     recons_imgs = F.sigmoid (recons).cpu().data
         if self.is_tensor_dataset(self.params['dataset']):
             recons_imgs = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
         else:
@@ -404,6 +419,12 @@ class VAEModule(pl.LightningModule):
         test_input = test_input.to(self.curr_device)
         
         recons = self.model.generate(test_input, labels = test_label)
+        # if self.is_tensor_dataset(self.params['dataset']):
+        #     recons_imgs = F.sigmoid (recons).cpu().data
+        if self.is_tensor_dataset(self.params['dataset']):
+            recons_imgs = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
+        else:
+            recons_imgs = recons.cpu().data
         
         filepath = f"{self.logger_folder}/imgs"
         if not(os.path.isdir(filepath)):
@@ -416,7 +437,7 @@ class VAEModule(pl.LightningModule):
                           nrow=12)
         
         # reconstructed images
-        vutils.save_image(recons.data,
+        vutils.save_image(recons_imgs,
                           f"{filepath}/recons_{self.logger.name}_{self.current_epoch}.png",
                           normalize=True,
                           nrow=12)
@@ -686,27 +707,26 @@ class VAEModule(pl.LightningModule):
         
         else:
             # do not use transforms for tensor datasets for now
+            SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
             transform = transforms.Compose([
-                transforms.ToPILImage(),
-                transforms.RandomHorizontalFlip(0.5),
-                transforms.ToTensor()
+                SetRange
                 ])
         return transform
 
     def test_data_transforms(self):
+        
+        SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
         if self.params['dataset'] == 'celeba':
-            SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
+            
             transform = transforms.Compose([transforms.CenterCrop(148),
                                             transforms.Resize(self.params['img_size']),
                                             transforms.ToTensor(),
                                             SetRange])
         elif self.is_hic_dataset(self.params['dataset']):
-            SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
             transform = transforms.Compose([transforms.Resize(self.params['img_size'], Image.NEAREST),
                                             transforms.ToTensor(),
                                             SetRange])
         elif self.is_IDC_dataset(self.params['dataset']) :
-            SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
             transform = transforms.Compose([transforms.Resize((self.params['img_size'], self.params['img_size'])),
                                             transforms.ToTensor(),
                                             SetRange])
@@ -714,8 +734,6 @@ class VAEModule(pl.LightningModule):
             # 
             # do not use transforms for tensor datasets for now
             transform = transforms.Compose([
-                # transforms.ToPILImage(),
-                transforms.RandomHorizontalFlip(0.5),
-                transforms.ToTensor()
+                SetRange
                 ])
         return transform
