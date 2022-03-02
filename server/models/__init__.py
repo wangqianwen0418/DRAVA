@@ -23,6 +23,7 @@ from .betatc_vae import *
 from .dip_vae import *
 from .beta_vae_mlp import *
 from .beta_vae_conv import *
+from .beta_vae_conv_2 import * # the model structure used in B loss paper
 
 
 # Aliases
@@ -42,6 +43,7 @@ vae_models = {'HVAE':HVAE,
               'BetaVAE':BetaVAE,
               'BetaVAE_MLP':BetaVAE_MLP,
               'BetaVAE_CONV':BetaVAE_CONV,
+              'BetaVAE_CONV2':BetaVAE_CONV2,
               'InfoVAE':InfoVAE,
               'WAE_MMD':WAE_MMD,
               'VampVAE': VampVAE,
