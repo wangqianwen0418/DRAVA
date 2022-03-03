@@ -410,12 +410,6 @@ class VAEModule(pl.LightningModule):
             recons_imgs = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
         else:
             recons_imgs = recons.cpu().data
-        
-        
-        # vutils.save_image(recons_imgs,
-        #                     './test_simu.png',
-        #                     normalize=True,
-        #                     nrow=self.bin_num)
 
         return recons_imgs
     
