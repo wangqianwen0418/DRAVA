@@ -164,7 +164,7 @@ class VAEModule(pl.LightningModule):
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
 
-        
+
         real_img, labels = batch
 
         if self.is_tensor_dataset(self.params['dataset']):
@@ -360,8 +360,20 @@ class VAEModule(pl.LightningModule):
                             normalize=True,
                             nrow=self.bin_num)
 
+    
+    def z2recons_sum(self, z):
+        '''
+        # feed for Shap to calculated z importances
+        '''
+        z = torch.tensor(z).float()
+        recons = self.model.decode(z)
+        
+        return recons.view(recons.size(0), -1).sum(dim = 1)
+        
+
     def get_simu_images(self, dimIndex, baseline = [], z_range = []):
         """
+        Called by Flask Api to generate simu images
         return an image grid,
         each row is a hidden dimension, 
         all images in this row have same values for other dims but differnt values at this dim  
@@ -389,6 +401,7 @@ class VAEModule(pl.LightningModule):
         z[mask, dimIndex] = torch.tensor(
             [z_min + j/(self.bin_num-1)* (z_max - z_min) for j in range(self.bin_num)]
         ).float()
+
         recons = self.model.decode(z)
 
         # if self.is_tensor_dataset(self.params['dataset']):
