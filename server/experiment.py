@@ -405,6 +405,11 @@ class VAEModule(pl.LightningModule):
 
         recons = self.model.decode(z)
 
+        if self.is_tensor_dataset(self.params['dataset']):
+            recons = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
+        else:
+            recons = recons.cpu().data
+
         # the same normalization as torch.utils.save_image
         for t in recons:
             min = float(t.min())
@@ -412,10 +417,7 @@ class VAEModule(pl.LightningModule):
             t.clamp_(min=min, max=max)
             t.add_(-min).div_(max - min + 1e-5) # add 1e-5 in case min = max
 
-        if self.is_tensor_dataset(self.params['dataset']):
-            recons = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
-        else:
-            recons = recons.cpu().data
+        
 
         recons = recons.numpy()
         avg = recons.mean(axis=0)
