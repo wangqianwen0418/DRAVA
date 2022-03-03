@@ -40,8 +40,6 @@ const LatentDim = (props: Props) => {
     latentZ
   } = props;
 
-  console.info(dimName);
-
   const imgSize = imageSize || Math.min(stepWidth, barHeight);
   const dimNum = parseInt(dimName.split('_')[1]);
   const [imageBytes, updateImageBytes] = useState<string[]>([]);
@@ -53,8 +51,9 @@ const LatentDim = (props: Props) => {
 
   const fetchImageBytes = async () => {
     setLoading(true);
-    const imageBytes = await querySimuImages(dataset, dimNum, latentZ);
+    const { image: imageBytes, score } = await querySimuImages(dataset, dimNum, latentZ);
     updateImageBytes(imageBytes);
+    console.info(dimName, score);
     setLoading(false);
   };
 

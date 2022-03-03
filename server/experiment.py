@@ -164,7 +164,7 @@ class VAEModule(pl.LightningModule):
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
 
-        
+
         real_img, labels = batch
 
         if self.is_tensor_dataset(self.params['dataset']):
@@ -360,11 +360,24 @@ class VAEModule(pl.LightningModule):
                             normalize=True,
                             nrow=self.bin_num)
 
+    
+    def z2recons_sum(self, z):
+        '''
+        # feed for Shap to calculated z importances
+        '''
+        z = torch.tensor(z).float()
+        recons = self.model.decode(z)
+        
+        return recons.view(recons.size(0), -1).sum(dim = 1)
+        
+
     def get_simu_images(self, dimIndex, baseline = [], z_range = []):
         """
+        Called by Flask Api to generate simu images
         return an image grid,
         each row is a hidden dimension, 
         all images in this row have same values for other dims but differnt values at this dim  
+        @Return: images: numpy.array(), score: number
         """
 
 
@@ -389,22 +402,28 @@ class VAEModule(pl.LightningModule):
         z[mask, dimIndex] = torch.tensor(
             [z_min + j/(self.bin_num-1)* (z_max - z_min) for j in range(self.bin_num)]
         ).float()
+
         recons = self.model.decode(z)
 
-        # if self.is_tensor_dataset(self.params['dataset']):
-        #     recons_imgs = F.sigmoid (recons).cpu().data
         if self.is_tensor_dataset(self.params['dataset']):
-            recons_imgs = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
+            recons = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
         else:
-            recons_imgs = recons.cpu().data
-        
-        
-        # vutils.save_image(recons_imgs,
-        #                     './test_simu.png',
-        #                     normalize=True,
-        #                     nrow=self.bin_num)
+            recons = recons.cpu().data
 
-        return recons_imgs
+        # the same normalization as torch.utils.save_image
+        for t in recons:
+            min = float(t.min())
+            max = float(t.max())
+            t.clamp_(min=min, max=max)
+            t.add_(-min).div_(max - min + 1e-5) # add 1e-5 in case min = max
+
+        
+
+        recons = recons.numpy()
+        avg = recons.mean(axis=0)
+        grad_score = [np.mean(np.abs(res-avg)) for res in recons ]
+
+        return recons, sum(grad_score)/len(grad_score)
     
     def save_paired_samples(self):
         """
