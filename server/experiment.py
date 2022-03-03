@@ -377,6 +377,7 @@ class VAEModule(pl.LightningModule):
         return an image grid,
         each row is a hidden dimension, 
         all images in this row have same values for other dims but differnt values at this dim  
+        @Return: images: numpy.array(), score: number
         """
 
 
@@ -404,14 +405,23 @@ class VAEModule(pl.LightningModule):
 
         recons = self.model.decode(z)
 
-        # if self.is_tensor_dataset(self.params['dataset']):
-        #     recons_imgs = F.sigmoid (recons).cpu().data
-        if self.is_tensor_dataset(self.params['dataset']):
-            recons_imgs = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
-        else:
-            recons_imgs = recons.cpu().data
+        # the same normalization as torch.utils.save_image
+        for t in recons:
+            min = float(t.min())
+            max = float(t.max())
+            t.clamp_(min=min, max=max)
+            t.add_(-min).div_(max - min + 1e-5) # add 1e-5 in case min = max
 
-        return recons_imgs
+        if self.is_tensor_dataset(self.params['dataset']):
+            recons = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
+        else:
+            recons = recons.cpu().data
+
+        recons = recons.numpy()
+        avg = recons.mean(axis=0)
+        grad_score = [np.mean(np.abs(res-avg)) for res in recons ]
+
+        return recons, sum(grad_score)/len(grad_score)
     
     def save_paired_samples(self):
         """

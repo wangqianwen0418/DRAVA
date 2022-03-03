@@ -212,19 +212,11 @@ def get_simu_images():
     if dataset == 'celeb':
         zRange = [-3, 3]
 
-    reconstructued = models[dataset].get_simu_images(dim, z, zRange)
+    reconstructued, score = models[dataset].get_simu_images(dim, z, zRange)
 
-    for t in reconstructued:
-        norm_range(t)
-    if dataset == 'sequence': # sequence dataset is only black and white
-        reconstructued = (reconstructued>0.5).float()
     results = []
 
-    reconstructued = reconstructued.numpy()
-    grad_score = 0
-    avg = reconstructued.mean(axis=0)
     for res in reconstructued:
-        grad_score += np.sum(np.abs(res-avg))
 
         img_io = BytesIO()
        
@@ -245,7 +237,7 @@ def get_simu_images():
         v = base64.b64encode(img_io.getvalue()).decode()
         results.append(f'data:image/png;base64,{v}')
 
-    return jsonify({"image": results, "score": grad_score/len(res)})
+    return jsonify({"image": results, "score": score})
 
 ######################
 # functions called by the API
