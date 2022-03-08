@@ -30,6 +30,7 @@ interface Props {
 }
 interface States {
   dimSampleIndex: { [dimName: string]: number | undefined }; // the index of samples used to generate simu images for each latent dimension
+  dimScores: { [dimName: string]: number };
 }
 
 export default class LatentDim extends React.Component<Props, States> {
@@ -41,10 +42,12 @@ export default class LatentDim extends React.Component<Props, States> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      dimSampleIndex: {}
+      dimSampleIndex: {},
+      dimScores: {}
     };
     this.isSelected = this.isSelected.bind(this);
     this.changeDimSamples = this.changeDimSamples.bind(this);
+    this.changeDimScores = this.changeDimScores.bind(this);
   }
 
   /**
@@ -131,10 +134,22 @@ export default class LatentDim extends React.Component<Props, States> {
     this.setState({ dimSampleIndex });
   }
 
+  /**
+   * @update_state
+   */
+  changeDimScores(dimName: string, score: number) {
+    const { dimScores } = this.state;
+    dimScores[dimName] = score;
+    this.setState({ dimScores });
+  }
+
   render() {
     const { filters, height, width, matrixData, isDataLoading, dimUserNames, samples, dataset } = this.props;
+    const { dimScores } = this.state;
 
     const dims = Object.keys(filters);
+    // sort dims based on dim score
+    dims.sort((a, b) => -dimScores[a] + dimScores[b]);
 
     const rootStyle = getComputedStyle(document.documentElement);
     const cardPadding = parseInt(rootStyle.getPropertyValue('--card-body-padding')),
@@ -168,6 +183,7 @@ export default class LatentDim extends React.Component<Props, States> {
     );
 
     const stepWidth = (width - 2 * cardPadding - this.spanWidth) / STEP_NUM - this.gap;
+    const maxScore = Math.max(...Object.values(this.state.dimScores)) || 0.0000001;
 
     return (
       <Card
@@ -195,8 +211,12 @@ export default class LatentDim extends React.Component<Props, States> {
                 latentZ={baseSampleIndex != undefined ? samples[baseSampleIndex].z : undefined}
                 isSelected={this.isSelected}
                 setFilters={this.props.setFilters}
+                changeDimScores={this.changeDimScores}
               />
             );
+            const score = this.state.dimScores[dimName] || 0;
+            const barWidth = this.spanWidth - 10;
+            const scoreBarWidth = (score / maxScore) * barWidth;
             return (
               <g
                 key={dimName}
@@ -211,12 +231,22 @@ export default class LatentDim extends React.Component<Props, States> {
                 >
                   {dimUserNames[dimName] || dimName}
                 </text>
+                {/* dim importance score */}
+                {dimName.includes('dim_') ? (
+                  <g transform={`translate(0, ${this.barHeight + this.barLabelHeight})`}>
+                    <rect height={this.barLabelHeight} width={barWidth} stroke="lightgray" fill="transparent"></rect>
+                    <rect height={this.barLabelHeight} width={scoreBarWidth} stroke="lightgray" fill="lightgray"></rect>
+                    <text y={this.barLabelHeight}>{score.toFixed(3)}</text>
+                  </g>
+                ) : (
+                  <></>
+                )}
 
                 {/* only show configure for latent dim */}
                 {dimName.includes('dim_') && (
                   <g
                     className="configure"
-                    transform={`translate(0, ${this.barHeight + this.barLabelHeight + this.gap})`}
+                    transform={`translate(0, ${this.barHeight + this.barLabelHeight * 2 + this.gap})`}
                   >
                     <ConfigDim
                       matrixData={matrixData}
