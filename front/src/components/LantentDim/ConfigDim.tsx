@@ -153,15 +153,15 @@ export const ConfigDim = (props: Props) => {
         width={modalWidth}
         destroyOnClose
       >
-        {inputName}
-        <br />
         {baselineSelector}
         <svg width={modalWidth - 2 * padding} height={barHeight + imageSize + barLabelHeight + gap * 2} id="configDim">
           <g>{Row}</g>
         </svg>
         <span style={{ fontSize: '20px', fontWeight: 700 }}> All samples are horizontally oragnized by </span>{' '}
         {dimXSelector}
-        <Piling dataset={dataset} samples={samples} dimX={dimX} dimNames={dimNames} dimUserNames={dimUserNames} />
+        <br />
+        {inputName}
+        <Piling dataset={dataset} samples={samples} dimNames={dimNames} dimUserNames={dimUserNames} />
       </Modal>
     </>
   );

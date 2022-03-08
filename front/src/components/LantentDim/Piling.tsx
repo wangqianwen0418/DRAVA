@@ -14,33 +14,36 @@ type Item = TResultRow & {
 type Props = {
   samples: TResultRow[];
   dataset: string;
-  dimX: string;
   dimUserNames: { [k: string]: string };
   dimNames: string[];
 };
 const Pilling = (props: Props) => {
-  const { samples, dimNames, dimUserNames, dataset, dimX } = props;
+  const { samples, dimNames, dimUserNames, dataset } = props;
   const items = samples.map(s => {
     const url = `${BASE_URL}/api/get_${dataset}_sample?id=${s.id}`;
     return { ...s, src: url }; // y = 0 in case dimYNum = null
   });
   const pileDragEnd = (e: any) => console.info('end of piling drag, ', e.target.items);
 
-  const pilingOptions = {
-    items,
-    pileDragEnd,
-    dims: [dimX, 'none'],
-    getSvgGroup: () => d3select('svg#configDim').select(`g`), // pass a function rather than a selection in case the svg components have been rendered yet
-    dataset
-  };
-
   const pilingInitHandler = useCallback(async element => {
     if (element == null) return;
+
+    const dimX = (document.getElementById('xSelector') as any).value;
+    const dimY = (document.getElementById('ySelector') as any).value;
+
+    const pilingOptions = {
+      items,
+      pileDragEnd,
+      dims: [dimX, dimY],
+      getSvgGroup: () => d3select('svg#configDim').select(`g`), // pass a function rather than a selection in case the svg components have been rendered yet
+      dataset
+    };
 
     const [piling, actions] = await createPilingExample(element, pilingOptions);
     // register action
     const reArrangeY = (event: any) => {
       const dimY = event.target.value;
+      const dimX = (document.getElementById('xSelector') as any).value;
       return actions.reArrange([dimX, dimY]);
     };
 
@@ -49,7 +52,10 @@ const Pilling = (props: Props) => {
       const dimY = (document.getElementById('ySelector') as any).value;
       return actions.reArrange([dimX, dimY]);
     };
-    const autoGroup = () => actions.group(dimX);
+    const autoGroup = () => {
+      const dimX = (document.getElementById('xSelector') as any).value;
+      actions.group(dimX);
+    };
 
     document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);
     document.querySelector('#xSelector')?.addEventListener('change', reArrangeX);

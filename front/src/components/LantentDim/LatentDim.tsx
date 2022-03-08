@@ -143,6 +143,13 @@ export default class LatentDim extends React.Component<Props, States> {
     this.setState({ dimScores });
   }
 
+  // clean dim scores after changing dataset
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.dataset != this.props.dataset) {
+      this.setState({ dimScores: {} });
+    }
+  }
+
   render() {
     const { filters, height, width, matrixData, isDataLoading, dimUserNames, samples, dataset } = this.props;
     const { dimScores } = this.state;

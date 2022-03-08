@@ -43,6 +43,15 @@ export default async function create(element, pilingOptions) {
       pileSizeBadge: pile => pile.items.length > 1,
       pileItemOffset: [0, 0] //force all items overlaid
     };
+  } else if (dataset == 'dsprites') {
+    spec = {
+      renderer: createImageRenderer({ imageSize }),
+      items: items,
+      itemSize: imageSize,
+      pileItemOpacity: (item, i, pile) => 1 - i / pile.items.length, //opaciy piles for the dsprites dataset
+      pileSizeBadge: pile => pile.items.length > 1,
+      pileItemOffset: [0, 0] //force all items overlaid
+    };
   } else {
     spec = {
       renderer: createImageRenderer({ imageSize }),
