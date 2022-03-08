@@ -95,6 +95,8 @@ const countingCategories = (
   samples: string[] | number[],
   sampleIds: string[]
 ): { row: TDistribution; sampleAssignments: number[] } => {
+  samples = samples.map(d => parseFloat(d as any) || d) as any;
+
   var labels: string[] = [];
   var histogram: number[] = [];
   var groupedSamples: string[][] = [];

@@ -77,6 +77,7 @@ matrix_model = load_model('./saved_models/matrix_config.yaml', './saved_models/m
 celeba_model = load_model('./saved_models/celeba_config.yaml', './saved_models/celeba.ckpt')
 sequence_model = load_model('./saved_models/sequence_config.yaml', './saved_models/sequence.ckpt')
 IDC_model = load_model('./saved_models/IDC_config.yaml', './saved_models/IDC.ckpt')
+dsprites_model = load_model('./saved_models/dsprites_config.yaml', './saved_models/dsprites.ckpt')
 
 with open('saved_models/z_range_matrix.json', 'r') as f:
     range_matrix = json.load(f)
@@ -90,21 +91,27 @@ with open('saved_models/z_range_celeba.json', 'r') as f:
 with open('saved_models/z_range_IDC.json', 'r') as f:
     range_IDC = json.load(f)
 
+with open('saved_models/z_range_dsprites.json', 'r') as f:
+    range_dsprites = json.load(f)
+
 ranges = {
     'sequence': range_sequence,
     'matrix': range_matrix,
-    'celeb': range_celeba,
-    'IDC': range_IDC
+    # 'celeb': range_celeba,
+    'IDC': range_IDC,
+    # 'dsprites': range_dsprites
 }
 
 models = {
     'sequence': sequence_model,
     'matrix': matrix_model,
     'celeb': celeba_model,
-    'IDC': IDC_model
+    'IDC': IDC_model,
+    'dsprites': dsprites_model
 }
 
 default_z = {
+    "dsprites": [-0.027196992188692093,0.062033019959926605,1.2151720523834229,-0.7173954248428345,2.0358076095581055,-0.004620308056473732,0.031831007450819016,1.2410718202590942,-0.0464935339987278,0.03360012546181679],
     "IDC": [-0.07878086715936661,0.6129785776138306,1.6250171661376953,-0.26838210225105286,2.1170804500579834,0.7363924384117126,0.07876656204462051,-0.36886027455329895,0.017318010330200195,-0.9062463045120239,-0.2743624746799469,-1.159773349761963],
     'sequence': [1.3912068605422974,1.3093589544296265,-1.4369394779205322,2.921229362487793,1.7272869348526,-1.0809800624847412],
     'matrix': [0.5784032344818115,0.1713341921567917,-0.27981624007225037,-0.4180270731449127,0.9767476916313171,-0.7862354516983032,0.7032433152198792,0.7099565863609314],
@@ -112,6 +119,7 @@ default_z = {
 }
 
 sequence_data = np.load(safe_join('../data/', 'HFFc6_ATAC_chr7.npz'), encoding='bytes')['imgs']
+dsprites_data = np.load(safe_join('../data/', 'dsprites_test.npy'), encoding='bytes')
 ######################
 # API Starts here
 ######################
@@ -176,6 +184,28 @@ def get_sequence_sample():
     img_io.seek(0)
     return send_file(img_io, mimetype='image/jpg')
 
+@api.route('/get_dsprites_sample', methods=['GET'])
+def get_dsprites_sample():
+    '''
+    e.g., base_url/api/get_dsprites_sample?id=xx
+    '''
+    id = request.args.get('id', type=str)
+    img = dsprites_data[int(id)]*255
+    # convert white to black
+    img = 255- img
+    # add a border
+    img[0, :] = 20
+    img[63, :] = 20
+    img[:, 0] = 20
+    img[:, 63] = 20
+    pil_img = Image.fromarray(img.astype(np.uint8))
+    
+    
+    img_io = BytesIO()
+    pil_img.save(img_io, 'JPEG', quality=70)
+    img_io.seek(0)
+    return send_file(img_io, mimetype='image/jpg')
+
 
 @api.route('/get_celeb_sample', methods=['GET'])
 def get_celeb_sample():
@@ -207,9 +237,9 @@ def get_simu_images():
     else:
         z = default_z[dataset]
 
-
-    zRange = ranges[dataset][dim]
-    if dataset == 'celeb':
+    if dataset in ranges:
+        zRange = ranges[dataset][dim]
+    else:
         zRange = [-3, 3]
 
     reconstructued, score = models[dataset].get_simu_images(dim, z, zRange)
@@ -229,6 +259,8 @@ def get_simu_images():
             res = colormap.get_cmap('viridis')(res) * 255
             pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
         else:
+            if (dataset) == 'dsprites':
+                res = 1-res
             res = res*255
             res = res.astype(np.uint8)
             pil_img = Image.fromarray(res)

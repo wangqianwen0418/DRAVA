@@ -28,6 +28,8 @@ const Z_Ranges: { [k: string]: number[][] } = {
   matrix: z_ranges_matrix
 };
 
+const non_genomic_dataset = ['celeb', 'IDC', 'dsprites'];
+
 interface State {
   dataset: string;
   filters: TFilter;
@@ -179,6 +181,9 @@ export default class App extends React.Component<{}, State> {
           'atac_right'
         ]);
       }
+      if (dataset == 'IDC') {
+        dimNames.push('label');
+      }
     }
     dimNames.forEach((dimName, idx) => {
       const dimValues = getDimValues(samples, dimName);
@@ -190,6 +195,8 @@ export default class App extends React.Component<{}, State> {
         distributionResults = generateDistribution(dimValues, false, STEP_NUM, sampleIds, 10);
       } else if (dimName == 'level') {
         distributionResults = generateDistribution(dimValues, true, STEP_NUM, sampleIds);
+      } else if (dimName == 'label') {
+        distributionResults = generateDistribution(dimValues, true, 2, sampleIds);
       } else {
         distributionResults = generateDistribution(dimValues, false, STEP_NUM, sampleIds);
       }
@@ -247,6 +254,7 @@ export default class App extends React.Component<{}, State> {
             <Menu.Item key="matrix">Matrix</Menu.Item>
             <Menu.Item key="celeb">Celeb</Menu.Item>
             <Menu.Item key="IDC">IDC</Menu.Item>
+            <Menu.Item key="dsprites">shapes</Menu.Item>
             <Menu.Item key="upload">
               <Upload>
                 <UploadOutlined style={{ color: 'rgba(255, 255, 255, 0.65)' }} />
@@ -280,7 +288,7 @@ export default class App extends React.Component<{}, State> {
                 />
               </Col>
               <Col span={12}>
-                {['celeb', 'IDC'].includes(dataset) ? (
+                {non_genomic_dataset.includes(dataset) ? (
                   <></>
                 ) : (
                   <GoslingVis
@@ -295,7 +303,7 @@ export default class App extends React.Component<{}, State> {
                 <SampleBrowser
                   dataset={dataset}
                   samples={this.filteredSamples}
-                  height={appHeight * (['celeb', 'IDC'].includes(dataset) ? 1 : 0.5)}
+                  height={appHeight * (non_genomic_dataset.includes(dataset) ? 1 : 0.5)}
                   isDataLoading={isDataLoading}
                   matrixData={this.matrixData}
                   dimUserNames={dimUserNames}

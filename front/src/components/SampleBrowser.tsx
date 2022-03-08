@@ -77,7 +77,7 @@ const SampleBrowser = (props: Props) => {
 
   return (
     <Card
-      title={`Samples [${isDataLoading ? '...' : samples.length}]`}
+      title={`Items [${isDataLoading ? '...' : samples.length}]`}
       size="small"
       bodyStyle={{ overflowY: 'scroll', height: height - cardHeadHeight }}
       loading={isDataLoading}
