@@ -149,6 +149,19 @@ class BetaVAE_CONV2(BaseVAE):
         z = self.reparameterize(mu, log_var)
         return  [self.decode(z), input, mu, log_var]
 
+    def kl_divergence(self, mu, logvar):
+        batch_size = mu.size(0)
+        assert batch_size != 0
+        if mu.data.ndimension() == 4:
+            mu = mu.view(mu.size(0), -1)
+        if logvar.data.ndimension() == 4:
+            logvar = logvar.view(logvar.size(0), -1)
+
+        klds = -0.5*(1 + logvar - mu.pow(2) - logvar.exp())
+        total_kld = klds.sum(1).mean(0) 
+
+        return total_kld
+
     def loss_function(self,
                       *args,
                       **kwargs) -> dict:
@@ -163,14 +176,16 @@ class BetaVAE_CONV2(BaseVAE):
         assert batch_size != 0
 
         if self.distribution == 'bernoulli':
-            recons_loss = F.binary_cross_entropy_with_logits(recons, input)
+            recons_loss = F.binary_cross_entropy_with_logits(recons, input, reduction='sum').div(batch_size) * self.recons_multi 
         elif self.distribution == 'gaussian':
-            recons_loss =F.mse_loss(recons, input) 
+            recons_loss =F.mse_loss(recons, input, reduction='sum').div(batch_size) * self.recons_multi 
         else:
             raise ValueError(f'distribution {self.distribution} not implemented')
 
-        kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
-
+        # kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
+        
+        kld_loss = self.kl_divergence(mu, log_var)
+        
         if self.loss_type == 'H': # https://openreview.net/forum?id=Sy2fzU9gl
 
             weighted_kld_loss = self.beta * kld_weight * kld_loss
@@ -183,6 +198,9 @@ class BetaVAE_CONV2(BaseVAE):
             loss = recons_loss + weighted_kld_loss
         else:
             raise ValueError('Undefined loss type.')
+
+        # print( 'loss shape', kld_loss.shape, recons_loss.shape, loss.shape)
+
 
         return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss, 'weighted_KLD': weighted_kld_loss}
 

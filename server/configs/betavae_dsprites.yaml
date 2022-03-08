@@ -4,18 +4,19 @@ model_params:
   latent_dim: 10 
   loss_type: 'B'
   img_size: 64
-  gamma: 1000.0
+  gamma: 2000.0
   max_capacity: 20
   Capacity_max_iter: 100000
   # conv_sizes: [4,4,4,4]
   distribution: bernoulli
+  recons_multi: 0.02 
 
 exp_params:
   dataset: dsprites
   data_path: "./data/"
   img_size: 64
   optimizer: "adam"
-  batch_size: 196 
+  batch_size: 64 
   LR: 0.0005
   weight_decay: 0.0
   # scheduler_gamma: 0.95
