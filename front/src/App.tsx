@@ -198,6 +198,7 @@ export default class App extends React.Component<{}, State> {
       } else if (dimName == 'label') {
         distributionResults = generateDistribution(dimValues, true, 2, sampleIds);
       } else {
+        console.info(dimName, dimValues);
         distributionResults = generateDistribution(dimValues, false, STEP_NUM, sampleIds);
       }
 

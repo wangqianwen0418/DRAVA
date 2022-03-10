@@ -57,14 +57,17 @@ export default async function create(element, pilingOptions) {
       renderer: createImageRenderer({ imageSize }),
       items: items,
       itemSize: imageSize,
-      // items in a pile is randomly rotated and offset
+      // // items in a pile is randomly rotated and offset
+      // pileItemOffset: (item, i, pile) => {
+      //   const isNotLast = pile.items.length - 1 !== i;
+      //   return [+isNotLast * (Math.random() * 12 - 6), +isNotLast * (Math.random() * 12 - 6)];
+      // },
+      // pileItemRotation: (item, i, pile) => {
+      //   const isNotLast = pile.items.length - 1 !== i;
+      //   return +isNotLast * (Math.random() * 12 - 6);
+      // },
       pileItemOffset: (item, i, pile) => {
-        const isNotLast = pile.items.length - 1 !== i;
-        return [+isNotLast * (Math.random() * 12 - 6), +isNotLast * (Math.random() * 12 - 6)];
-      },
-      pileItemRotation: (item, i, pile) => {
-        const isNotLast = pile.items.length - 1 !== i;
-        return +isNotLast * (Math.random() * 12 - 6);
+        return [0, +i * -3];
       },
       pileSizeBadge: pile => pile.items.length > 1
     };
@@ -98,7 +101,10 @@ export default async function create(element, pilingOptions) {
         piling.arrangeBy('data', dims);
       }
     },
-    group: dim => piling.groupBy('category', item => item['assignments'][dim]),
+    group: dim => {
+      piling.arrangeBy('data', [item => item['assignments'][dim] || 0, 0]);
+      piling.groupBy('category', item => item['assignments'][dim] || 0);
+    },
     splitAll: () => piling.splitAll()
   };
 

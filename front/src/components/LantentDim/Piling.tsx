@@ -40,6 +40,7 @@ const Pilling = (props: Props) => {
     };
 
     const [piling, actions] = await createPilingExample(element, pilingOptions);
+
     // register action
     const reArrangeY = (event: any) => {
       const dimY = event.target.value;
@@ -85,6 +86,7 @@ const Pilling = (props: Props) => {
           );
         })}
       </select>
+      <br />
       <Button type="default" id="groupBtn" size="small">
         Auto-Group
       </Button>
