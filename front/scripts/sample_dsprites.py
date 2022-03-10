@@ -10,7 +10,7 @@ all_results = pd.read_csv('../public/assets/results_dsprites_all.csv')
 
 # %%
 sample_num =1000
-ratio = math.floor(len(raw_data)/sample_num)
+ratio = math.floor(len(raw_data['imgs'])/sample_num)
 sample_array = [i*ratio for i in range(sample_num)]
 
 
