@@ -42,6 +42,7 @@ const queryIDCResults = async () => {
     return {
       ...row,
       z: row['z'].split(',').map(d => parseFloat(d)),
+      std: row['std'].split(',').map(d => parseFloat(d)),
       id: row['img_path'],
       assignments: {},
       ...dims,
@@ -70,6 +71,7 @@ const queryDspritesResults = async () => {
     return {
       ...row,
       z: row['z'].split(',').map(d => parseFloat(d)),
+      std: row['std'].split(',').map(d => parseFloat(d)),
       id: i.toString(),
       assignments: {},
       ...dims,
@@ -98,6 +100,7 @@ const queryCelebResults = async () => {
     return {
       ...row,
       z: row['z'].split(',').map(d => parseFloat(d)),
+      std: row['std'].split(',').map(d => parseFloat(d)),
       id: (i + 1).toString(),
       assignments: {},
       ...dims,
@@ -135,6 +138,7 @@ const queryMatrixResults = async () => {
         start: parseInt(row.start as any) * resolution,
         end: parseInt(row.end as any) * resolution,
         z: row['z'].split(',').map(d => parseFloat(d)),
+        std: row['std'].split(',').map(d => parseFloat(d)),
         id: (i + 1).toString(),
         index: i,
         size: parseInt((row.end - row.start) as any) * resolution,
@@ -173,6 +177,7 @@ const querySequenceResults = async () => {
         start: parseInt(row.start as any),
         end: parseInt(row.end as any),
         z: row['z'].split(',').map(d => parseFloat(d)),
+        std: row['std'].split(',').map(d => parseFloat(d)),
         id: i.toString(),
         assignments: {},
         ...dims

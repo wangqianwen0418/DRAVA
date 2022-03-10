@@ -88,7 +88,16 @@ export default async function create(element, pilingOptions) {
   });
 
   const actions = {
-    reArrange: dims => piling.arrangeBy('data', dims),
+    reArrange: dims => {
+      const [dimX, dimY] = dims;
+
+      if (dimY == 'std') {
+        const dimNum = parseInt(dimX.split('_')[1]);
+        piling.arrangeBy('data', [item => item[dimX], item => item['std'][dimNum]]);
+      } else {
+        piling.arrangeBy('data', dims);
+      }
+    },
     group: dim => piling.groupBy('category', item => item['assignments'][dim]),
     splitAll: () => piling.splitAll()
   };

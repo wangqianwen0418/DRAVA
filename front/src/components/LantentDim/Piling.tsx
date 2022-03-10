@@ -76,6 +76,7 @@ const Pilling = (props: Props) => {
       <label>Oragnize samples vertically using</label>
       <select id="ySelector" style={{ width: '100px' }}>
         <option value="none">none</option>
+        <option value="std">std</option>
         {dimNames.map(dimName => {
           return (
             <option key={dimName} value={dimName}>

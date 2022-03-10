@@ -258,7 +258,7 @@ export default class LatentDim extends React.Component<Props, States> {
                     <ConfigDim
                       matrixData={matrixData}
                       dimName={dimName}
-                      dimNames={Object.keys(matrixData)}
+                      dimNames={dims}
                       samples={samples}
                       dimUserNames={dimUserNames}
                       dataset={dataset}

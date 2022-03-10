@@ -119,7 +119,7 @@ default_z = {
 }
 
 sequence_data = np.load(safe_join('../data/', 'HFFc6_ATAC_chr7.npz'), encoding='bytes')['imgs']
-dsprites_data = np.load(safe_join('../data/', 'dsprites_test.npy'), encoding='bytes')
+dsprites_data = np.load(safe_join('../data/', 'dsprites_test.npz'), encoding='bytes')['imgs']
 ######################
 # API Starts here
 ######################

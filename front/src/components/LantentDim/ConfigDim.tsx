@@ -55,7 +55,6 @@ export const ConfigDim = (props: Props) => {
 
   const inputName = (
     <>
-      <label htmlFor="fname">Rename: </label>
       <input value={dimUserName} unselectable="on" onChange={e => setDimUserNames({ [dimX]: e.target.value })} />
     </>
   );
@@ -142,7 +141,7 @@ export const ConfigDim = (props: Props) => {
 
       <Modal
         // title={dimXSelector}
-        title="Dim Configuration"
+        title={<span> Dim Configuration {dimXSelector}</span>}
         visible={isModalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => {
@@ -158,9 +157,8 @@ export const ConfigDim = (props: Props) => {
           <g>{Row}</g>
         </svg>
         <span style={{ fontSize: '20px', fontWeight: 700 }}> All samples are horizontally oragnized by </span>{' '}
-        {dimXSelector}
-        <br />
         {inputName}
+        <br />
         <Piling dataset={dataset} samples={samples} dimNames={dimNames} dimUserNames={dimUserNames} />
       </Modal>
     </>
