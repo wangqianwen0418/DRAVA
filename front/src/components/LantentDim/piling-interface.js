@@ -101,9 +101,15 @@ export default async function create(element, pilingOptions) {
         piling.arrangeBy('data', dims);
       }
     },
-    group: dim => {
+    stackX: dim => {
+      piling.set('pileItemOffset', (item, i, pile) => {
+        return [0, +i * 3];
+      });
       piling.arrangeBy('data', [item => item['assignments'][dim] || 0, 0]);
       piling.groupBy('category', item => item['assignments'][dim] || 0);
+    },
+    gridGroup: dims => {
+      // TODO
     },
     splitAll: () => piling.splitAll()
   };

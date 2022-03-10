@@ -53,21 +53,21 @@ const Pilling = (props: Props) => {
       const dimY = (document.getElementById('ySelector') as any).value;
       return actions.reArrange([dimX, dimY]);
     };
-    const autoGroup = () => {
+    const stackX = () => {
       const dimX = (document.getElementById('xSelector') as any).value;
-      actions.group(dimX);
+      actions.stackX(dimX);
     };
 
     document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);
     document.querySelector('#xSelector')?.addEventListener('change', reArrangeX);
-    document.getElementById('groupBtn')?.addEventListener('click', autoGroup);
+    document.getElementById('stackXBtn')?.addEventListener('click', stackX);
     document.getElementById('splitBtn')?.addEventListener('click', actions.splitAll);
 
     return () => {
       piling.destory();
       document.querySelector('#ySelector')?.removeEventListener('change', reArrangeY);
       document.querySelector('#xSelector')?.removeEventListener('change', reArrangeX);
-      document.getElementById('groupBtn')?.removeEventListener('click', autoGroup);
+      document.getElementById('stackXBtn')?.removeEventListener('click', stackX);
       document.getElementById('splitBtn')?.removeEventListener('click', actions.splitAll);
     };
   }, []);
@@ -87,8 +87,11 @@ const Pilling = (props: Props) => {
         })}
       </select>
       <br />
+      <Button type="default" id="stackXBtn" size="small">
+        StackX
+      </Button>
       <Button type="default" id="groupBtn" size="small">
-        Auto-Group
+        AutoGroup
       </Button>
       <Button type="default" id="splitBtn" size="small">
         Split-All
