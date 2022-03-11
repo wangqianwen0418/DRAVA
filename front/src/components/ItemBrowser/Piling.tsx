@@ -69,6 +69,7 @@ const Pilling = (props: Props) => {
     document.getElementById('stackXBtn')?.addEventListener('click', stackX);
     document.getElementById('splitBtn')?.addEventListener('click', splitAll);
     document.getElementById('umapBtn')?.addEventListener('click', actions.UMAP);
+    document.getElementById('1dBtn')?.addEventListener('click', actions.grid);
 
     return () => {
       piling.destory();
@@ -77,36 +78,12 @@ const Pilling = (props: Props) => {
       document.getElementById('stackXBtn')?.removeEventListener('click', stackX);
       document.getElementById('splitBtn')?.removeEventListener('click', splitAll);
       document.getElementById('umapBtn')?.removeEventListener('click', actions.UMAP);
+      document.getElementById('1dBtn')?.addEventListener('click', actions.grid);
     };
   }, []);
 
   return (
     <div className={styles.piling_container}>
-      <label>Oragnize samples vertically using</label>
-      <select id="ySelector" style={{ width: '100px' }}>
-        <option value="none">none</option>
-        <option value="std">std</option>
-        {dimNames.map(dimName => {
-          return (
-            <option key={dimName} value={dimName}>
-              {dimUserNames[dimName] || dimName}
-            </option>
-          );
-        })}
-      </select>
-      <br />
-      <Button type="default" id="stackXBtn" size="small">
-        StackX
-      </Button>
-      <Button type="default" id="groupBtn" size="small">
-        AutoGroup
-      </Button>
-      <Button type="default" id="splitBtn" size="small">
-        Split-All
-      </Button>
-      <Button type="default" id="umapBtn" size="small">
-        UMAP
-      </Button>
       <div className={styles.piling_wrapper} ref={pilingInitHandler} />
     </div>
   );

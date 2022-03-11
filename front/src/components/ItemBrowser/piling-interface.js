@@ -29,39 +29,36 @@ const createImageRenderer = option => sources =>
   );
 
 export default async function create(element, pilingOptions) {
-  const imageSize = 64;
+  const imageSize = 50;
   const { items, pileDragEnd, dims, getSvgGroup, dataset } = pilingOptions;
 
   const umap = createUmap();
 
-  var spec;
+  var spec = {
+    dimensionalityReducer: umap,
+    cellSize: imageSize,
+    renderer: createImageRenderer({ imageSize }),
+    items: items,
+    itemSize: imageSize
+  };
 
   if (dataset == 'sequence') {
     spec = {
-      dimensionalityReducer: umap,
-      renderer: createImageRenderer({ imageSize }),
-      items: items,
-      itemSize: imageSize,
+      ...spec,
       pileItemOpacity: (item, i, pile) => 1 - i / pile.items.length, //opaciy piles for the sequence dataset
       pileSizeBadge: pile => pile.items.length > 1,
       pileItemOffset: [0, 0] //force all items overlaid
     };
   } else if (dataset == 'dsprites') {
     spec = {
-      dimensionalityReducer: umap,
-      renderer: createImageRenderer({ imageSize }),
-      items: items,
-      itemSize: imageSize,
+      ...spec,
       pileItemOpacity: (item, i, pile) => 1 - i / pile.items.length, //opaciy piles for the dsprites dataset
       pileSizeBadge: pile => pile.items.length > 1,
       pileItemOffset: [0, 0] //force all items overlaid
     };
   } else {
     spec = {
-      dimensionalityReducer: umap,
-      renderer: createImageRenderer({ imageSize }),
-      items: items,
-      itemSize: imageSize,
+      ...spec,
       // // items in a pile is randomly rotated and offset
       // pileItemOffset: (item, i, pile) => {
       //   const isNotLast = pile.items.length - 1 !== i;
@@ -115,7 +112,7 @@ export default async function create(element, pilingOptions) {
       // TODO
     },
     splitAll: dims => {
-      piling.arrangeBy('data', dims);
+      piling.arrangeBy('data', [dims[0], 'none']);
       piling.splitAll();
     },
     UMAP: () => {
@@ -128,6 +125,9 @@ export default async function create(element, pilingOptions) {
       //   { forceDimReduction: true }
       // );
       piling.arrangeBy('uv', 'z');
+    },
+    grid: () => {
+      piling.arrangeBy('data', 'dim_0');
     }
   };
 

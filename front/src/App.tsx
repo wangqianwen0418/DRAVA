@@ -9,8 +9,8 @@ import { generateDistribution, getDimValues, range } from 'helpers';
 import z_ranges_sequence from 'assets/z_range_sequence.json';
 import z_ranges_matrix from 'assets/z_range_matrix.json';
 
-import LatentDim from 'components/LantentDim/LatentDim';
-import SampleBrowser from 'components/SampleBrowser';
+import LatentDim from 'components/LatentDim/LatentDim';
+import ItemBrowser from 'components/ItemBrowser';
 import GoslingVis from 'components/Gosling';
 
 import { queryResults } from 'dataService';
@@ -233,7 +233,7 @@ export default class App extends React.Component<{}, State> {
       appHeight = (windowInnerSize ? windowInnerSize.height : window.innerHeight) - headerHeight - 2 * contentPadding,
       leftCol = 9,
       rightCol = 15,
-      lefColWidth =
+      leftColWidth =
         ((windowInnerSize ? windowInnerSize.width : window.innerWidth) - siderWidth - contentPadding * 2) *
           (leftCol / 24) -
         gutter,
@@ -287,7 +287,7 @@ export default class App extends React.Component<{}, State> {
                   filters={filters}
                   matrixData={this.matrixData}
                   height={appHeight * (non_genomic_dataset.includes(dataset) ? 1 : 0.6)}
-                  width={lefColWidth}
+                  width={leftColWidth}
                   isDataLoading={isDataLoading}
                   dimUserNames={dimUserNames}
                   setDimUserNames={this.setDimUserNames}
@@ -300,21 +300,24 @@ export default class App extends React.Component<{}, State> {
                   <GoslingVis
                     dataset={dataset}
                     samples={this.filteredSamples}
-                    width={rightColWidth}
+                    width={leftColWidth}
                     height={appHeight * 0.4}
                     isDataLoading={isDataLoading}
                   />
                 )}
               </Col>
               <Col span={rightCol}>
-                <SampleBrowser
+                <ItemBrowser
                   dataset={dataset}
                   samples={this.filteredSamples}
                   height={appHeight}
+                  width={rightColWidth}
                   isDataLoading={isDataLoading}
                   matrixData={this.matrixData}
                   dimUserNames={dimUserNames}
                   filters={filters}
+                  dimNames={Object.keys(filters)}
+                  setDimUserNames={this.setDimUserNames}
                 />
               </Col>
             </Row>

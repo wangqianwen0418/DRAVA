@@ -1,0 +1,42 @@
+.ConfigContainer {
+  position: absolute;
+  right: 0px;
+  top: var(--card-head-height);
+  height: calc(100% - var(--card-head-height));
+}
+
+.ConfigPanel {
+  border-left: 1px solid lightgray;
+  background-color: white;
+  position: absolute;
+  padding: 5px;
+  right: 0px;
+  width: 200px;
+  height: 100%;
+  transition: width 1s;
+  float: right;
+}
+
+.ConfigPanel.hidden {
+  /* display: none; */
+  width: 0px;
+}
+
+.ConfigPanel.show {
+  /* display: block; */
+  width: 200px;
+}
+
+.ConfigBtn {
+  float: right;
+}
+
+.ConfigHideBtn {
+  width: 100%;
+  text-align: center;
+}
+
+.configHr {
+  margin-top: 5px;
+  margin-bottom: 10px;
+}

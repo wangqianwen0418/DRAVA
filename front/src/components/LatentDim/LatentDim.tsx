@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import styles from './LatentDim.module.css';
 import clsx from 'clsx';
+
 import { Card, Select, Tooltip } from 'antd';
 
 import { getMax, debounce } from 'helpers';
@@ -9,8 +10,6 @@ import { STEP_NUM } from 'Const';
 import { scaleLinear, scaleLog, ScaleLogarithmic } from 'd3-scale';
 import { TDistribution, TFilter, TResultRow } from 'types';
 
-import { Correlations } from './AddCorrelation';
-import { ConfigDim } from './ConfigDim';
 import { DimRow } from './DimRow';
 
 const { Option } = Select;
@@ -229,44 +228,30 @@ export default class LatentDim extends React.Component<Props, States> {
                 key={dimName}
                 transform={`translate(0, ${row_idx * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}
               >
-                <text
-                  y={this.barHeight + this.barLabelHeight}
-                  onClick={e => {
-                    e.preventDefault();
-                    this.props.setFilters(dimName, -1);
-                  }}
-                >
-                  {dimUserNames[dimName] || dimName}
-                </text>
+                <foreignObject className={styles.inputTextWrapper} width={60} height={30}>
+                  <input
+                    value={dimUserNames[dimName] || dimName}
+                    className={clsx(styles.inputText)}
+                    unselectable="on"
+                    onChange={e => this.onChangeDimNames(dimName, e.target.value)}
+                  />
+                </foreignObject>
                 {/* dim importance score */}
                 {dimName.includes('dim_') ? (
-                  <g transform={`translate(0, ${this.barHeight + this.barLabelHeight})`}>
+                  <g
+                    transform={`translate(0, ${this.barHeight + 2 * this.barLabelHeight})`}
+                    className={styles.toggleFilter}
+                    // onClick={e => {
+                    //   e.preventDefault();
+                    //   this.props.setFilters(dimName, -1);
+                    // }}
+                  >
                     <rect height={this.barLabelHeight} width={barWidth} stroke="lightgray" fill="transparent"></rect>
                     <rect height={this.barLabelHeight} width={scoreBarWidth} stroke="lightgray" fill="lightgray"></rect>
                     <text y={this.barLabelHeight}>{score.toFixed(3)}</text>
                   </g>
                 ) : (
                   <></>
-                )}
-
-                {/* only show configure for latent dim */}
-                {dimName.includes('dim_') && (
-                  <g
-                    className="configure"
-                    transform={`translate(0, ${this.barHeight + this.barLabelHeight * 2 + this.gap})`}
-                  >
-                    <ConfigDim
-                      matrixData={matrixData}
-                      dimName={dimName}
-                      dimNames={dims}
-                      samples={samples}
-                      dimUserNames={dimUserNames}
-                      dataset={dataset}
-                      baseSampleIndex={baseSampleIndex}
-                      changeDimSamples={this.changeDimSamples}
-                      setDimUserNames={this.props.setDimUserNames}
-                    />
-                  </g>
                 )}
 
                 {/* get each cell of a row */}
@@ -276,18 +261,6 @@ export default class LatentDim extends React.Component<Props, States> {
           })}
 
           {/* <g className="links">{this.getLinks(matrixData, stepWidth)}</g> */}
-          {dataset == 'matrix' ? (
-            <g transform={`translate(0, ${dims.length * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}>
-              <Correlations
-                samples={samples}
-                dimNames={Object.keys(matrixData)}
-                dimUserNames={dimUserNames}
-                width={width}
-              />
-            </g>
-          ) : (
-            <></>
-          )}
         </svg>
       </Card>
     );
