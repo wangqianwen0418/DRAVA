@@ -124,6 +124,7 @@ class VAEModule(pl.LightningModule):
         # min and max value for each latent dim, used to generate simu images
         # to avoid long tail, use the top k value as the max value, least k value as the min value
         K = 5
+        self.concept_array = []
         self.z_range = [ [ [math.inf for _ in range(K) ], [-math.inf for _ in range(K)]  ] for _ in range(self.model.latent_dim) ]
 
     @property
@@ -132,7 +133,7 @@ class VAEModule(pl.LightningModule):
 
     def is_tensor_dataset(self, dataset_name):
         # numpy datasets have different data loaders
-        if 'sunspot' in dataset_name or dataset_name in ['dsprites', 'HFFc6_ATAC_chr7', 'HFFc6_ATAC_chr1-8', 'ENCFF158GBQ']:
+        if 'sunspot' in dataset_name or dataset_name in ['dsprites','dsprites_test', 'HFFc6_ATAC_chr7', 'HFFc6_ATAC_chr1-8', 'ENCFF158GBQ']:
             return True
         else:
             return False
@@ -232,6 +233,10 @@ class VAEModule(pl.LightningModule):
                                             batch_idx = batch_idx)
         recons_loss = self.model.recons_loss(*results)
 
+        # save output for concept adaptor
+        concept_in = self.concept_encoder(real_img)
+        self.concept_array.append([concept_in, mu, labels])
+
         # save latent vectors of samples in this batch
         self.save_results(mu, recons_loss, labels, batch_idx)
         return loss
@@ -239,6 +244,14 @@ class VAEModule(pl.LightningModule):
     def test_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
 
+        # save concept arrays
+        concepts_in = torch.cat([i[0] for i in self.concept_array], 0)
+        concepts_in = concepts_in.cpu().detach().numpy()
+        mu = torch.cat([i[1] for i in self.concept_array], 0)
+        mu = mu.cpu().detach().numpy()
+        labels = torch.cat([i[2] for i in self.concept_array], 0)
+        labels = labels.cpu().detach().numpy()
+        np.savez(f'./data/{self.params["dataset"]}_concepts.npz', x = concepts_in, y=mu, gt=labels)
 
         # save z range
         f = open(os.path.join(self.logger_folder, 'results/', 'z_range.json'), 'w')     
@@ -254,6 +267,27 @@ class VAEModule(pl.LightningModule):
         print('test_loss', avg_loss)
 
         return {'test_loss': avg_loss}
+
+    def concept_encoder(self, input: Tensor) -> List[Tensor]:
+        """
+        Encodes the input by passing through the encoder network
+        and returns the latent codes.
+        :param input: (Tensor) Input tensor to encoder [N x C x H x W]
+        :return: (Tensor) List of latent codes
+        """
+
+        # output of th last conv layer will be used to learn the concept
+
+        # # for the beta_vae_conv model
+        # concept_in = self.model.encoder(input)
+
+        # for the beta_vae_conv2 model
+        if 'dsprites' in self.params['dataset']:
+            concept_in = self.model.encoder[:8](input)
+        else:
+            concept_in = self.model.encoder(input)
+
+        return concept_in
 
     def save_results(self, mu, recons_loss, labels, batch_idx):
         """
@@ -581,9 +615,9 @@ class VAEModule(pl.LightningModule):
                 subprocess.call(['./download_dsprites.sh'])
                 print('Finished')
             data = np.load(root, encoding='bytes')
-            if self.params['dataset'] == 'dsprites':
+            if 'dsprites' in self.params['dataset']:
                 tensor = torch.from_numpy(data['imgs']).unsqueeze(1)
-                labels = None
+                labels = torch.from_numpy(data['latents_classes'])
             else:
                 tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
                 labels = torch.from_numpy(data['labels'])
@@ -676,9 +710,9 @@ class VAEModule(pl.LightningModule):
                 subprocess.call(['./download_dsprites.sh'])
                 print('Finished')
             data = np.load(root, encoding='bytes')
-            if self.params['dataset'] == 'dsprites':
+            if 'dsprites' in self.params['dataset']:
                 tensor = torch.from_numpy(data['imgs']).unsqueeze(1)
-                labels = None
+                labels = torch.from_numpy(data['latents_classes'])
             else:
                 tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
                 labels = torch.from_numpy(data['labels'])
