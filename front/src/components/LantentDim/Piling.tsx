@@ -58,17 +58,23 @@ const Pilling = (props: Props) => {
       actions.stackX(dimX);
     };
 
+    const splitAll = () => {
+      const dimX = (document.getElementById('xSelector') as any).value;
+      const dimY = (document.getElementById('ySelector') as any).value;
+      actions.splitAll([dimX, dimY]);
+    };
+
     document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);
     document.querySelector('#xSelector')?.addEventListener('change', reArrangeX);
     document.getElementById('stackXBtn')?.addEventListener('click', stackX);
-    document.getElementById('splitBtn')?.addEventListener('click', actions.splitAll);
+    document.getElementById('splitBtn')?.addEventListener('click', splitAll);
 
     return () => {
       piling.destory();
       document.querySelector('#ySelector')?.removeEventListener('change', reArrangeY);
       document.querySelector('#xSelector')?.removeEventListener('change', reArrangeX);
       document.getElementById('stackXBtn')?.removeEventListener('click', stackX);
-      document.getElementById('splitBtn')?.removeEventListener('click', actions.splitAll);
+      document.getElementById('splitBtn')?.removeEventListener('click', splitAll);
     };
   }, []);
 

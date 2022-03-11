@@ -67,7 +67,7 @@ export default async function create(element, pilingOptions) {
       //   return +isNotLast * (Math.random() * 12 - 6);
       // },
       pileItemOffset: (item, i, pile) => {
-        return [0, +i * -3];
+        return [0, +i * 3];
       },
       pileSizeBadge: pile => pile.items.length > 1
     };
@@ -102,16 +102,16 @@ export default async function create(element, pilingOptions) {
       }
     },
     stackX: dim => {
-      piling.set('pileItemOffset', (item, i, pile) => {
-        return [0, +i * 3];
-      });
       piling.arrangeBy('data', [item => item['assignments'][dim] || 0, 0]);
       piling.groupBy('category', item => item['assignments'][dim] || 0);
     },
     gridGroup: dims => {
       // TODO
     },
-    splitAll: () => piling.splitAll()
+    splitAll: dims => {
+      piling.arrangeBy('data', dims);
+      piling.splitAll();
+    }
   };
 
   return [piling, actions];
