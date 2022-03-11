@@ -231,8 +231,15 @@ export default class App extends React.Component<{}, State> {
       contentPadding = 10,
       gutter = 16,
       appHeight = (windowInnerSize ? windowInnerSize.height : window.innerHeight) - headerHeight - 2 * contentPadding,
-      colWidth =
-        ((windowInnerSize ? windowInnerSize.width : window.innerWidth) - siderWidth - contentPadding * 2) * 0.5 -
+      leftCol = 9,
+      rightCol = 15,
+      lefColWidth =
+        ((windowInnerSize ? windowInnerSize.width : window.innerWidth) - siderWidth - contentPadding * 2) *
+          (leftCol / 24) -
+        gutter,
+      rightColWidth =
+        ((windowInnerSize ? windowInnerSize.width : window.innerWidth) - siderWidth - contentPadding * 2) *
+          (rightCol / 24) -
         gutter;
 
     const sider = (
@@ -273,38 +280,37 @@ export default class App extends React.Component<{}, State> {
           {sider}
           <Content style={{ padding: contentPadding, backgroundColor: 'white' }}>
             <Row gutter={gutter}>
-              <Col span={12}>
+              <Col span={leftCol}>
                 <LatentDim
                   dataset={dataset}
                   samples={samples}
                   filters={filters}
                   matrixData={this.matrixData}
-                  height={appHeight}
-                  width={colWidth}
+                  height={appHeight * (non_genomic_dataset.includes(dataset) ? 1 : 0.6)}
+                  width={lefColWidth}
                   isDataLoading={isDataLoading}
                   dimUserNames={dimUserNames}
                   setDimUserNames={this.setDimUserNames}
                   updateDims={this.updateDims}
                   setFilters={this.setFilters}
                 />
-              </Col>
-              <Col span={12}>
                 {non_genomic_dataset.includes(dataset) ? (
                   <></>
                 ) : (
                   <GoslingVis
                     dataset={dataset}
                     samples={this.filteredSamples}
-                    width={colWidth}
-                    height={appHeight * 0.5}
+                    width={rightColWidth}
+                    height={appHeight * 0.4}
                     isDataLoading={isDataLoading}
                   />
                 )}
-
+              </Col>
+              <Col span={rightCol}>
                 <SampleBrowser
                   dataset={dataset}
                   samples={this.filteredSamples}
-                  height={appHeight * (non_genomic_dataset.includes(dataset) ? 1 : 0.5)}
+                  height={appHeight}
                   isDataLoading={isDataLoading}
                   matrixData={this.matrixData}
                   dimUserNames={dimUserNames}
