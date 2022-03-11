@@ -68,6 +68,7 @@ const Pilling = (props: Props) => {
     document.querySelector('#xSelector')?.addEventListener('change', reArrangeX);
     document.getElementById('stackXBtn')?.addEventListener('click', stackX);
     document.getElementById('splitBtn')?.addEventListener('click', splitAll);
+    document.getElementById('umapBtn')?.addEventListener('click', actions.UMAP);
 
     return () => {
       piling.destory();
@@ -75,6 +76,7 @@ const Pilling = (props: Props) => {
       document.querySelector('#xSelector')?.removeEventListener('change', reArrangeX);
       document.getElementById('stackXBtn')?.removeEventListener('click', stackX);
       document.getElementById('splitBtn')?.removeEventListener('click', splitAll);
+      document.getElementById('umapBtn')?.removeEventListener('click', actions.UMAP);
     };
   }, []);
 
@@ -101,6 +103,9 @@ const Pilling = (props: Props) => {
       </Button>
       <Button type="default" id="splitBtn" size="small">
         Split-All
+      </Button>
+      <Button type="default" id="umapBtn" size="small">
+        UMAP
       </Button>
       <div className={styles.piling_wrapper} ref={pilingInitHandler} />
     </div>

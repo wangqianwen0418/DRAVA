@@ -1,4 +1,4 @@
-import createPilingJs from 'piling.js';
+import createPilingJs, { createUmap } from 'piling.js';
 
 /**
  * Promised-based image loading
@@ -32,10 +32,13 @@ export default async function create(element, pilingOptions) {
   const imageSize = 64;
   const { items, pileDragEnd, dims, getSvgGroup, dataset } = pilingOptions;
 
+  const umap = createUmap();
+
   var spec;
 
   if (dataset == 'sequence') {
     spec = {
+      dimensionalityReducer: umap,
       renderer: createImageRenderer({ imageSize }),
       items: items,
       itemSize: imageSize,
@@ -45,6 +48,7 @@ export default async function create(element, pilingOptions) {
     };
   } else if (dataset == 'dsprites') {
     spec = {
+      dimensionalityReducer: umap,
       renderer: createImageRenderer({ imageSize }),
       items: items,
       itemSize: imageSize,
@@ -54,6 +58,7 @@ export default async function create(element, pilingOptions) {
     };
   } else {
     spec = {
+      dimensionalityReducer: umap,
       renderer: createImageRenderer({ imageSize }),
       items: items,
       itemSize: imageSize,
@@ -90,6 +95,7 @@ export default async function create(element, pilingOptions) {
     svgGroup.selectAll('text').attr('transform', `scale(${1 / camera.scaling} 1)`);
   });
 
+  // a set of functions to be called
   const actions = {
     reArrange: dims => {
       const [dimX, dimY] = dims;
@@ -111,6 +117,17 @@ export default async function create(element, pilingOptions) {
     splitAll: dims => {
       piling.arrangeBy('data', dims);
       piling.splitAll();
+    },
+    UMAP: () => {
+      // piling.arrangeBy(
+      //   'data',
+      //   {
+      //     property: item => item.z,
+      //     propertyIsVector: true
+      //   },
+      //   { forceDimReduction: true }
+      // );
+      piling.arrangeBy('uv', 'z');
     }
   };
 
