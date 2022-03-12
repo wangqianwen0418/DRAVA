@@ -13,7 +13,7 @@ import pytorch_lightning as pl
 from torchvision import transforms
 import torchvision.utils as vutils
 from torchvision.datasets import CelebA
-from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
+from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler, Subset
 from torch.optim import SGD, Adam, Adagrad
 import torch.nn.functional as F
 
@@ -226,6 +226,8 @@ class VAEModule(pl.LightningModule):
 
         results = self.forward(real_img, labels = labels)
         mu = results[2]
+        log_var = results[3]
+        std = torch.exp(0.5 * log_var)
 
         loss = self.model.loss_function(*results,
                                             M_N = self.params['batch_size']/ self.num_val_imgs,
@@ -235,7 +237,7 @@ class VAEModule(pl.LightningModule):
 
         # save output for concept adaptor
         concept_in = self.concept_encoder(real_img)
-        self.concept_array.append([concept_in, mu, labels])
+        self.concept_array.append([concept_in, mu, std, labels])
 
         # save latent vectors of samples in this batch
         self.save_results(mu, recons_loss, labels, batch_idx)
@@ -249,9 +251,11 @@ class VAEModule(pl.LightningModule):
         concepts_in = concepts_in.cpu().detach().numpy()
         mu = torch.cat([i[1] for i in self.concept_array], 0)
         mu = mu.cpu().detach().numpy()
-        labels = torch.cat([i[2] for i in self.concept_array], 0)
+        std = torch.cat([i[2] for i in self.concept_array], 0)
+        std = std.cpu().detach().numpy()
+        labels = torch.cat([i[3] for i in self.concept_array], 0)
         labels = labels.cpu().detach().numpy()
-        np.savez(f'./data/{self.params["dataset"]}_concepts.npz', x = concepts_in, y=mu, gt=labels)
+        np.savez(f'./data/{self.params["dataset"]}_concepts.npz', x = concepts_in, y=mu, std=std, gt=labels)
 
         # save z range
         f = open(os.path.join(self.logger_folder, 'results/', 'z_range.json'), 'w')     
@@ -668,10 +672,12 @@ class VAEModule(pl.LightningModule):
         print('loading test data')
         if self.params['dataset'] == 'celeba':
             transform = self.test_data_transforms()
-            self.test_sample_dataloader =  DataLoader(CelebA(root = self.params['data_path'],
+            dataset = CelebA(root = self.params['data_path'],
                                                         split = "train",
                                                         transform=transform,
-                                                        download=False),
+                                                        download=False)
+            dataset = Subset(dataset, list(range(1400)))
+            self.test_sample_dataloader =  DataLoader(dataset,
                                                  batch_size= 144,
                                                  shuffle = False,
                                                  drop_last=False)

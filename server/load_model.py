@@ -69,6 +69,7 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
     checkpoint = torch.load( ckp_file, map_location=device )
+    config['trainer_params']['gpus'] = 0
 
 
 new_state_dict = {}
