@@ -20,7 +20,7 @@ import torch.nn.functional as F
 
 from PIL import Image
 
-from models import BaseVAE
+
 from models.types_ import *
 from utils import data_loader
 
@@ -50,7 +50,8 @@ class ConceptAdaptor(pl.LightningModule):
                      "dataset": "",
                      "data_path": "./data",
                      'batch_size': 64,
-                     'LR': 0.002
+                     'LR': 0.002,
+                     'dim': 0
                  }) -> None:
 
         '''
@@ -62,6 +63,7 @@ class ConceptAdaptor(pl.LightningModule):
         self.cat_num = cat_num
         kernel_size = 4
         stride = 2
+        self.params = params
 
         if cat_num == 1:
             self.concept_adaptor = nn.Sequential(
@@ -76,7 +78,7 @@ class ConceptAdaptor(pl.LightningModule):
             self.concept_adaptor = nn.Sequential(
                 nn.Conv2d(c, cat_num, 4, 2),
                 nn.BatchNorm2d(cat_num),
-                nn.MaxPool2d( (h-kernel_size)/stride + 1, (w-kernel_size)/stride + 1),
+                nn.MaxPool2d( (math.floor((h-kernel_size)/stride + 1), math.floor((w-kernel_size)/stride + 1))),
                 nn.Flatten()
             )
 
@@ -109,7 +111,7 @@ class ConceptAdaptor(pl.LightningModule):
             dist = torch.distributions.Normal(m, std)
             return -dist.log_prob(labels).sum()
         else:
-            return F.nll_loss(F.log_softmax(results), labels)
+            return F.nll_loss(F.log_softmax(results, dim=1), labels)
 
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
@@ -123,20 +125,19 @@ class ConceptAdaptor(pl.LightningModule):
                                               optimizer_idx=optimizer_idx,
                                               batch_idx = batch_idx)
 
-        self.logger.experiment.log({key: val.item() for key, val in train_loss.items()})
 
         return train_loss
 
     def training_end(self, outputs):
         
-        return {'loss': outputs['loss']}
+        return {'loss': outputs}
 
     def validation_step(self, batch, batch_idx, optimizer_idx = 0):
         real_img, labels = batch
 
 
         self.curr_device = real_img.device
-        results = self.forward(real_img, labels = labels)
+        results = self.forward(real_img)
         val_loss = self.loss_function(results, labels,
                                             M_N = self.params['batch_size']/ self.num_val_imgs,
                                             optimizer_idx = optimizer_idx,
@@ -146,7 +147,7 @@ class ConceptAdaptor(pl.LightningModule):
 
     def validation_end(self, outputs):
         
-        avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
+        avg_loss = torch.stack(outputs).mean()
         tensorboard_logs = {'avg_val_loss': avg_loss}
        
 
@@ -162,7 +163,7 @@ class ConceptAdaptor(pl.LightningModule):
         
         self.curr_device = real_img.device
 
-        results = self.forward(real_img, labels = labels)
+        results = self.forward(real_img)
 
         loss = self.loss_function(results, labels,
                                             M_N = self.params['batch_size']/ self.num_val_imgs,
@@ -171,7 +172,7 @@ class ConceptAdaptor(pl.LightningModule):
         return loss
 
     def test_end(self, outputs):
-        avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
+        avg_loss = torch.stack(outputs).mean()
         print('test_loss', avg_loss)
 
         return {'test_loss': avg_loss}
@@ -193,7 +194,10 @@ class ConceptAdaptor(pl.LightningModule):
         data = np.load(root, encoding='bytes')
 
         tensor = torch.from_numpy(data['x'])
-        labels = torch.from_numpy(data['y'])
+        # labels = torch.from_numpy(data['gt'][:, self.params['dim']])
+        mapper = np.vectorize(self.params['y_mapper'])
+        labels = data['y'][:, self.params['dim']]
+        labels = torch.from_numpy(mapper( labels ))
         # TODO: hard code a categorical transfer function
 
 
@@ -218,7 +222,10 @@ class ConceptAdaptor(pl.LightningModule):
         data = np.load(root, encoding='bytes')
 
         tensor = torch.from_numpy(data['x'])
-        labels = torch.from_numpy(data['gt'])
+
+        mapper = np.vectorize(self.params['gt_mapper'])
+        labels = data['gt'][:, self.params['dim']]
+        labels = torch.from_numpy( mapper(labels))
 
 
         val_kwargs = {'data_tensor':tensor, 'labels': labels}
@@ -240,8 +247,9 @@ class ConceptAdaptor(pl.LightningModule):
         data = np.load(root, encoding='bytes')
 
         tensor = torch.from_numpy(data['x'])
-        labels = torch.from_numpy(data['gt'])
-
+        mapper = np.vectorize(self.params['gt_mapper'])
+        labels = data['gt'][:, self.params['dim']]
+        labels = torch.from_numpy( mapper(labels))
 
         test_kwargs = {'data_tensor':tensor, 'labels': labels}
         dset = CustomTensorDataset
