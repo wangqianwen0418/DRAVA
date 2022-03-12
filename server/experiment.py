@@ -653,7 +653,7 @@ class VAEModule(pl.LightningModule):
                                                         split = "test",
                                                         transform=transform,
                                                         download=False),
-                                                 batch_size= 144,
+                                                 batch_size= self.params['batch_size'],
                                                  shuffle = True,
                                                  drop_last=True)
             self.num_val_imgs = len(self.sample_dataloader)
@@ -676,11 +676,11 @@ class VAEModule(pl.LightningModule):
                                                         split = "train",
                                                         transform=transform,
                                                         download=False)
-            dataset = Subset(dataset, list(range(1400)))
+            dataset = Subset(dataset, list(range(2400)))
             self.test_sample_dataloader =  DataLoader(dataset,
-                                                 batch_size= 144,
+                                                 batch_size= self.params['batch_size'],
                                                  shuffle = False,
-                                                 drop_last=False)
+                                                 drop_last=True)
             self.num_test_imgs = len(self.test_sample_dataloader)
             return self.test_sample_dataloader
 
