@@ -24,3 +24,5 @@ __pycache__/
 
 Run.ipynb
 static/
+saved_models
+lightning_logs/

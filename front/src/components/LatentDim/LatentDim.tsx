@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import styles from './LatentDim.module.css';
 import clsx from 'clsx';
+
 import { Card, Select, Tooltip } from 'antd';
 
 import { getMax, debounce } from 'helpers';
@@ -9,8 +10,6 @@ import { STEP_NUM } from 'Const';
 import { scaleLinear, scaleLog, ScaleLogarithmic } from 'd3-scale';
 import { TDistribution, TFilter, TResultRow } from 'types';
 
-import { Correlations } from './AddCorrelation';
-import { ConfigDim } from './ConfigDim';
 import { DimRow } from './DimRow';
 
 const { Option } = Select;
@@ -30,6 +29,7 @@ interface Props {
 }
 interface States {
   dimSampleIndex: { [dimName: string]: number | undefined }; // the index of samples used to generate simu images for each latent dimension
+  dimScores: { [dimName: string]: number };
 }
 
 export default class LatentDim extends React.Component<Props, States> {
@@ -41,10 +41,12 @@ export default class LatentDim extends React.Component<Props, States> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      dimSampleIndex: {}
+      dimSampleIndex: {},
+      dimScores: {}
     };
     this.isSelected = this.isSelected.bind(this);
     this.changeDimSamples = this.changeDimSamples.bind(this);
+    this.changeDimScores = this.changeDimScores.bind(this);
   }
 
   /**
@@ -131,10 +133,29 @@ export default class LatentDim extends React.Component<Props, States> {
     this.setState({ dimSampleIndex });
   }
 
+  /**
+   * @update_state
+   */
+  changeDimScores(dimName: string, score: number) {
+    const { dimScores } = this.state;
+    dimScores[dimName] = score;
+    this.setState({ dimScores });
+  }
+
+  // clean dim scores after changing dataset
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.dataset != this.props.dataset) {
+      this.setState({ dimScores: {} });
+    }
+  }
+
   render() {
     const { filters, height, width, matrixData, isDataLoading, dimUserNames, samples, dataset } = this.props;
+    const { dimScores } = this.state;
 
     const dims = Object.keys(filters);
+    // sort dims based on dim score
+    dims.sort((a, b) => -dimScores[a] + dimScores[b]);
 
     const rootStyle = getComputedStyle(document.documentElement);
     const cardPadding = parseInt(rootStyle.getPropertyValue('--card-body-padding')),
@@ -168,10 +189,11 @@ export default class LatentDim extends React.Component<Props, States> {
     );
 
     const stepWidth = (width - 2 * cardPadding - this.spanWidth) / STEP_NUM - this.gap;
+    const maxScore = Math.max(...Object.values(this.state.dimScores)) || 0.0000001;
 
     return (
       <Card
-        title="Pattern Space"
+        title="Concept Space"
         size="small"
         extra={axisController}
         bodyStyle={{ height: height - cardHeadHeight, width: width, overflowY: 'scroll' }}
@@ -195,41 +217,41 @@ export default class LatentDim extends React.Component<Props, States> {
                 latentZ={baseSampleIndex != undefined ? samples[baseSampleIndex].z : undefined}
                 isSelected={this.isSelected}
                 setFilters={this.props.setFilters}
+                changeDimScores={this.changeDimScores}
               />
             );
+            const score = this.state.dimScores[dimName] || 0;
+            const barWidth = this.spanWidth - 10;
+            const scoreBarWidth = (score / maxScore) * barWidth;
             return (
               <g
                 key={dimName}
                 transform={`translate(0, ${row_idx * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}
               >
-                <text
-                  y={this.barHeight + this.barLabelHeight}
-                  onClick={e => {
-                    e.preventDefault();
-                    this.props.setFilters(dimName, -1);
-                  }}
-                >
-                  {dimUserNames[dimName] || dimName}
-                </text>
-
-                {/* only show configure for latent dim */}
-                {dimName.includes('dim_') && (
+                <foreignObject className={styles.inputTextWrapper} width={60} height={30}>
+                  <input
+                    value={dimUserNames[dimName] || dimName}
+                    className={clsx(styles.inputText)}
+                    unselectable="on"
+                    onChange={e => this.onChangeDimNames(dimName, e.target.value)}
+                  />
+                </foreignObject>
+                {/* dim importance score */}
+                {dimName.includes('dim_') ? (
                   <g
-                    className="configure"
-                    transform={`translate(0, ${this.barHeight + this.barLabelHeight + this.gap})`}
+                    transform={`translate(0, ${this.barHeight + 2 * this.barLabelHeight})`}
+                    className={styles.toggleFilter}
+                    // onClick={e => {
+                    //   e.preventDefault();
+                    //   this.props.setFilters(dimName, -1);
+                    // }}
                   >
-                    <ConfigDim
-                      matrixData={matrixData}
-                      dimName={dimName}
-                      dimNames={Object.keys(matrixData)}
-                      samples={samples}
-                      dimUserNames={dimUserNames}
-                      dataset={dataset}
-                      baseSampleIndex={baseSampleIndex}
-                      changeDimSamples={this.changeDimSamples}
-                      setDimUserNames={this.props.setDimUserNames}
-                    />
+                    <rect height={this.barLabelHeight} width={barWidth} stroke="lightgray" fill="transparent"></rect>
+                    <rect height={this.barLabelHeight} width={scoreBarWidth} stroke="lightgray" fill="lightgray"></rect>
+                    <text y={this.barLabelHeight}>{score.toFixed(3)}</text>
                   </g>
+                ) : (
+                  <></>
                 )}
 
                 {/* get each cell of a row */}
@@ -239,18 +261,6 @@ export default class LatentDim extends React.Component<Props, States> {
           })}
 
           {/* <g className="links">{this.getLinks(matrixData, stepWidth)}</g> */}
-          {dataset == 'matrix' ? (
-            <g transform={`translate(0, ${dims.length * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}>
-              <Correlations
-                samples={samples}
-                dimNames={Object.keys(matrixData)}
-                dimUserNames={dimUserNames}
-                width={width}
-              />
-            </g>
-          ) : (
-            <></>
-          )}
         </svg>
       </Card>
     );

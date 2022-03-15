@@ -3,6 +3,8 @@ from models import BaseVAE
 from torch import nn
 from torch.nn import functional as F
 from .types_ import *
+from torch.autograd import Variable
+import torch.nn.init as init
 
 import math
 import numpy as np
@@ -17,8 +19,25 @@ class PrintLayer(nn.Module):
         print(x.shape)
         return x
 
+class View(nn.Module):
+    def __init__(self, size):
+        super(View, self).__init__()
+        self.size = size
 
-class BetaVAE_CONV(BaseVAE):
+    def forward(self, tensor):
+        return tensor.view(self.size)
+
+def kaiming_init(m):
+    if isinstance(m, (nn.Linear, nn.Conv2d)):
+        init.kaiming_normal_(m.weight)
+        if m.bias is not None:
+            m.bias.data.fill_(0)
+    elif isinstance(m, (nn.BatchNorm1d, nn.BatchNorm2d)):
+        m.weight.data.fill_(1)
+        if m.bias is not None:
+            m.bias.data.fill_(0)
+
+class BetaVAE_CONV2(BaseVAE):
 
     num_iter = 0 # Global static variable to keep track of iterations
 
@@ -33,101 +52,64 @@ class BetaVAE_CONV(BaseVAE):
                  max_capacity: int = 25, # works similar to the beta in original beta vae
                  Capacity_max_iter: int = 1e5,
                  **kwargs) -> None:
-        super(BetaVAE_CONV, self).__init__()
+        super(BetaVAE_CONV2, self).__init__()
 
         self.latent_dim = latent_dim
         self.beta = beta
         self.gamma = gamma
         self.loss_type = loss_type
         
-        conv_sizes =  kwargs.get('conv_sizes', [ 3 for i in hidden_dims])
+       
         self.recons_multi = kwargs.get('recons_multi', 1)
-        is_masked = kwargs.get('is_masked', False)
-        mask_ratio = kwargs.get('mask_ratio', 0.5)
         self.distribution = kwargs.get('distribution', 'gaussian')
         
         self.C_max = torch.Tensor([max_capacity])
         self.C_stop_iter = Capacity_max_iter
-        out_channels = in_channels
 
-        modules = []
-
-        # for matrix images, we use a mask otherwise the diagonal is emphasized too much
-        self.mask = np.ones( (img_size, img_size) )
-
-        if is_masked:
-            for i in range(img_size):
-                for j in range(img_size):
-                    self.mask[i,j] = mask_ratio * abs(i-j)/63 + (1-mask_ratio)
-        self.mask = torch.from_numpy(self.mask).float()
-        if torch.cuda.is_available():
-            device = torch.cuda.current_device()
-        else:
-            device = torch.device("cpu")
-        self.mask = self.mask.to(device)
 
 
         # Build Encoder
-        w_dim = img_size
-        padding = 1
-        stride = 2
-        dilation = 1 
-        for i, h_dim in enumerate(hidden_dims):
-            kernel_size = conv_sizes[i]
-            modules.append(
-                nn.Sequential(
-                    nn.Conv2d(in_channels, h_dim,
-                              kernel_size, stride, padding, dilation = dilation),
-                    nn.BatchNorm2d(h_dim),
-                    # PrintLayer(),
-                    nn.LeakyReLU())
-            )
-            in_channels = h_dim
-            # calculated as https://pytorch.org/docs/master/generated/torch.nn.Conv2d.html#torch.nn.Conv2d
-            w_dim = math.floor((w_dim + 2 * padding - dilation * (kernel_size - 1) - 1)/stride + 1)
-        
-        self.encoder_outsize = [h_dim, w_dim, w_dim] # w and h is the same in our case
-        flat_outsize = h_dim * w_dim * w_dim
-
-        self.encoder = nn.Sequential(*modules)
-        self.fc_mu = nn.Linear( flat_outsize, self.latent_dim )
-        self.fc_var = nn.Linear( flat_outsize, self.latent_dim )
+        self.encoder = nn.Sequential(
+            nn.Conv2d(in_channels, 32, 4, 2, 1),          # B,  32, 32, 32
+            nn.ReLU(True),
+            nn.Conv2d(32, 32, 4, 2, 1),          # B,  32, 16, 16
+            nn.ReLU(True),
+            nn.Conv2d(32, 32, 4, 2, 1),          # B,  32,  8,  8
+            nn.ReLU(True),
+            nn.Conv2d(32, 32, 4, 2, 1),          # B,  32,  4,  4
+            nn.ReLU(True),
+            View((-1, 32*4*4)),                  # B, 512
+            nn.Linear(32*4*4, 256),              # B, 256
+            nn.ReLU(True),
+            nn.Linear(256, 256),                 # B, 256
+            nn.ReLU(True),
+            nn.Linear(256, self.latent_dim*2),             # B, z_dim*2
+        )
 
 
         # Build Decoder
-        modules = []
+        self.decoder = nn.Sequential(
+            nn.Linear(self.latent_dim, 256),               # B, 256
+            nn.ReLU(True),
+            nn.Linear(256, 256),                 # B, 256
+            nn.ReLU(True),
+            nn.Linear(256, 32*4*4),              # B, 512
+            nn.ReLU(True),
+            View((-1, 32, 4, 4)),                # B,  32,  4,  4
+            nn.ConvTranspose2d(32, 32, 4, 2, 1), # B,  32,  8,  8
+            nn.ReLU(True),
+            nn.ConvTranspose2d(32, 32, 4, 2, 1), # B,  32, 16, 16
+            nn.ReLU(True),
+            nn.ConvTranspose2d(32, 32, 4, 2, 1), # B,  32, 32, 32
+            nn.ReLU(True),
+            nn.ConvTranspose2d(32, in_channels, 4, 2, 1), # B,  nc, 64, 64
+        )
+        self.weight_init()
 
-        hidden_dims.reverse()
-        conv_sizes.reverse()
-
-        for i in range(len(hidden_dims) - 1):
-            kernel_size= conv_sizes[i]
-            modules.append(
-                nn.Sequential(
-                    nn.ConvTranspose2d(hidden_dims[i],
-                                       hidden_dims[i + 1],
-                                       kernel_size,
-                                       stride = stride,
-                                       output_padding=1,
-                                       padding=padding),
-                    nn.BatchNorm2d(hidden_dims[i + 1]),
-                    # PrintLayer(),
-                    nn.LeakyReLU())
-            )
-
-
-        self.decoder_input = nn.Linear(latent_dim, flat_outsize) 
-        self.decoder = nn.Sequential(*modules)
-
-        self.final_layer = nn.Sequential(
-                            nn.ConvTranspose2d(hidden_dims[-1],
-                                               out_channels,
-                                               kernel_size=conv_sizes[-1],
-                                               stride=stride,
-                                               output_padding=1,
-                                               padding= padding),
-                            nn.BatchNorm2d(out_channels),
-                            nn.ReLU())
+    def weight_init(self):
+        for block in self._modules:
+            for m in self._modules[block]:
+                kaiming_init(m)
 
     def encode(self, input: Tensor) -> List[Tensor]:
         """
@@ -136,26 +118,19 @@ class BetaVAE_CONV(BaseVAE):
         :param input: (Tensor) Input tensor to encoder [N x C x H x W]
         :return: (Tensor) List of latent codes
         """
-        encoder_out = self.encoder(input)
-
-        flat_out = torch.flatten(encoder_out, start_dim=1)
+        distributions = self.encoder(input)
 
         # Split the result into mu and var components
         # of the latent Gaussian distribution
         
-        mu = self.fc_mu(flat_out)
-        log_var = self.fc_var(flat_out)
+        mu = distributions[:, :self.latent_dim]
+        log_var = distributions[:, self.latent_dim:]
 
         return [mu, log_var]
 
     def decode(self, z: Tensor) -> Tensor:
 
-        result = self.decoder_input(z)
-        result = result.view(-1, *self.encoder_outsize) 
-        result = self.decoder(result)
-        result = self.final_layer(result)
-        
-        return result
+        return self.decoder(z)
 
     def reparameterize(self, mu: Tensor, logvar: Tensor) -> Tensor:
         """
@@ -165,14 +140,27 @@ class BetaVAE_CONV(BaseVAE):
         :param logvar: (Tensor) Standard deviation of the latent Gaussian
         :return:
         """
-        std = torch.exp(0.5 * logvar)
-        eps = torch.randn_like(std)
-        return eps * std + mu
+        std = logvar.div(2).exp()
+        eps = Variable(std.data.new(std.size()).normal_())
+        return mu + std*eps
 
     def forward(self, input: Tensor, **kwargs) -> Tensor:
         mu, log_var = self.encode(input)
         z = self.reparameterize(mu, log_var)
         return  [self.decode(z), input, mu, log_var]
+
+    def kl_divergence(self, mu, logvar):
+        batch_size = mu.size(0)
+        assert batch_size != 0
+        if mu.data.ndimension() == 4:
+            mu = mu.view(mu.size(0), -1)
+        if logvar.data.ndimension() == 4:
+            logvar = logvar.view(logvar.size(0), -1)
+
+        klds = -0.5*(1 + logvar - mu.pow(2) - logvar.exp())
+        total_kld = klds.sum(1).mean(0) 
+
+        return total_kld
 
     def loss_function(self,
                       *args,
@@ -184,15 +172,20 @@ class BetaVAE_CONV(BaseVAE):
         log_var = args[3]
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
+        batch_size = input.size(0)
+        assert batch_size != 0
+
         if self.distribution == 'bernoulli':
-            recons_loss = F.binary_cross_entropy_with_logits(recons, input)
+            recons_loss = F.binary_cross_entropy_with_logits(recons, input, reduction='sum').div(batch_size) * self.recons_multi 
         elif self.distribution == 'gaussian':
-            recons_loss =F.mse_loss(recons * self.mask, input * self.mask) * self.recons_multi
+            recons_loss =F.mse_loss(recons, input, reduction='sum').div(batch_size) * self.recons_multi 
         else:
             raise ValueError(f'distribution {self.distribution} not implemented')
 
-        kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
-
+        # kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
+        
+        kld_loss = self.kl_divergence(mu, log_var)
+        
         if self.loss_type == 'H': # https://openreview.net/forum?id=Sy2fzU9gl
 
             weighted_kld_loss = self.beta * kld_weight * kld_loss
@@ -205,6 +198,9 @@ class BetaVAE_CONV(BaseVAE):
             loss = recons_loss + weighted_kld_loss
         else:
             raise ValueError('Undefined loss type.')
+
+        # print( 'loss shape', kld_loss.shape, recons_loss.shape, loss.shape)
+
 
         return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss, 'weighted_KLD': weighted_kld_loss}
 

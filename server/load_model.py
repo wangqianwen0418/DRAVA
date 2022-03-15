@@ -52,7 +52,7 @@ model = vae_models[config['model_params']['name']](**config['model_params'])
 
 # load state dict from check point
 if args.ckp:
-    checkpoint = torch.load( args.ckp )
+    ckp_file = args.ckp
 
 else:
     logger_path = f"{tt_logger.save_dir}/{tt_logger.name}/version_{args.version_num}"
@@ -61,13 +61,15 @@ else:
     assert os.path.exists(ckp_dir), 'the checkpoint folder does not exist'
     assert ckp_file_num>0, 'the checkpoint file does not exist'
     ckp_name = [f for f in os.listdir(ckp_dir)][ckp_file_num-1] # use the lastest checkpoint if there is more than one
+    ckp_file = os.path.join(ckp_dir, ckp_name)
 
-    if torch.cuda.is_available():
-        device = torch.cuda.current_device()
-        checkpoint = torch.load( os.path.join(ckp_dir, ckp_name) )
-    else:
-        device = torch.device("cpu")
-        checkpoint = torch.load( os.path.join(ckp_dir, ckp_name), map_location=device )
+if torch.cuda.is_available():
+    device = torch.cuda.current_device()
+    checkpoint = torch.load( ckp_file )
+else:
+    device = torch.device("cpu")
+    checkpoint = torch.load( ckp_file, map_location=device )
+    config['trainer_params']['gpus'] = 0
 
 
 new_state_dict = {}

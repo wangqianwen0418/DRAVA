@@ -13,8 +13,10 @@ import pytorch_lightning as pl
 from torchvision import transforms
 import torchvision.utils as vutils
 from torchvision.datasets import CelebA
-from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
+from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler, Subset
 from torch.optim import SGD, Adam, Adagrad
+import torch.nn.functional as F
+
 from PIL import Image
 
 from models import BaseVAE
@@ -28,10 +30,10 @@ class CustomTensorDataset(Dataset):
         self.labels = labels
 
     def __getitem__(self, index):
-        if self.labels ==  None:
-            return self.data_tensor[index], 0
-        else:
+            
+        if torch.is_tensor(self.labels):
             return self.data_tensor[index], self.labels[index]
+        return self.data_tensor[index], 0
 
     def __len__(self):
         return self.data_tensor.size(0)
@@ -122,6 +124,7 @@ class VAEModule(pl.LightningModule):
         # min and max value for each latent dim, used to generate simu images
         # to avoid long tail, use the top k value as the max value, least k value as the min value
         K = 5
+        self.concept_array = []
         self.z_range = [ [ [math.inf for _ in range(K) ], [-math.inf for _ in range(K)]  ] for _ in range(self.model.latent_dim) ]
 
     @property
@@ -130,7 +133,7 @@ class VAEModule(pl.LightningModule):
 
     def is_tensor_dataset(self, dataset_name):
         # numpy datasets have different data loaders
-        if 'sunspot' in dataset_name or dataset_name in ['dsprites', 'HFFc6_ATAC_chr7', 'HFFc6_ATAC_chr1-8', 'ENCFF158GBQ']:
+        if 'sunspot' in dataset_name or dataset_name in ['dsprites','dsprites_test', 'HFFc6_ATAC_chr7', 'HFFc6_ATAC_chr1-8', 'ENCFF158GBQ']:
             return True
         else:
             return False
@@ -148,6 +151,13 @@ class VAEModule(pl.LightningModule):
             return True
         else:
             return False
+
+    def is_genomic_dataset(self, dataset_name):
+        # whether to use custom image data loader for hi c data
+        if dataset_name in ['HFFc6_ATAC_chr7', 'HFFc6_ATAC_chr1-8', 'ENCFF158GBQ'] or self.is_hic_dataset(dataset_name):
+            return True
+        else:
+            return False
     
     def forward(self, input: Tensor, **kwargs) -> Tensor:
         return self.model(input, **kwargs)
@@ -155,7 +165,7 @@ class VAEModule(pl.LightningModule):
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
 
-        
+
         real_img, labels = batch
 
         if self.is_tensor_dataset(self.params['dataset']):
@@ -216,12 +226,18 @@ class VAEModule(pl.LightningModule):
 
         results = self.forward(real_img, labels = labels)
         mu = results[2]
+        log_var = results[3]
+        std = torch.exp(0.5 * log_var)
 
         loss = self.model.loss_function(*results,
                                             M_N = self.params['batch_size']/ self.num_val_imgs,
                                             optimizer_idx = optimizer_idx,
                                             batch_idx = batch_idx)
         recons_loss = self.model.recons_loss(*results)
+
+        # save output for concept adaptor
+        concept_in = self.concept_encoder(real_img)
+        self.concept_array.append([concept_in, mu, std, labels])
 
         # save latent vectors of samples in this batch
         self.save_results(mu, recons_loss, labels, batch_idx)
@@ -230,6 +246,16 @@ class VAEModule(pl.LightningModule):
     def test_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
 
+        # save concept arrays
+        concepts_in = torch.cat([i[0] for i in self.concept_array], 0)
+        concepts_in = concepts_in.cpu().detach().numpy()
+        mu = torch.cat([i[1] for i in self.concept_array], 0)
+        mu = mu.cpu().detach().numpy()
+        std = torch.cat([i[2] for i in self.concept_array], 0)
+        std = std.cpu().detach().numpy()
+        labels = torch.cat([i[3] for i in self.concept_array], 0)
+        labels = labels.cpu().detach().numpy()
+        np.savez(f'./data/{self.params["dataset"]}_concepts.npz', x = concepts_in, y=mu, std=std, gt=labels)
 
         # save z range
         f = open(os.path.join(self.logger_folder, 'results/', 'z_range.json'), 'w')     
@@ -246,6 +272,27 @@ class VAEModule(pl.LightningModule):
 
         return {'test_loss': avg_loss}
 
+    def concept_encoder(self, input: Tensor) -> List[Tensor]:
+        """
+        Encodes the input by passing through the encoder network
+        and returns the latent codes.
+        :param input: (Tensor) Input tensor to encoder [N x C x H x W]
+        :return: (Tensor) List of latent codes
+        """
+
+        # output of th last conv layer will be used to learn the concept
+
+        # # for the beta_vae_conv model
+        # concept_in = self.model.encoder(input)
+
+        # for the beta_vae_conv2 model
+        if 'dsprites' in self.params['dataset']:
+            concept_in = self.model.encoder[:8](input)
+        else:
+            concept_in = self.model.encoder(input)
+
+        return concept_in
+
     def save_results(self, mu, recons_loss, labels, batch_idx):
         """
         save results in a csw file, columns are [labels] + [latent_z]
@@ -256,10 +303,11 @@ class VAEModule(pl.LightningModule):
             f = open(os.path.join(filepath, 'results.csv'), 'w')
             result_writer = csv.writer(f)
 
-            if self.params['dataset'] == 'celeba' or self.is_IDC_dataset(self.params['dataset']):
-                header = ['z', 'recons_loss']
-            else: 
+            if self.is_genomic_dataset(self.params['dataset']):
                 header = ['chr', 'start', 'end', 'level', 'mean', 'score'][0: len(labels[0])] + ['z', 'recons_loss']
+            else: 
+                header = ['z', 'recons_loss']
+                
             result_writer.writerow(header)
         else: 
             f = open(os.path.join(filepath, 'results.csv'), 'a')
@@ -267,10 +315,11 @@ class VAEModule(pl.LightningModule):
 
         recons_loss = recons_loss.tolist()
         for i, m in enumerate(mu.tolist()):
-            if self.params['dataset'] == 'celeba' or self.is_IDC_dataset(self.params['dataset']):
-                row = [','.join([str(d) for d in m]), recons_loss[i]]
-            else:
+            
+            if self.is_genomic_dataset(self.params['dataset']):
                 row = labels[i].tolist() + [','.join([str(d) for d in m]), recons_loss[i]]
+            else:
+                row = [','.join([str(d) for d in m]), recons_loss[i]]
 
             result_writer.writerow(row)
 
@@ -324,6 +373,8 @@ class VAEModule(pl.LightningModule):
         filepath = f"{self.logger_folder}/imgs"
         Path(filepath).mkdir(parents=True, exist_ok=True)
 
+        # if self.is_tensor_dataset(self.params['dataset']):
+        #     recons_imgs = F.sigmoid (recons).cpu().data
         if self.is_tensor_dataset(self.params['dataset']):
             recons_imgs = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
         else:
@@ -347,11 +398,24 @@ class VAEModule(pl.LightningModule):
                             normalize=True,
                             nrow=self.bin_num)
 
+    
+    def z2recons_sum(self, z):
+        '''
+        # feed for Shap to calculated z importances
+        '''
+        z = torch.tensor(z).float()
+        recons = self.model.decode(z)
+        
+        return recons.view(recons.size(0), -1).sum(dim = 1)
+        
+
     def get_simu_images(self, dimIndex, baseline = [], z_range = []):
         """
+        Called by Flask Api to generate simu images
         return an image grid,
         each row is a hidden dimension, 
         all images in this row have same values for other dims but differnt values at this dim  
+        @Return: images: numpy.array(), score: number
         """
 
 
@@ -376,20 +440,28 @@ class VAEModule(pl.LightningModule):
         z[mask, dimIndex] = torch.tensor(
             [z_min + j/(self.bin_num-1)* (z_max - z_min) for j in range(self.bin_num)]
         ).float()
+
         recons = self.model.decode(z)
 
         if self.is_tensor_dataset(self.params['dataset']):
-            recons_imgs = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
+            recons = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
         else:
-            recons_imgs = recons.cpu().data
-        
-        
-        # vutils.save_image(recons_imgs,
-        #                     './test_simu.png',
-        #                     normalize=True,
-        #                     nrow=self.bin_num)
+            recons = recons.cpu().data
 
-        return recons_imgs
+        # the same normalization as torch.utils.save_image
+        for t in recons:
+            min = float(t.min())
+            max = float(t.max())
+            t.clamp_(min=min, max=max)
+            t.add_(-min).div_(max - min + 1e-5) # add 1e-5 in case min = max
+
+        
+
+        recons = recons.numpy()
+        avg = recons.mean(axis=0)
+        grad_score = [np.mean(np.abs(res-avg)) for res in recons ]
+
+        return recons, sum(grad_score)/len(grad_score)
     
     def save_paired_samples(self):
         """
@@ -404,6 +476,12 @@ class VAEModule(pl.LightningModule):
         test_input = test_input.to(self.curr_device)
         
         recons = self.model.generate(test_input, labels = test_label)
+        # if self.is_tensor_dataset(self.params['dataset']):
+        #     recons_imgs = F.sigmoid (recons).cpu().data
+        if self.is_tensor_dataset(self.params['dataset']):
+            recons_imgs = (recons.cpu().data>0.5).float() # so that the simulated images have only white and black and no gray
+        else:
+            recons_imgs = recons.cpu().data
         
         filepath = f"{self.logger_folder}/imgs"
         if not(os.path.isdir(filepath)):
@@ -416,7 +494,7 @@ class VAEModule(pl.LightningModule):
                           nrow=12)
         
         # reconstructed images
-        vutils.save_image(recons.data,
+        vutils.save_image(recons_imgs,
                           f"{filepath}/recons_{self.logger.name}_{self.current_epoch}.png",
                           normalize=True,
                           nrow=12)
@@ -541,9 +619,9 @@ class VAEModule(pl.LightningModule):
                 subprocess.call(['./download_dsprites.sh'])
                 print('Finished')
             data = np.load(root, encoding='bytes')
-            if self.params['dataset'] == 'dsprites':
+            if 'dsprites' in self.params['dataset']:
                 tensor = torch.from_numpy(data['imgs']).unsqueeze(1)
-                labels = None
+                labels = torch.from_numpy(data['latents_classes'])
             else:
                 tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
                 labels = torch.from_numpy(data['labels'])
@@ -575,7 +653,7 @@ class VAEModule(pl.LightningModule):
                                                         split = "test",
                                                         transform=transform,
                                                         download=False),
-                                                 batch_size= 144,
+                                                 batch_size= self.params['batch_size'],
                                                  shuffle = True,
                                                  drop_last=True)
             self.num_val_imgs = len(self.sample_dataloader)
@@ -594,13 +672,15 @@ class VAEModule(pl.LightningModule):
         print('loading test data')
         if self.params['dataset'] == 'celeba':
             transform = self.test_data_transforms()
-            self.test_sample_dataloader =  DataLoader(CelebA(root = self.params['data_path'],
+            dataset = CelebA(root = self.params['data_path'],
                                                         split = "train",
                                                         transform=transform,
-                                                        download=False),
-                                                 batch_size= 144,
+                                                        download=False)
+            dataset = Subset(dataset, list(range(2400)))
+            self.test_sample_dataloader =  DataLoader(dataset,
+                                                 batch_size= self.params['batch_size'],
                                                  shuffle = False,
-                                                 drop_last=False)
+                                                 drop_last=True)
             self.num_test_imgs = len(self.test_sample_dataloader)
             return self.test_sample_dataloader
 
@@ -636,9 +716,9 @@ class VAEModule(pl.LightningModule):
                 subprocess.call(['./download_dsprites.sh'])
                 print('Finished')
             data = np.load(root, encoding='bytes')
-            if self.params['dataset'] == 'dsprites':
+            if 'dsprites' in self.params['dataset']:
                 tensor = torch.from_numpy(data['imgs']).unsqueeze(1)
-                labels = None
+                labels = torch.from_numpy(data['latents_classes'])
             else:
                 tensor = torch.from_numpy(data['imgs']).unsqueeze(1) # unsequeeze reshape data from [x, 64, 64] to [x, 1, 64, 64]
                 labels = torch.from_numpy(data['labels'])
@@ -686,27 +766,26 @@ class VAEModule(pl.LightningModule):
         
         else:
             # do not use transforms for tensor datasets for now
+            SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
             transform = transforms.Compose([
-                transforms.ToPILImage(),
-                transforms.RandomHorizontalFlip(0.5),
-                transforms.ToTensor()
+                SetRange
                 ])
         return transform
 
     def test_data_transforms(self):
+        
+        SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
         if self.params['dataset'] == 'celeba':
-            SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
+            
             transform = transforms.Compose([transforms.CenterCrop(148),
                                             transforms.Resize(self.params['img_size']),
                                             transforms.ToTensor(),
                                             SetRange])
         elif self.is_hic_dataset(self.params['dataset']):
-            SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
             transform = transforms.Compose([transforms.Resize(self.params['img_size'], Image.NEAREST),
                                             transforms.ToTensor(),
                                             SetRange])
         elif self.is_IDC_dataset(self.params['dataset']) :
-            SetRange = transforms.Lambda(lambda X: 2 * X - 1.) # [0,1] to [-1, 1]
             transform = transforms.Compose([transforms.Resize((self.params['img_size'], self.params['img_size'])),
                                             transforms.ToTensor(),
                                             SetRange])
@@ -714,8 +793,6 @@ class VAEModule(pl.LightningModule):
             # 
             # do not use transforms for tensor datasets for now
             transform = transforms.Compose([
-                # transforms.ToPILImage(),
-                transforms.RandomHorizontalFlip(0.5),
-                transforms.ToTensor()
+                SetRange
                 ])
         return transform

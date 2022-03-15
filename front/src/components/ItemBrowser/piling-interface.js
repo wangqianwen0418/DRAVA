@@ -1,4 +1,4 @@
-import createPilingJs from 'piling.js';
+import createPilingJs, { createUmap } from 'piling.js';
 
 /**
  * Promised-based image loading
@@ -29,33 +29,47 @@ const createImageRenderer = option => sources =>
   );
 
 export default async function create(element, pilingOptions) {
-  const imageSize = 64;
+  const imageSize = 50;
   const { items, pileDragEnd, dims, getSvgGroup, dataset } = pilingOptions;
 
-  var spec;
+  const umap = createUmap();
+
+  var spec = {
+    dimensionalityReducer: umap,
+    cellSize: imageSize,
+    renderer: createImageRenderer({ imageSize }),
+    items: items,
+    itemSize: imageSize
+  };
 
   if (dataset == 'sequence') {
     spec = {
-      renderer: createImageRenderer({ imageSize }),
-      items: items,
-      itemSize: imageSize,
+      ...spec,
       pileItemOpacity: (item, i, pile) => 1 - i / pile.items.length, //opaciy piles for the sequence dataset
+      pileSizeBadge: pile => pile.items.length > 1,
+      pileItemOffset: [0, 0] //force all items overlaid
+    };
+  } else if (dataset == 'dsprites') {
+    spec = {
+      ...spec,
+      pileItemOpacity: (item, i, pile) => 1 - i / pile.items.length, //opaciy piles for the dsprites dataset
       pileSizeBadge: pile => pile.items.length > 1,
       pileItemOffset: [0, 0] //force all items overlaid
     };
   } else {
     spec = {
-      renderer: createImageRenderer({ imageSize }),
-      items: items,
-      itemSize: imageSize,
-      // items in a pile is randomly rotated and offset
+      ...spec,
+      // // items in a pile is randomly rotated and offset
+      // pileItemOffset: (item, i, pile) => {
+      //   const isNotLast = pile.items.length - 1 !== i;
+      //   return [+isNotLast * (Math.random() * 12 - 6), +isNotLast * (Math.random() * 12 - 6)];
+      // },
+      // pileItemRotation: (item, i, pile) => {
+      //   const isNotLast = pile.items.length - 1 !== i;
+      //   return +isNotLast * (Math.random() * 12 - 6);
+      // },
       pileItemOffset: (item, i, pile) => {
-        const isNotLast = pile.items.length - 1 !== i;
-        return [+isNotLast * (Math.random() * 12 - 6), +isNotLast * (Math.random() * 12 - 6)];
-      },
-      pileItemRotation: (item, i, pile) => {
-        const isNotLast = pile.items.length - 1 !== i;
-        return +isNotLast * (Math.random() * 12 - 6);
+        return [0, +i * 3];
       },
       pileSizeBadge: pile => pile.items.length > 1
     };
@@ -78,10 +92,43 @@ export default async function create(element, pilingOptions) {
     svgGroup.selectAll('text').attr('transform', `scale(${1 / camera.scaling} 1)`);
   });
 
+  // a set of functions to be called
   const actions = {
-    reArrange: dims => piling.arrangeBy('data', dims),
-    group: dim => piling.groupBy('category', item => item['assignments'][dim]),
-    splitAll: () => piling.splitAll()
+    reArrange: dims => {
+      const [dimX, dimY] = dims;
+
+      if (dimY == 'std') {
+        const dimNum = parseInt(dimX.split('_')[1]);
+        piling.arrangeBy('data', [item => item[dimX], item => item['std'][dimNum]]);
+      } else {
+        piling.arrangeBy('data', dims);
+      }
+    },
+    stackX: dim => {
+      piling.arrangeBy('data', [item => item['assignments'][dim] || 0, 0]);
+      piling.groupBy('category', item => item['assignments'][dim] || 0);
+    },
+    gridGroup: dims => {
+      // TODO
+    },
+    splitAll: dims => {
+      piling.arrangeBy('data', [dims[0], 'none']);
+      piling.splitAll();
+    },
+    UMAP: () => {
+      // piling.arrangeBy(
+      //   'data',
+      //   {
+      //     property: item => item.z,
+      //     propertyIsVector: true
+      //   },
+      //   { forceDimReduction: true }
+      // );
+      piling.arrangeBy('uv', 'z');
+    },
+    grid: () => {
+      piling.arrangeBy('data', 'dim_0');
+    }
   };
 
   return [piling, actions];

@@ -17,6 +17,8 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
     return querySequenceResults();
   } else if (dataset == 'IDC') {
     return queryIDCResults();
+  } else if (dataset == 'dsprites') {
+    return queryDspritesResults();
   }
   return [];
 };
@@ -40,7 +42,37 @@ const queryIDCResults = async () => {
     return {
       ...row,
       z: row['z'].split(',').map(d => parseFloat(d)),
+      std: row['std'].split(',').map(d => parseFloat(d)),
       id: row['img_path'],
+      assignments: {},
+      ...dims,
+      index: i
+    };
+  });
+  return samples;
+};
+
+const queryDspritesResults = async () => {
+  const url = '/assets/results_dsprites.csv';
+  const response = await axios({
+    method: 'get',
+    url,
+    responseType: 'text'
+  });
+  const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
+
+  const samples = pcsv.data.map((row, i) => {
+    const zs = row['z'].split(',').map(d => parseFloat(d));
+    const dims = zs.reduce((pre, curr, idx) => {
+      const dimName = `dim_${idx}`;
+      return { ...pre, [dimName]: curr };
+    }, {});
+
+    return {
+      ...row,
+      z: row['z'].split(',').map(d => parseFloat(d)),
+      std: row['std'].split(',').map(d => parseFloat(d)),
+      id: i.toString(),
       assignments: {},
       ...dims,
       index: i
@@ -68,6 +100,7 @@ const queryCelebResults = async () => {
     return {
       ...row,
       z: row['z'].split(',').map(d => parseFloat(d)),
+      std: row['std'].split(',').map(d => parseFloat(d)),
       id: (i + 1).toString(),
       assignments: {},
       ...dims,
@@ -105,6 +138,7 @@ const queryMatrixResults = async () => {
         start: parseInt(row.start as any) * resolution,
         end: parseInt(row.end as any) * resolution,
         z: row['z'].split(',').map(d => parseFloat(d)),
+        std: row['std'].split(',').map(d => parseFloat(d)),
         id: (i + 1).toString(),
         index: i,
         size: parseInt((row.end - row.start) as any) * resolution,
@@ -143,6 +177,7 @@ const querySequenceResults = async () => {
         start: parseInt(row.start as any),
         end: parseInt(row.end as any),
         z: row['z'].split(',').map(d => parseFloat(d)),
+        std: row['std'].split(',').map(d => parseFloat(d)),
         id: i.toString(),
         assignments: {},
         ...dims

@@ -2,7 +2,8 @@ export type TCSVResultRow = {
   chr: number;
   start: number;
   end: number;
-  z: string; // '[x, x, x,]',
+  z: string; // '[m, m, m,]',
+  std: string; // '[std, std, std,]',
   [key: string]: any;
 };
 

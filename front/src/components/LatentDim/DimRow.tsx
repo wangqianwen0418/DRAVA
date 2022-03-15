@@ -18,6 +18,7 @@ type Props = {
   latentZ?: number[];
   isSelected?: (dimName: string, col_idx: number) => boolean;
   setFilters?: (dimName: string, col_idx: number) => void;
+  changeDimScores?: (dimName: string, score: number) => void;
 };
 
 export const DimRow = (props: Props) => {
@@ -37,10 +38,9 @@ const LatentDim = (props: Props) => {
     isSelected,
     setFilters,
     imageSize,
-    latentZ
+    latentZ,
+    changeDimScores
   } = props;
-
-  console.info(dimName);
 
   const imgSize = imageSize || Math.min(stepWidth, barHeight);
   const dimNum = parseInt(dimName.split('_')[1]);
@@ -53,8 +53,9 @@ const LatentDim = (props: Props) => {
 
   const fetchImageBytes = async () => {
     setLoading(true);
-    const imageBytes = await querySimuImages(dataset, dimNum, latentZ);
+    const { image: imageBytes, score } = await querySimuImages(dataset, dimNum, latentZ);
     updateImageBytes(imageBytes);
+    if (changeDimScores) changeDimScores(dimName, score);
     setLoading(false);
   };
 

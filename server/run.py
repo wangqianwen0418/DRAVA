@@ -59,6 +59,13 @@ myModule = VAEModule(model,config['exp_params'])
 #     prefix=''
 # )
 
+
+if torch.cuda.is_available():
+    device = torch.cuda.current_device()
+else:
+    device = torch.device("cpu")  
+    config['trainer_params']["gpus"] = 0     
+
 runner = Trainer(default_save_path=f"{tt_logger.save_dir}",
                     min_nb_epochs=1,
                     logger=tt_logger,
@@ -70,11 +77,7 @@ runner = Trainer(default_save_path=f"{tt_logger.save_dir}",
                     # checkpoint_callback=checkpoint_callback,
                     early_stop_callback = False,
                     **config['trainer_params'])
-
-if torch.cuda.is_available():
-    device = torch.cuda.current_device()
-else:
-    device = torch.device("cpu")                  
+          
 
 
 # copy config file to the logger folder
