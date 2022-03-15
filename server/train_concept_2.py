@@ -3,58 +3,67 @@ from ConceptAdaptor import *
 from pytorch_lightning import Trainer
 from sklearn.metrics import accuracy_score
 import math
- 
-DIM_NAME = 'sclae'
+
+classes = ['5_o_Clock_Shadow',
+ 'Arched_Eyebrows',
+ 'Attractive',
+ 'Bags_Under_Eyes',
+ 'Bald',
+ 'Bangs',
+ 'Big_Lips',
+ 'Big_Nose',
+ 'Black_Hair',
+ 'Blond_Hair',
+ 'Blurry',
+ 'Brown_Hair',
+ 'Bushy_Eyebrows',
+ 'Chubby',
+ 'Double_Chin',
+ 'Eyeglasses',
+ 'Goatee',
+ 'Gray_Hair',
+ 'Heavy_Makeup',
+ 'High_Cheekbones',
+ 'Male',
+ 'Mouth_Slightly_Open',
+ 'Mustache',
+ 'Narrow_Eyes',
+ 'No_Beard',
+ 'Oval_Face',
+ 'Pale_Skin',
+ 'Pointy_Nose',
+ 'Receding_Hairline',
+ 'Rosy_Cheeks',
+ 'Sideburns',
+ 'Smiling',
+ 'Straight_Hair',
+ 'Wavy_Hair',
+ 'Wearing_Earrings',
+ 'Wearing_Hat',
+ 'Wearing_Lipstick',
+ 'Wearing_Necklace',
+ 'Wearing_Necktie',
+ 'Young']
 #%%
-if DIM_NAME == 'scale':
-    ################
-    # scale (3 classes)
-    ################
-    # mappers for dsprites scale
-    def y_mapper(y):
-        if y<-0.9:
-            return 2
-        elif y < 0.4:
-            return 1
+# 
+# mappers for dsprites scale
+def y_mapper(y):
+    if y<0.1:
         return 0
+    return 1
 
 
-    def gt_mapper(y):
-        # if y<=10:
-        #     return 0
-        # elif 10<y<=20:
-        #     return 1
-        # return 2
-        return math.floor(y/2)
+def gt_mapper(y):
+    return y
 
-    dim_gt = 2
-    dim_y = 2
-    # inital acc: 0.62
-
-else:
-################
-# x pos (3 classes)
-################
-    dim_y=7
-    dim_gt=4 #posx
-
-    def y_mapper(y):
-        if y<-0.5:
-            return 0
-        elif y < 0.3:
-            return 1
-        return 2
-
-
-    def gt_mapper(y):
-        return math.floor(y/10)
-    # inital acc: 0.70
-
+# smiling
+dim_y = 19
+dim_gt = 31
 # %%
 # intial accuracy
 def initial_acc():
-    raw = np.load('./data/dsprites_test_concepts.npz')
-    y_true = raw['gt'][:, dim_gt]
+    raw = np.load('./data/celeba_concepts.npz')
+    y_true = raw['gt'][:, dim_gt] 
     y_true_norm = np.vectorize(gt_mapper)(y_true)
 
     y_pred = raw['y'][:, dim_y]
@@ -64,7 +73,7 @@ def initial_acc():
     print('initial', acc)
 
 
-# std = raw['std'][:, dim_y]
+# std = raw['std'][:, dim]
 # sample_index = np.argsort(std)[::-1]
 # n_group = 10
 # for i in range(n_group):
@@ -77,15 +86,15 @@ def initial_acc():
 #%%
 #  model training
 def fine_tune():
-    raw = np.load('./data/dsprites_test_concepts.npz')
+    raw = np.load('./data/celeba_concepts.npz')
     std = raw['std'][:, dim_y]
-    n_feedback = 20
+    n_feedback = 40
     sample_index = np.argsort(std)[::-1][:n_feedback]
-    for i in range(10):
+    for i in range(20):
         sample_index = np.argsort(std)[::-1][:n_feedback*(i+1)]
         
         model_config = {
-                "dataset": "dsprites_test_concepts",
+                "dataset": "celeba_concepts",
                 "data_path": "./data",
                 'batch_size': 64,
                 'LR': 0.005,
@@ -94,15 +103,15 @@ def fine_tune():
                 'y_mapper': y_mapper,
                 'gt_mapper': gt_mapper,
                 'sample_index':sample_index,
-                'mode': 'active'
-                # 'mode': 'concept_tune'
+                # 'mode': 'active'
+                'mode': 'concept_tune'
             }
 
-        model = ConceptAdaptor(cat_num=3, input_size=[32, 4, 4], params=model_config)
+        model = ConceptAdaptor(cat_num=3, input_size=[512, 2, 2], params=model_config)
 
         # 'dsprites latents_names': (b'color', b'shape', b'scale', b'orientation', b'posX', b'posY')
 
-        trainer = Trainer(gpus=0, max_epochs = 20 * (i+1), 
+        trainer = Trainer(gpus=0, max_epochs = 30, 
             early_stop_callback = False, 
             logger=False, # disable logs
             checkpoint_callback=False,
