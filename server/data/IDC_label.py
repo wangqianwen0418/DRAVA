@@ -53,20 +53,44 @@ def generate_IDC_label():
 # %%
 # add image path to the result file
 ####################################
-def add_image_path():
+def add_info2results():
     result_file = '../../front/public/assets/results_IDC_all.csv'
     label_file = './IDC_regular_ps50_idx5/label.csv'
-    patient_id = '9036'
+    pred_file = '../IDC_results.csv'
+
+    patient_id = '12749'
 
     result_df = pd.read_csv(result_file)
     label_df = pd.read_csv(label_file)
+    pred_df = pd.read_csv(pred_file)
 
     result_df['img_path'] = label_df['image']
     result_df['label'] = label_df['label']
     result_df = result_df[result_df['img_path'].str.startswith(f'{patient_id}/')]
-    result_df = result_df.sample(frac=1) # shuffle rows
 
-    result_df.to_csv('../../front/public/assets/results_IDC.csv', index=False)
+    sub_pred = pred_df[pred_df['image'].str.startswith(f'{patient_id}/')]
+
+    new_df = result_df.merge(sub_pred, left_on ='img_path', right_on = 'image' )
+    new_df = result_df.sample(frac=1) # shuffle rows
+
+    new_df.to_csv('../../front/public/assets/results_IDC_test.csv', index=False)
+
+def process_pred_file():
+    pred_file = '../IDC_results.csv'
+    label_file = './IDC_regular_ps50_idx5/label.csv'
+    pred_df = pd.read_csv(pred_file)
+    label_df = pd.read_csv(label_file)
+
+    sub_label = label_df.iloc[202154:, :].reset_index(drop=True)
+
+
+    pred_df['label'] = sub_label['label']
+    pred_df['image'] = sub_label['image']
+    pred_df['confidence'] = (pred_df['score'] - 0.5).abs() * 2
+    pred_df['acc'] = (pred_df['score'] - pred_df['label']).abs() < 0.5
+
+    pred_df.to_csv('./IDC_pred.csv', index=False)
 # %%
 if __name__=='__main__':
-    generate_IDC_label()
+    # generate_IDC_label()
+    add_info2results()

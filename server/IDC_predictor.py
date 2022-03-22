@@ -79,7 +79,6 @@ class IDCPredictor(pl.LightningModule):
         else:
             device = torch.device("cpu")
         self.curr_device = device
-        self.correct = 0
        
     @property
     def logger_folder(self):
@@ -105,9 +104,15 @@ class IDCPredictor(pl.LightningModule):
     def loss_function(self,
                       results,
                       labels,
-                      **kwargs) -> dict:
+                      **kwargs) -> Tensor:
 
-        return F.mse_loss(torch.flatten(F.sigmoid(results)), labels.float())
+        # return F.mse_loss(torch.flatten(F.sigmoid(results)), labels.float())
+        out = torch.flatten(torch.sigmoid(results))
+        return F.binary_cross_entropy(out, labels.float())  
+    
+    def acc_function(self, results, labels, batch_size):
+        acc = ((torch.flatten(results) > 0.5) == (labels==1) ).sum().item()/batch_size
+        return torch.tensor(acc)
 
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
@@ -133,24 +138,21 @@ class IDCPredictor(pl.LightningModule):
 
         self.curr_device = real_img.device
         results = self.forward(real_img)
-        self.correct += ((results > 0.5) == (labels == 1)).float().sum()
+        acc = self.acc_function(results, labels, self.params['batch_size'])
 
         val_loss = self.loss_function(results, labels,
                                             M_N = self.params['batch_size']/ self.num_val_imgs,
                                             optimizer_idx = optimizer_idx,
                                             batch_idx = batch_idx)
 
-        return val_loss
+        return {'loss': val_loss, 'acc': acc}
 
     def validation_end(self, outputs):
-        # if self.current_epoch > 10:
-        #     self.unfreeze()
-        
-        avg_loss = torch.stack(outputs).mean()
-        tensorboard_logs = {'avg_val_loss': avg_loss}
-       
-        acc = self.correct/self.num_val_imgs 
-        self.correct = 0
+
+        avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
+        acc = torch.stack([x['acc'] for x in outputs]).mean()
+        tensorboard_logs = {'avg_val_loss': avg_loss, 'avg_val_acc': acc}
+
         print('val_loss: ', avg_loss.item(), 'acc: ', acc)
 
         return {'val_loss': avg_loss, 'log': tensorboard_logs}
@@ -162,25 +164,23 @@ class IDCPredictor(pl.LightningModule):
         self.curr_device = real_img.device
 
         results = self.forward(real_img)
-        self.correct += ((results > 0.5) == (labels == 1)).float().sum()
+        acc = self.acc_function(results, labels, self.params['batch_size'])
         
 
         loss = self.loss_function(results, labels,
                                             M_N = self.params['batch_size']/ self.num_val_imgs,
                                             optimizer_idx = optimizer_idx,
                                             batch_idx = batch_idx)
-        self.save_results(F.sigmoid(results), batch_idx)
-        return loss
+        self.save_results(torch.sigmoid(results), batch_idx)
+        return {'loss': loss, 'acc': acc}
 
     def test_end(self, outputs):
-        avg_loss = torch.stack(outputs).mean()
-
-        acc = self.correct/self.num_test_imgs 
-        self.correct = 0
+        avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
+        acc = torch.stack([x['acc'] for x in outputs]).mean()
 
         print('test_loss', avg_loss, 'acc: ', acc)
 
-        return {'test_loss': avg_loss}
+        return {'test_loss': avg_loss, 'test_acc': acc}
 
     def configure_optimizers(self):
         return Adam(
@@ -258,7 +258,7 @@ class IDCPredictor(pl.LightningModule):
 if __name__ == "__main__":
     model = IDCPredictor()
 
-    # 'dsprites latents_names': (b'color', b'shape', b'scale', b'orientation', b'posX', b'posY')
+    model.freeze()
 
     trainer = Trainer(gpus=0, max_epochs = 1, 
         early_stop_callback = False, 
@@ -269,4 +269,7 @@ if __name__ == "__main__":
         # reload_dataloaders_every_epoch=True # enable data loader switch between epoches
         )
     trainer.fit(model)
+    # model.unfreeze()
+    # trainer.fit(model)
+
     trainer.test(model)
