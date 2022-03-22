@@ -13,6 +13,7 @@ import torchvision.models as models
 import torch
 from torch import optim, nn
 import pytorch_lightning as pl
+from pytorch_lightning import Trainer
 from torchvision import transforms
 import torchvision.utils as vutils
 from torchvision.datasets import CelebA
@@ -62,15 +63,15 @@ class IDCPredictor(pl.LightningModule):
        
         self.model = models.resnet34(pretrained=True)
         # Replace last layer
-        num_ftrs = self.network.fc.in_features
-        self.network.fc = nn.Linear(num_ftrs, 1)
-        # model.compile(loss = 'binary_crossentropy', optimizer ='adam', metrics= ['accuracy'])
+        num_ftrs = self.model.fc.in_features
+        self.model.fc = nn.Linear(num_ftrs, 1)
+        # self.freeze()
         
         self.params = {
                      "dataset": "IDC_regular_ps50_idx5",
                      "data_path": "./data",
                      'batch_size': 64,
-                     'LR': 0.002
+                     'LR': 0.0002
                  }
 
         if torch.cuda.is_available():
@@ -78,22 +79,23 @@ class IDCPredictor(pl.LightningModule):
         else:
             device = torch.device("cpu")
         self.curr_device = device
+        self.correct = 0
        
     @property
     def logger_folder(self):
         return f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
 
-    # def freeze(self):
-    #     # To freeze the residual layers
-    #     for param in self.network.parameters():
-    #         param.require_grad = False
-    #     for param in self.network.fc.parameters():
-    #         param.require_grad = True
+    def freeze(self):
+        # To freeze the residual layers
+        for param in self.model.parameters():
+            param.require_grad = False
+        for param in self.model.fc.parameters():
+            param.require_grad = True
     
-    # def unfreeze(self):
-    #     # Unfreeze all layers
-    #     for param in self.network.parameters():
-    #         param.require_grad = True
+    def unfreeze(self):
+        # Unfreeze all layers
+        for param in self.model.parameters():
+            param.require_grad = True
 
     
     def forward(self, input: Tensor, **kwargs) -> Tensor:
@@ -104,7 +106,8 @@ class IDCPredictor(pl.LightningModule):
                       results,
                       labels,
                       **kwargs) -> dict:
-        return F.mse_loss(F.sigmoid(results), labels)
+
+        return F.mse_loss(torch.flatten(F.sigmoid(results)), labels.float())
 
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
@@ -118,20 +121,20 @@ class IDCPredictor(pl.LightningModule):
                                               optimizer_idx=optimizer_idx,
                                               batch_idx = batch_idx)
 
-        self.logger.experiment.log({key: val.item() for key, val in train_loss.items()})
-
         return train_loss
 
     def training_end(self, outputs):
         
-        return {'loss': outputs['loss']}
+        return {'loss': outputs}
 
     def validation_step(self, batch, batch_idx, optimizer_idx = 0):
         real_img, labels = batch
 
 
         self.curr_device = real_img.device
-        results = self.forward(real_img, labels = labels)
+        results = self.forward(real_img)
+        self.correct += ((results > 0.5) == (labels == 1)).float().sum()
+
         val_loss = self.loss_function(results, labels,
                                             M_N = self.params['batch_size']/ self.num_val_imgs,
                                             optimizer_idx = optimizer_idx,
@@ -140,12 +143,15 @@ class IDCPredictor(pl.LightningModule):
         return val_loss
 
     def validation_end(self, outputs):
+        # if self.current_epoch > 10:
+        #     self.unfreeze()
         
-        avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
+        avg_loss = torch.stack(outputs).mean()
         tensorboard_logs = {'avg_val_loss': avg_loss}
        
-
-        print('val_loss: ', avg_loss.item())
+        acc = self.correct/self.num_val_imgs 
+        self.correct = 0
+        print('val_loss: ', avg_loss.item(), 'acc: ', acc)
 
         return {'val_loss': avg_loss, 'log': tensorboard_logs}
 
@@ -153,24 +159,28 @@ class IDCPredictor(pl.LightningModule):
     def test_step(self, batch, batch_idx, optimizer_idx = 0):
         
         real_img, labels = batch
-
-        
         self.curr_device = real_img.device
 
-        results = self.forward(real_img, labels = labels)
+        results = self.forward(real_img)
+        self.correct += ((results > 0.5) == (labels == 1)).float().sum()
+        
 
         loss = self.loss_function(results, labels,
                                             M_N = self.params['batch_size']/ self.num_val_imgs,
                                             optimizer_idx = optimizer_idx,
                                             batch_idx = batch_idx)
+        self.save_results(F.sigmoid(results), batch_idx)
         return loss
 
     def test_end(self, outputs):
-        avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
-        print('test_loss', avg_loss)
+        avg_loss = torch.stack(outputs).mean()
+
+        acc = self.correct/self.num_test_imgs 
+        self.correct = 0
+
+        print('test_loss', avg_loss, 'acc: ', acc)
 
         return {'test_loss': avg_loss}
-
 
     def configure_optimizers(self):
         return Adam(
@@ -178,26 +188,30 @@ class IDCPredictor(pl.LightningModule):
             lr=self.params['LR'],
             betas = (0.9, 0.999)
         )
-        
+
+    def save_results(self, score, batch_idx):
+        file_name = 'IDC_results.csv'
+        if batch_idx == 0:
+            f = open(file_name, 'w')
+            result_writer = csv.writer(f)
+            header = ['score']
+            result_writer.writerow(header)
+        else: 
+            f = open(file_name, 'a')
+            result_writer = csv.writer(f)
+
+        for i, s in enumerate(score.tolist()):
+            result_writer.writerow(s)
+        f.close()
 
     @data_loader
     def train_dataloader(self):
         print('start train data loading')
-        root = os.path.join(self.params['data_path'], f"{self.params['dataset']}.npz")
        
-        data = np.load(root, encoding='bytes')
-
-        tensor = torch.from_numpy(data['x'])
-        labels = torch.from_numpy(data['y'])
-        # TODO: hard code a categorical transfer function
-
-
-
-        train_kwargs = {'data_tensor':tensor, 'labels': labels}
-        dset = IDC_Dataset
-        train_data = dset(**train_kwargs, transform = self.data_transforms(), train=True)
-        self.num_train_imgs = len(train_data)
-        train_loader = DataLoader(train_data,
+        root = os.path.join(self.params['data_path'], self.params['dataset'] )
+        dataset = IDC_Dataset(root = root, transform=self.data_transforms(), train = True)
+        self.num_train_imgs = len(dataset)
+        train_loader = DataLoader(dataset,
                                 batch_size=self.params['batch_size'],
                                 shuffle=True,
                                 drop_last=True)
@@ -208,17 +222,8 @@ class IDCPredictor(pl.LightningModule):
 
     @data_loader
     def val_dataloader(self):
-        root = os.path.join(self.params['data_path'], f"{self.params['dataset']}.npz")
-       
-        data = np.load(root, encoding='bytes')
-
-        tensor = torch.from_numpy(data['x'])
-        labels = torch.from_numpy(data['gt'])
-
-
-        val_kwargs = {'data_tensor':tensor, 'labels': labels}
-        dset = IDC_Dataset
-        val_data = dset(**val_kwargs, transform = self.data_transforms(), train=False)
+        root = os.path.join(self.params['data_path'], self.params['dataset'] )
+        val_data = IDC_Dataset(root = root, transform=self.data_transforms(), train = False)
         self.num_val_imgs = len(val_data)
         val_loader = DataLoader(val_data,
                                 batch_size=self.params['batch_size'],
@@ -230,17 +235,8 @@ class IDCPredictor(pl.LightningModule):
     
     @data_loader
     def test_dataloader(self):
-        root = os.path.join(self.params['data_path'], f"{self.params['dataset']}.npz")
-       
-        data = np.load(root, encoding='bytes')
-
-        tensor = torch.from_numpy(data['x'])
-        labels = torch.from_numpy(data['gt'])
-
-
-        test_kwargs = {'data_tensor':tensor, 'labels': labels}
-        dset = IDC_Dataset
-        test_data = dset(**test_kwargs, transform = self.data_transforms(), train=False)
+        root = os.path.join(self.params['data_path'], self.params['dataset'] )
+        test_data = IDC_Dataset(root = root, transform=self.data_transforms(), train = False)
         self.num_test_imgs = len(test_data)
         test_loader = DataLoader(test_data,
                                 batch_size=self.params['batch_size'],
@@ -257,3 +253,20 @@ class IDCPredictor(pl.LightningModule):
                                         norm
                                         ])
         return transform
+
+
+if __name__ == "__main__":
+    model = IDCPredictor()
+
+    # 'dsprites latents_names': (b'color', b'shape', b'scale', b'orientation', b'posX', b'posY')
+
+    trainer = Trainer(gpus=0, max_epochs = 1, 
+        early_stop_callback = False, 
+        logger= False, # whether disable logs
+        checkpoint_callback=False,
+        show_progress_bar= True,
+        weights_summary=None
+        # reload_dataloaders_every_epoch=True # enable data loader switch between epoches
+        )
+    trainer.fit(model)
+    trainer.test(model)
