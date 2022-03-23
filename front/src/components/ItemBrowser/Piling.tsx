@@ -82,8 +82,14 @@ const Pilling = (props: Props) => {
       actions.grid(dimX);
     };
 
+    const changeSummary = () => {
+      const sType = (document.getElementById('summarySelector') as any).value;
+      actions.changeSummary(sType);
+    };
+
     document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);
     document.querySelector('#xSelector')?.addEventListener('change', reArrangeX);
+    document.querySelector('#summarySelector')?.addEventListener('change', changeSummary);
     document.getElementById('XGroupBtn')?.addEventListener('click', stackX);
     document.getElementById('groupBtn')?.addEventListener('click', gridGroup);
     document.getElementById('splitBtn')?.addEventListener('click', splitAll);
@@ -95,6 +101,7 @@ const Pilling = (props: Props) => {
       piling.destory();
       document.querySelector('#ySelector')?.removeEventListener('change', reArrangeY);
       document.querySelector('#xSelector')?.removeEventListener('change', reArrangeX);
+      document.querySelector('#summarySelector')?.removeEventListener('change', changeSummary);
       document.getElementById('XGroupBtn')?.removeEventListener('click', stackX);
       document.getElementById('groupBtn')?.removeEventListener('click', gridGroup);
       document.getElementById('splitBtn')?.removeEventListener('click', splitAll);

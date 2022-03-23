@@ -1,3 +1,4 @@
+import { style } from 'd3-selection';
 import createPilingJs, { createUmap } from 'piling.js';
 
 /**
@@ -146,6 +147,38 @@ export default async function create(element, pilingOptions) {
         itemSize: size,
         renderer: createImageRenderer({ size })
       });
+    },
+    changeSummary: sType => {
+      if (sType == 'foreshortened') {
+        piling.set({
+          pileItemOpacity: 1, //opaciy piles for the dsprites dataset
+          pileItemOffset: (_, i, pile) => [0, i * -3] //force all items overlaid
+        });
+      } else if (sType == 'combining') {
+        piling.set({
+          pileItemOpacity: (item, i, pile) => 1 - i / pile.items.length,
+          pileItemOffset: [0, 0] //force all items overlaid
+        });
+      } else if (sType == 'combining2') {
+        // combine with offset
+        piling.set({
+          // pileItemOpacity: (item, i, pile) => 0.4 + (0.6 * i) / pile.items.length,
+          pileItemOpacity: 0.4,
+          pileItemOffset: (_, i, pile) => [0, i * -3] //force all items overlaid
+        });
+      } else {
+        piling.set({
+          pileItemOpacity: 1,
+          pileItemOffset: (item, i, pile) => {
+            const isNotLast = pile.items.length - 1 !== i;
+            return [+isNotLast * (Math.random() * 12 - 6), +isNotLast * (Math.random() * 12 - 6)];
+          },
+          pileItemRotation: (item, i, pile) => {
+            const isNotLast = pile.items.length - 1 !== i;
+            return +isNotLast * (Math.random() * 12 - 6);
+          }
+        });
+      }
     }
   };
 

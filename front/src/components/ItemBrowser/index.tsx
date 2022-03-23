@@ -211,7 +211,7 @@ const ItemBrowser = (props: Props) => {
         {/* --------Summary------------- */}
         <hr className={styles.configHr} />
         <h5> Summary </h5>
-        <select id="summarySelector" style={{ width: '100px' }}>
+        <select id="summarySelector" style={{ width: '100px' }} defaultValue="representative">
           <option value="foreshortened">Foreshortened</option>
           <option value="combining">Combining</option>
           <option value="combining2">Combining with offset</option>
