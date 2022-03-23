@@ -149,7 +149,7 @@ const ItemBrowser = (props: Props) => {
   ));
 
   const baselineSelector = (
-    <>
+    <div style={{ transform: `translate(${rowHeight}px, 0px)` }}>
       <label htmlFor="fname">Explore {dimUserNames[dimX] || dimX} based on image </label>
       <Select
         id="baseline"
@@ -163,7 +163,7 @@ const ItemBrowser = (props: Props) => {
         {options}
       </Select>
       {image}
-    </>
+    </div>
   );
 
   const config = (
@@ -246,6 +246,7 @@ const ItemBrowser = (props: Props) => {
       imageSize={XStepWidth}
       dataset={props.dataset}
       latentZ={z}
+      rotate={false}
     />
   );
 
@@ -262,6 +263,7 @@ const ItemBrowser = (props: Props) => {
         imageSize={YStepWidth}
         dataset={props.dataset}
         latentZ={z}
+        rotate={true}
       />
     ) : (
       <></>
@@ -276,7 +278,7 @@ const ItemBrowser = (props: Props) => {
     >
       <div>
         <svg width={120} height={pilingHeight} style={{ float: 'left' }} id="ItemBrowserY">
-          <g transform={`rotate(-90) translate(${-1 * pilingHeight}, 0)`}>
+          <g transform={` translate(0 , ${pilingHeight}) rotate(-90)`}>
             <g>{yRow}</g>
           </g>
         </svg>
@@ -290,7 +292,9 @@ const ItemBrowser = (props: Props) => {
       </div>
       {baselineSelector}
       <svg width={width - 2 * padding} height={rowHeight} id="ItemBrowser">
-        <g transform={`translate(${rowHeight}, 0)`}>{xRow}</g>
+        <g transform={`translate(${rowHeight}, 0)`}>
+          <g>{xRow}</g>
+        </g>
       </svg>
 
       {config}

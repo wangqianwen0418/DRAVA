@@ -4,6 +4,7 @@ import { Tooltip } from 'antd';
 import clsx from 'clsx';
 import styles from './DimRow.module.css';
 import { querySimuImages } from 'dataService';
+import { image } from 'd3-fetch';
 
 type Props = {
   row: TDistribution;
@@ -19,6 +20,7 @@ type Props = {
   isSelected?: (dimName: string, col_idx: number) => boolean;
   setFilters?: (dimName: string, col_idx: number) => void;
   changeDimScores?: (dimName: string, score: number) => void;
+  rotate?: boolean;
 };
 
 export const DimRow = (props: Props) => {
@@ -39,7 +41,8 @@ const LatentDim = (props: Props) => {
     setFilters,
     imageSize,
     latentZ,
-    changeDimScores
+    changeDimScores,
+    rotate
   } = props;
 
   const imgSize = imageSize || Math.min(stepWidth, barHeight);
@@ -76,7 +79,7 @@ const LatentDim = (props: Props) => {
       />
     ) : (
       // <Tooltip title={<img width={64} src={href} />} destroyTooltipOnHide placement="top">
-      <g>
+      <g transform={rotate ? `translate(${imgSize * 2.5}, ${imgSize * 1.5}) rotate(90)` : ''}>
         <image
           xlinkHref={href}
           className={clsx(styles.latentImage, selectFlag && styles.isImageSelected)}
