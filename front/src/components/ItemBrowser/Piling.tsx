@@ -7,7 +7,7 @@ import { BASE_URL } from 'Const';
 
 import { TFilter, TResultRow } from 'types';
 
-type Item = TResultRow & {
+type TItem = TResultRow & {
   src: string;
   [key: string]: any;
 };
