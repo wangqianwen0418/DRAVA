@@ -205,7 +205,7 @@ const ItemBrowser = (props: Props) => {
         {/* --------Item------------- */}
         <hr className={styles.configHr} />
         <h5>Item</h5>
-        <label> Size</label> <input id="itemSize" type="number" min="10" max="50" value="40" />
+        <label> Size</label> <input id="itemSize" type="number" min="10" max="50" defaultValue={40} />
         {/* --------Summary------------- */}
         <hr className={styles.configHr} />
         <h5> Summary </h5>

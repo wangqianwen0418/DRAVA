@@ -64,12 +64,18 @@ const Pilling = (props: Props) => {
       actions.splitAll([dimX, dimY]);
     };
 
+    const changeSize = () => {
+      const size = (document.getElementById('itemSize') as any).value;
+      actions.changeSize(size);
+    };
+
     document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);
     document.querySelector('#xSelector')?.addEventListener('change', reArrangeX);
     document.getElementById('stackXBtn')?.addEventListener('click', stackX);
     document.getElementById('splitBtn')?.addEventListener('click', splitAll);
     document.getElementById('umapBtn')?.addEventListener('click', actions.UMAP);
     document.getElementById('1dBtn')?.addEventListener('click', actions.grid);
+    document.getElementById('itemSize')?.addEventListener('change', changeSize);
 
     return () => {
       piling.destory();
@@ -78,7 +84,8 @@ const Pilling = (props: Props) => {
       document.getElementById('stackXBtn')?.removeEventListener('click', stackX);
       document.getElementById('splitBtn')?.removeEventListener('click', splitAll);
       document.getElementById('umapBtn')?.removeEventListener('click', actions.UMAP);
-      document.getElementById('1dBtn')?.addEventListener('click', actions.grid);
+      document.getElementById('1dBtn')?.removeEventListener('click', actions.grid);
+      document.getElementById('itemSize')?.removeEventListener('change', changeSize);
     };
   }, []);
 

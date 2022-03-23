@@ -29,7 +29,7 @@ const createImageRenderer = option => sources =>
   );
 
 export default async function create(element, pilingOptions) {
-  const imageSize = 75;
+  const imageSize = 45;
   const { items, pileDragEnd, dims, getSvgGroup, dataset } = pilingOptions;
 
   const umap = createUmap();
@@ -134,6 +134,12 @@ export default async function create(element, pilingOptions) {
     },
     grid: () => {
       piling.arrangeBy('data', 'dim_0');
+    },
+    changeSize: size => {
+      piling.set({
+        itemSize: size,
+        renderer: createImageRenderer({ size })
+      });
     }
   };
 
