@@ -71,7 +71,6 @@ const ItemBrowser = (props: Props) => {
     );
 
   const [dimX, changeDimX] = useState(`dim_0`);
-  const [isShowConfig, toggleConfig] = useState(false);
   const [sampleIdx, changeSampleIdx] = useState(0);
 
   const baselineOptions = [...samples]
@@ -165,13 +164,10 @@ const ItemBrowser = (props: Props) => {
 
   const config = (
     <div className={styles.ConfigContainer}>
-      <Button className={styles.ConfigBtn} type="default" size="small" onClick={() => toggleConfig(!isShowConfig)}>
-        Config <LeftCircleOutlined />
-      </Button>
-      <div className={clsx(styles.ConfigPanel, isShowConfig ? 'show' : 'hide')}>
-        <div className={styles.ConfigHideBtn} onClick={() => toggleConfig(false)}>
+      <div className={clsx(styles.ConfigPanel, 'show')}>
+        <div className={styles.ConfigHideBtn}>
           <span>
-            Config <RightCircleOutlined />
+            <b>Config</b>
           </span>
         </div>
         {/* ----------Arrange----------- */}
