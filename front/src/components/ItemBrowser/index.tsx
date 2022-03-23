@@ -79,6 +79,7 @@ const ItemBrowser = (props: Props) => {
 
   const [dimX, changeDimX] = useState(`dim_0`);
   const [dimY, changeDimY] = useState(`none`);
+  const [group, changeGroup] = useState('umap');
   const [sampleIdx, changeSampleIdx] = useState(0);
 
   const baselineOptions = [...samples]
@@ -93,6 +94,7 @@ const ItemBrowser = (props: Props) => {
       id="xSelector"
       style={{ width: '100px' }}
       value={dimX}
+      disabled={group == 'umap'}
       onChange={(e: any) => {
         changeDimX(e.target.value);
       }}
@@ -117,6 +119,7 @@ const ItemBrowser = (props: Props) => {
       onChange={(e: any) => {
         changeDimY(e.target.value);
       }}
+      disabled={group != 'concept'}
     >
       <option value="none">none</option>
       <option value="std">std</option>
@@ -177,19 +180,24 @@ const ItemBrowser = (props: Props) => {
         {/* ----------Arrange----------- */}
         <hr className={styles.configHr} />
         <h5>Arrange</h5>
+        <select
+          id="groupSelector"
+          style={{ width: '100px' }}
+          value={group}
+          onChange={(e: any) => {
+            changeGroup(e.target.value);
+          }}
+        >
+          <option value="umap">UMAP</option>
+          <option value="grid">1D Grid</option>
+          <option value="concept">Concept</option>
+        </select>
+        <br />
         <label>x</label>
         {dimXSelector}
         <br />
         <label>y</label>
         {dimYSelector}
-        <br />
-        <Button type="default" id="umapBtn" size="small">
-          UMAP
-        </Button>
-        {` `}
-        <Button type="default" id="1dBtn" size="small">
-          Grid
-        </Button>
         {/* --------Group------------- */}
         <hr className={styles.configHr} />
         <h5>Group</h5>
@@ -216,6 +224,12 @@ const ItemBrowser = (props: Props) => {
           <option value="combining">Combining</option>
           <option value="combining2">Combining with offset</option>
           <option value="representative">Representative</option>
+        </select>
+        <br />
+        <label>Label</label>{' '}
+        <select id="labelSelector" style={{ width: '100px' }} defaultValue="representative">
+          <option value="none">none</option>
+          {dataset == 'IDC' ? <option value="label">label</option> : <></>}
         </select>
         <Button
           type="primary"

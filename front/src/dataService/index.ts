@@ -46,9 +46,11 @@ const queryIDCResults = async () => {
       id: row['img_path'],
       assignments: {},
       ...dims,
+      prediction: row['acc'] == 'True' ? 'right' : 'wrong',
       index: i
     };
   });
+
   return samples;
 };
 

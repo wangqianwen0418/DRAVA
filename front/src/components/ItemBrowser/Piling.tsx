@@ -87,9 +87,30 @@ const Pilling = (props: Props) => {
       actions.changeSummary(sType);
     };
 
+    const addLabel = () => {
+      const label = (document.getElementById('labelSelector') as any).value;
+      actions.addLabel(label);
+    };
+
+    const changeGroup = () => {
+      const group = (document.getElementById('groupSelector') as any).value;
+      const dimX = (document.getElementById('xSelector') as any).value;
+      const dimY = (document.getElementById('ySelector') as any).value;
+      if (group == 'UMAP') {
+        actions.UMAP;
+      } else if (group == 'grid') {
+        actions.grid(dimX);
+      } else {
+        actions.reArrange([dimX, dimY]);
+      }
+    };
+
     document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);
     document.querySelector('#xSelector')?.addEventListener('change', reArrangeX);
     document.querySelector('#summarySelector')?.addEventListener('change', changeSummary);
+    document.querySelector('#labelSelector')?.addEventListener('change', addLabel);
+    document.querySelector('#groupSelector')?.addEventListener('change', changeGroup);
+
     document.getElementById('XGroupBtn')?.addEventListener('click', stackX);
     document.getElementById('groupBtn')?.addEventListener('click', gridGroup);
     document.getElementById('splitBtn')?.addEventListener('click', splitAll);
@@ -102,6 +123,9 @@ const Pilling = (props: Props) => {
       document.querySelector('#ySelector')?.removeEventListener('change', reArrangeY);
       document.querySelector('#xSelector')?.removeEventListener('change', reArrangeX);
       document.querySelector('#summarySelector')?.removeEventListener('change', changeSummary);
+      document.querySelector('#labelSelector')?.removeEventListener('change', addLabel);
+      document.querySelector('#groupSelector')?.removeEventListener('change', changeGroup);
+
       document.getElementById('XGroupBtn')?.removeEventListener('click', stackX);
       document.getElementById('groupBtn')?.removeEventListener('click', gridGroup);
       document.getElementById('splitBtn')?.removeEventListener('click', splitAll);

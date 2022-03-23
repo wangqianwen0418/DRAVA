@@ -183,6 +183,7 @@ export default class App extends React.Component<{}, State> {
       } else if (dataset == 'IDC') {
         dimNames.push('label');
         dimNames.push('confidence');
+        dimNames.push('prediction');
       } else if (dataset == 'sequence') {
         dimNames.push('peak_score');
       }
@@ -197,7 +198,7 @@ export default class App extends React.Component<{}, State> {
         distributionResults = generateDistribution(dimValues, false, STEP_NUM, sampleIds, 10);
       } else if (dimName == 'level') {
         distributionResults = generateDistribution(dimValues, true, STEP_NUM, sampleIds);
-      } else if (dimName == 'label') {
+      } else if (dimName == 'label' || dimName == 'prediction') {
         distributionResults = generateDistribution(dimValues, true, 2, sampleIds);
       } else {
         distributionResults = generateDistribution(dimValues, false, STEP_NUM, sampleIds);

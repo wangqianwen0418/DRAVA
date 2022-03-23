@@ -179,6 +179,13 @@ export default async function create(element, pilingOptions) {
           }
         });
       }
+    },
+    addLabel: label => {
+      piling.set({
+        pileLabel: item => item[label] || '',
+        pileLabelText: true,
+        pileLabelTextMapping: (label, _) => (label == '0' ? 'neg' : 'pos')
+      });
     }
   };
 
