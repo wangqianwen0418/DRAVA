@@ -52,7 +52,14 @@ const ItemBrowser = (props: Props) => {
   const barHeight = 30; // height of bar chart
   const gap = 3; //horizontal gap between thumbnails
   const barLabelHeight = 14;
-  const stepWidth = (width - 2 * padding - 200) / STEP_NUM - gap;
+  const imageSize = 64;
+
+  const rowHeight = barHeight + imageSize + barLabelHeight + gap * 2;
+
+  const XStepWidth = (width - 2 * padding - 200 - rowHeight) / STEP_NUM - gap;
+
+  const pilingHeight = height - rowHeight - 150;
+  const YStepWidth = pilingHeight / STEP_NUM - gap;
 
   const rootStyle = getComputedStyle(document.documentElement),
     cardHeadHeight = parseInt(rootStyle.getPropertyValue('--card-head-height')),
@@ -71,25 +78,15 @@ const ItemBrowser = (props: Props) => {
     );
 
   const [dimX, changeDimX] = useState(`dim_0`);
+  const [dimY, changeDimY] = useState(`none`);
   const [sampleIdx, changeSampleIdx] = useState(0);
 
   const baselineOptions = [...samples]
     // .sort((a, b) => +a['recons_loss'] - +b['recons_loss'])
     .slice(0, samples.length / 4);
 
-  const iconWidth = 15;
-  const imageSize = 64;
-
   const maxV = getMax(matrixData[dimX].histogram);
   const yScale = scaleLog().domain([0.1, maxV]).range([0, barHeight]);
-
-  const dimUserName = dimUserNames[dimX] || dimX;
-
-  // const inputName = (
-  //   <>
-  //     <input value={dimUserName} unselectable="on" onChange={e => setDimUserNames({ [dimX]: e.target.value })} />
-  //   </>
-  // );
 
   const dimXSelector = (
     <select
@@ -113,7 +110,14 @@ const ItemBrowser = (props: Props) => {
   );
 
   const dimYSelector = (
-    <select id="ySelector" style={{ width: '100px' }}>
+    <select
+      id="ySelector"
+      style={{ width: '100px' }}
+      value={dimY}
+      onChange={(e: any) => {
+        changeDimY(e.target.value);
+      }}
+    >
       <option value="none">none</option>
       <option value="std">std</option>
       {dimNames.map(dimName => {
@@ -230,23 +234,38 @@ const ItemBrowser = (props: Props) => {
   );
 
   const z = samples[sampleIdx]['z'];
-  const Row = (
+  const xRow = (
     <DimRow
       row={matrixData[dimX]}
       dimName={dimX}
-      stepWidth={stepWidth}
+      stepWidth={XStepWidth}
       yScale={yScale}
       barHeight={barHeight}
       barLabelHeight={barLabelHeight}
       gap={gap}
-      imageSize={stepWidth}
+      imageSize={XStepWidth}
       dataset={props.dataset}
       latentZ={z}
     />
   );
 
-  const rowHeight = barHeight + imageSize + barLabelHeight + gap * 2;
-  const pilingHeight = height - rowHeight - 150;
+  const yRow =
+    dimY != 'none' && matrixData[dimY] ? (
+      <DimRow
+        row={matrixData[dimY]}
+        dimName={dimY}
+        stepWidth={YStepWidth}
+        yScale={yScale}
+        barHeight={barHeight}
+        barLabelHeight={barLabelHeight}
+        gap={gap}
+        imageSize={YStepWidth}
+        dataset={props.dataset}
+        latentZ={z}
+      />
+    ) : (
+      <></>
+    );
 
   return (
     <Card
@@ -255,16 +274,23 @@ const ItemBrowser = (props: Props) => {
       bodyStyle={{ overflowY: 'scroll', height: height - cardHeadHeight }}
       loading={isDataLoading}
     >
-      <Piling
-        dataset={dataset}
-        samples={samples}
-        dimNames={dimNames}
-        dimUserNames={dimUserNames}
-        height={pilingHeight}
-      />
+      <div>
+        <svg width={120} height={pilingHeight} style={{ float: 'left' }} id="ItemBrowserY">
+          <g transform={`rotate(-90) translate(${-1 * pilingHeight}, 0)`}>
+            <g>{yRow}</g>
+          </g>
+        </svg>
+        <Piling
+          dataset={dataset}
+          samples={samples}
+          dimNames={dimNames}
+          dimUserNames={dimUserNames}
+          height={pilingHeight}
+        />
+      </div>
       {baselineSelector}
       <svg width={width - 2 * padding} height={rowHeight} id="ItemBrowser">
-        <g>{Row}</g>
+        <g transform={`translate(${rowHeight}, 0)`}>{xRow}</g>
       </svg>
 
       {config}

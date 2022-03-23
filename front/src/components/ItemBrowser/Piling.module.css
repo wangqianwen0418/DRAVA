@@ -1,9 +1,9 @@
 .piling_wrapper {
   position: relative;
-  width: calc(100% - 180px);
+  width: calc(100% - 300px);
   border-bottom: 1px solid #808080;
 }
 
 .piling_container {
-  margin-top: 10px;
+  margin-bottom: 10px;
 }
