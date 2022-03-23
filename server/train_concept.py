@@ -3,8 +3,9 @@ from ConceptAdaptor import *
 from pytorch_lightning import Trainer
 from sklearn.metrics import accuracy_score
 import math
- 
-DIM_NAME = 'sclae'
+
+# 'dsprites latents_names': (b'color', b'shape', b'scale', b'orientation', b'posX', b'posY')
+DIM_NAME = 'pos_x'
 #%%
 if DIM_NAME == 'scale':
     ################
@@ -20,18 +21,13 @@ if DIM_NAME == 'scale':
 
 
     def gt_mapper(y):
-        # if y<=10:
-        #     return 0
-        # elif 10<y<=20:
-        #     return 1
-        # return 2
         return math.floor(y/2)
 
     dim_gt = 2
     dim_y = 2
     # inital acc: 0.62
 
-else:
+elif DIM_NAME == 'pos_x':
 ################
 # x pos (3 classes)
 ################
@@ -41,15 +37,41 @@ else:
     def y_mapper(y):
         if y<-0.5:
             return 0
-        elif y < 0.3:
+        elif y < 0.4:
             return 1
         return 2
 
 
     def gt_mapper(y):
-        return math.floor(y/10)
-    # inital acc: 0.70
+        if y<=10:
+            return 0
+        elif 10<y<=20:
+            return 1
+        return 2
+    # inital acc: 0.771
 
+elif DIM_NAME == 'pos_y':
+################
+# y pos (3 classes)
+################
+    dim_y= 4
+    dim_gt=5 #pos y
+
+    def y_mapper(y):
+        if y<-0.5:
+            return 0
+        elif y < 0.7:
+            return 1
+        return 2
+
+
+    def gt_mapper(y):
+        if y<=10:
+            return 0
+        elif 10<y<=20:
+            return 1
+        return 2
+    #  acc 0.93
 # %%
 # intial accuracy
 def initial_acc():
@@ -76,13 +98,14 @@ def initial_acc():
 
 #%%
 #  model training
-def fine_tune():
+def fine_tune(sample='m'):
     raw = np.load('./data/dsprites_test_concepts.npz')
     std = raw['std'][:, dim_y]
+    y_pred = raw['y'][:, dim_y]
     n_feedback = 20
     sample_index = np.argsort(std)[::-1][:n_feedback]
     for i in range(10):
-        sample_index = np.argsort(std)[::-1][:n_feedback*(i+1)]
+        
         
         model_config = {
                 "dataset": "dsprites_test_concepts",
@@ -94,13 +117,13 @@ def fine_tune():
                 'y_mapper': y_mapper,
                 'gt_mapper': gt_mapper,
                 'sample_index':sample_index,
-                'mode': 'active'
-                # 'mode': 'concept_tune'
+                # 'mode': 'active'
+                'mode': 'concept_tune'
             }
 
         model = ConceptAdaptor(cat_num=3, input_size=[32, 4, 4], params=model_config)
 
-        # 'dsprites latents_names': (b'color', b'shape', b'scale', b'orientation', b'posX', b'posY')
+        
 
         trainer = Trainer(gpus=0, max_epochs = 20 * (i+1), 
             early_stop_callback = False, 
@@ -113,9 +136,19 @@ def fine_tune():
         trainer.fit(model)
         trainer.test(model)
 
-        # sample_index = model.get_uncertain_index(n_feedback*(i+1))
+        # based on probability score
+        if sample == 'uncertain':
+            sample_index = model.get_uncertain_index(n_feedback*(i+1))
+        #  based on std
+        elif sample == 'std':
+            sample_index = np.argsort(std)[::-1][:n_feedback*(i+1)]
+        # based on mean value
+        elif sample == 'm':
+            sample_index_a = np.argsort( np.abs(y_pred - 0.3) )[:int(n_feedback*(i+1)/2)]
+            sample_index_b = np.argsort( np.abs(y_pred - (-0.5)) )[:int(n_feedback*(i+1)/2)]
+            sample_index = np.concatenate((sample_index_a, sample_index_b))
         # print(sample_index)
 
 
 if __name__=="__main__":
-    fine_tune()
+    fine_tune(sample='m')

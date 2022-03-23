@@ -194,13 +194,29 @@ const ItemBrowser = (props: Props) => {
         <hr className={styles.configHr} />
         <h5>Group</h5>
         <Button type="default" id="stackXBtn" size="small">
-          StackX
+          GroupX
         </Button>
         <Button type="default" id="groupBtn" size="small">
           AutoGroup
         </Button>
         <Button type="default" id="splitBtn" size="small">
           Split-All
+        </Button>
+        {/* --------Item------------- */}
+        <hr className={styles.configHr} />
+        <h5>Item</h5>
+        <label> Size</label> <input id="itemSize" type="number" min="10" max="50" value="40" />
+        {/* --------Summary------------- */}
+        <hr className={styles.configHr} />
+        <h5> Summary </h5>
+        <select id="summarySelector" style={{ width: '100px' }}>
+          <option value="foreshortened">Foreshortened</option>
+          <option value="combining">Combining</option>
+          <option value="combining2">Combining with offset</option>
+          <option value="representative">Representative</option>
+        </select>
+        <Button type="primary" className={styles.updateBtn}>
+          Update Concept
         </Button>
       </div>
     </div>

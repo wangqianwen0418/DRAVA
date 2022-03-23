@@ -180,9 +180,11 @@ export default class App extends React.Component<{}, State> {
           'atac_left',
           'atac_right'
         ]);
-      }
-      if (dataset == 'IDC') {
+      } else if (dataset == 'IDC') {
         dimNames.push('label');
+        dimNames.push('confidence');
+      } else if (dataset == 'sequence') {
+        dimNames.push('peak_score');
       }
     }
     dimNames.forEach((dimName, idx) => {

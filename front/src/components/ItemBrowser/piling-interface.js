@@ -29,7 +29,7 @@ const createImageRenderer = option => sources =>
   );
 
 export default async function create(element, pilingOptions) {
-  const imageSize = 50;
+  const imageSize = 75;
   const { items, pileDragEnd, dims, getSvgGroup, dataset } = pilingOptions;
 
   const umap = createUmap();
@@ -40,6 +40,8 @@ export default async function create(element, pilingOptions) {
     renderer: createImageRenderer({ imageSize }),
     items: items,
     itemSize: imageSize
+    // pileBorderColor: '#000000',
+    // pileBorderSize: 1
   };
 
   if (dataset == 'sequence') {
@@ -55,23 +57,27 @@ export default async function create(element, pilingOptions) {
       pileItemOpacity: (item, i, pile) => 1 - i / pile.items.length, //opaciy piles for the dsprites dataset
       pileSizeBadge: pile => pile.items.length > 1,
       pileItemOffset: [0, 0] //force all items overlaid
+      // pileItemRotation: (item, i, pile) => {
+      //   const isNotLast = pile.items.length - 1 !== i;
+      //   return +isNotLast * (Math.random() * 12 - 6);
+      // }
     };
   } else {
     spec = {
       ...spec,
-      // // items in a pile is randomly rotated and offset
-      // pileItemOffset: (item, i, pile) => {
-      //   const isNotLast = pile.items.length - 1 !== i;
-      //   return [+isNotLast * (Math.random() * 12 - 6), +isNotLast * (Math.random() * 12 - 6)];
-      // },
-      // pileItemRotation: (item, i, pile) => {
-      //   const isNotLast = pile.items.length - 1 !== i;
-      //   return +isNotLast * (Math.random() * 12 - 6);
-      // },
+      // items in a pile is randomly rotated and offset
       pileItemOffset: (item, i, pile) => {
-        return [0, +i * 3];
+        const isNotLast = pile.items.length - 1 !== i;
+        return [+isNotLast * (Math.random() * 12 - 6), +isNotLast * (Math.random() * 12 - 6)];
       },
-      pileSizeBadge: pile => pile.items.length > 1
+      pileItemRotation: (item, i, pile) => {
+        const isNotLast = pile.items.length - 1 !== i;
+        return +isNotLast * (Math.random() * 12 - 6);
+      }
+      // pileItemOffset: (item, i, pile) => {
+      //   return [0, +i * -3];
+      // },
+      // pileSizeBadge: pile => pile.items.length > 1
     };
   }
 

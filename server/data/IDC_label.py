@@ -27,7 +27,6 @@ def generate_IDC_label():
     images_df["image"] = imagePatches
     images_df["image"] = images_df["image"].apply(lambda x:x.replace('./IDC_regular_ps50_idx5/', ''))
     images_df["label"] = y
-    # %%
     images_df.to_csv('./IDC_regular_ps50_idx5/label_all.csv', index=False)
     # %%
     # check image size
@@ -56,7 +55,7 @@ def generate_IDC_label():
 def add_info2results():
     result_file = '../../front/public/assets/results_IDC_all.csv'
     label_file = './IDC_regular_ps50_idx5/label.csv'
-    pred_file = '../IDC_results.csv'
+    pred_file = './IDC_pred.csv'
 
     patient_id = '12749'
 
@@ -66,12 +65,14 @@ def add_info2results():
 
     result_df['img_path'] = label_df['image']
     result_df['label'] = label_df['label']
-    result_df = result_df[result_df['img_path'].str.startswith(f'{patient_id}/')]
+    result_df = result_df[result_df['img_path'].str.startswith(f'{patient_id}/')].reset_index(drop=True)
 
-    sub_pred = pred_df[pred_df['image'].str.startswith(f'{patient_id}/')]
+    sub_pred = pred_df[pred_df['image'].str.startswith(f'{patient_id}/')].reset_index(drop=True)
 
     new_df = result_df.merge(sub_pred, left_on ='img_path', right_on = 'image' )
-    new_df = result_df.sample(frac=1) # shuffle rows
+    new_df.drop(columns = ['label_y', 'image'], inplace=True)
+    new_df.rename(mapper={'label_x': 'label'}, inplace=True)
+    new_df = new_df.sample(frac=1) # shuffle rows
 
     new_df.to_csv('../../front/public/assets/results_IDC_test.csv', index=False)
 

@@ -59,6 +59,22 @@ def gt_mapper(y):
 # smiling
 dim_y = 19
 dim_gt = 31
+
+# #########
+# bangs: 0.77
+##############
+def y_mapper(y):
+    if y<-0.6:
+        return 1
+    return 0
+
+
+def gt_mapper(y):
+    return y
+
+# bangs: 
+dim_y = 10
+dim_gt = 5
 # %%
 # intial accuracy
 def initial_acc():
@@ -85,13 +101,14 @@ def initial_acc():
 
 #%%
 #  model training
-def fine_tune():
+def fine_tune(sample):
     raw = np.load('./data/celeba_concepts.npz')
+    y_pred = raw['y'][:, dim_y]
+    initial_acc()
     std = raw['std'][:, dim_y]
     n_feedback = 40
     sample_index = np.argsort(std)[::-1][:n_feedback]
     for i in range(20):
-        sample_index = np.argsort(std)[::-1][:n_feedback*(i+1)]
         
         model_config = {
                 "dataset": "celeba_concepts",
@@ -124,7 +141,16 @@ def fine_tune():
 
         # sample_index = model.get_uncertain_index(n_feedback*(i+1))
         # print(sample_index)
+        if sample == 'uncertain':
+            sample_index = model.get_uncertain_index(n_feedback*(i+1))
+        #  based on std
+        elif sample == 'std':
+            sample_index = np.argsort(std)[::-1][:n_feedback*(i+1)]
+        # based on mean value
+        elif sample == 'm':
+            sample_index = np.argsort( np.abs(y_pred - (0.1)) )[:n_feedback*(i+1)]
+        # print(sample_index)
 
 
 if __name__=="__main__":
-    fine_tune()
+    fine_tune(sample = 'm')
