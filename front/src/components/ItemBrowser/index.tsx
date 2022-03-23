@@ -1,6 +1,6 @@
 import { TDistribution, TResultRow, TFilter } from 'types';
 import React, { useState } from 'react';
-import { Card, Select, Button } from 'antd';
+import { Card, Select, Button, message } from 'antd';
 import { RightCircleOutlined, LeftCircleOutlined } from '@ant-design/icons';
 
 import styles from './index.module.css';
@@ -52,7 +52,7 @@ const ItemBrowser = (props: Props) => {
   const barHeight = 30; // height of bar chart
   const gap = 3; //horizontal gap between thumbnails
   const barLabelHeight = 14;
-  const stepWidth = (width - 2 * padding) / STEP_NUM - gap;
+  const stepWidth = (width - 2 * padding - 200) / STEP_NUM - gap;
 
   const rootStyle = getComputedStyle(document.documentElement),
     cardHeadHeight = parseInt(rootStyle.getPropertyValue('--card-head-height')),
@@ -186,26 +186,28 @@ const ItemBrowser = (props: Props) => {
         <Button type="default" id="umapBtn" size="small">
           UMAP
         </Button>
-        <br />
+        {` `}
         <Button type="default" id="1dBtn" size="small">
           Grid
         </Button>
         {/* --------Group------------- */}
         <hr className={styles.configHr} />
         <h5>Group</h5>
-        <Button type="default" id="stackXBtn" size="small">
-          GroupX
+        <Button type="default" id="XGroupBtn" size="small">
+          Group by X
         </Button>
+        <br />
         <Button type="default" id="groupBtn" size="small">
-          AutoGroup
+          Group by grid
         </Button>
+        <br />
         <Button type="default" id="splitBtn" size="small">
           Split-All
         </Button>
         {/* --------Item------------- */}
         <hr className={styles.configHr} />
         <h5>Item</h5>
-        <label> Size</label> <input id="itemSize" type="number" min="10" max="50" defaultValue={40} />
+        <label> Size</label> <input id="itemSize" type="number" min="10" max="50" defaultValue={45} />
         {/* --------Summary------------- */}
         <hr className={styles.configHr} />
         <h5> Summary </h5>
@@ -215,7 +217,16 @@ const ItemBrowser = (props: Props) => {
           <option value="combining2">Combining with offset</option>
           <option value="representative">Representative</option>
         </select>
-        <Button type="primary" className={styles.updateBtn}>
+        <Button
+          type="primary"
+          className={styles.updateBtn}
+          onClick={() =>
+            message.warning(
+              'Update Concept is not supported in the online demo.\n Please download Drava and run it on your local computer.',
+              5 //duration = 5s
+            )
+          }
+        >
           Update Concept
         </Button>
       </div>
@@ -232,11 +243,14 @@ const ItemBrowser = (props: Props) => {
       barHeight={barHeight}
       barLabelHeight={barLabelHeight}
       gap={gap}
-      imageSize={imageSize}
+      imageSize={stepWidth}
       dataset={props.dataset}
       latentZ={z}
     />
   );
+
+  const rowHeight = barHeight + imageSize + barLabelHeight + gap * 2;
+  const pilingHeight = height - rowHeight - 150;
 
   return (
     <Card
@@ -245,22 +259,21 @@ const ItemBrowser = (props: Props) => {
       bodyStyle={{ overflowY: 'scroll', height: height - cardHeadHeight }}
       loading={isDataLoading}
     >
+      <Piling
+        dataset={dataset}
+        samples={samples}
+        dimNames={dimNames}
+        dimUserNames={dimUserNames}
+        height={pilingHeight}
+      />
       {baselineSelector}
-      <svg width={width - 2 * padding} height={barHeight + imageSize + barLabelHeight + gap * 2} id="ItemBrowser">
+      <svg width={width - 2 * padding} height={rowHeight} id="ItemBrowser">
         <g>{Row}</g>
       </svg>
-      <Piling dataset={dataset} samples={samples} dimNames={dimNames} dimUserNames={dimUserNames} />
 
       {config}
     </Card>
   );
 };
-
-const get_tool_icon = (width: number) => (
-  <path
-    transform={`scale(${(0.01 * width) / 8})`}
-    d="M876.6 239.5c-.5-.9-1.2-1.8-2-2.5-5-5-13.1-5-18.1 0L684.2 409.3l-67.9-67.9L788.7 169c.8-.8 1.4-1.6 2-2.5 3.6-6.1 1.6-13.9-4.5-17.5-98.2-58-226.8-44.7-311.3 39.7-67 67-89.2 162-66.5 247.4l-293 293c-3 3-2.8 7.9.3 11l169.7 169.7c3.1 3.1 8.1 3.3 11 .3l292.9-292.9c85.5 22.8 180.5.7 247.6-66.4 84.4-84.5 97.7-213.1 39.7-311.3zM786 499.8c-58.1 58.1-145.3 69.3-214.6 33.6l-8.8 8.8-.1-.1-274 274.1-79.2-79.2 230.1-230.1s0 .1.1.1l52.8-52.8c-35.7-69.3-24.5-156.5 33.6-214.6a184.2 184.2 0 01144-53.5L537 318.9a32.05 32.05 0 000 45.3l124.5 124.5a32.05 32.05 0 0045.3 0l132.8-132.8c3.7 51.8-14.4 104.8-53.6 143.9z"
-  ></path>
-);
 
 export default ItemBrowser;

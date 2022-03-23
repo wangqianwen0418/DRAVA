@@ -16,6 +16,7 @@ type Props = {
   dataset: string;
   dimUserNames: { [k: string]: string };
   dimNames: string[];
+  height: number;
 };
 const Pilling = (props: Props) => {
   const { samples, dimNames, dimUserNames, dataset } = props;
@@ -64,34 +65,47 @@ const Pilling = (props: Props) => {
       actions.splitAll([dimX, dimY]);
     };
 
+    const gridGroup = () => {
+      const dimX = (document.getElementById('xSelector') as any).value;
+      const dimY = (document.getElementById('ySelector') as any).value;
+      actions.gridGroup([dimX, dimY]);
+    };
+
     const changeSize = () => {
       const size = (document.getElementById('itemSize') as any).value;
       actions.changeSize(size);
     };
 
+    const onegrid = () => {
+      const dimX = (document.getElementById('xSelector') as any).value;
+      actions.grid(dimX);
+    };
+
     document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);
     document.querySelector('#xSelector')?.addEventListener('change', reArrangeX);
-    document.getElementById('stackXBtn')?.addEventListener('click', stackX);
+    document.getElementById('XGroupBtn')?.addEventListener('click', stackX);
+    document.getElementById('groupBtn')?.addEventListener('click', gridGroup);
     document.getElementById('splitBtn')?.addEventListener('click', splitAll);
     document.getElementById('umapBtn')?.addEventListener('click', actions.UMAP);
-    document.getElementById('1dBtn')?.addEventListener('click', actions.grid);
+    document.getElementById('1dBtn')?.addEventListener('click', onegrid);
     document.getElementById('itemSize')?.addEventListener('change', changeSize);
 
     return () => {
       piling.destory();
       document.querySelector('#ySelector')?.removeEventListener('change', reArrangeY);
       document.querySelector('#xSelector')?.removeEventListener('change', reArrangeX);
-      document.getElementById('stackXBtn')?.removeEventListener('click', stackX);
+      document.getElementById('XGroupBtn')?.removeEventListener('click', stackX);
+      document.getElementById('groupBtn')?.removeEventListener('click', gridGroup);
       document.getElementById('splitBtn')?.removeEventListener('click', splitAll);
       document.getElementById('umapBtn')?.removeEventListener('click', actions.UMAP);
-      document.getElementById('1dBtn')?.removeEventListener('click', actions.grid);
+      document.getElementById('1dBtn')?.removeEventListener('click', onegrid);
       document.getElementById('itemSize')?.removeEventListener('change', changeSize);
     };
   }, []);
 
   return (
     <div className={styles.piling_container}>
-      <div className={styles.piling_wrapper} ref={pilingInitHandler} />
+      <div className={styles.piling_wrapper} ref={pilingInitHandler} style={{ height: props.height }} />
     </div>
   );
 };

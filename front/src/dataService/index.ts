@@ -41,7 +41,7 @@ const queryIDCResults = async () => {
 
     return {
       ...row,
-      z: row['z'].split(',').map(d => parseFloat(d)),
+      z: row['z'].split(',').map(d => parseFloat(d) / 6 + 0.5),
       std: row['std'].split(',').map(d => parseFloat(d)),
       id: row['img_path'],
       assignments: {},

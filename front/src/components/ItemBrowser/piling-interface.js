@@ -39,7 +39,9 @@ export default async function create(element, pilingOptions) {
     cellSize: imageSize,
     renderer: createImageRenderer({ imageSize }),
     items: items,
-    itemSize: imageSize
+    itemSize: imageSize,
+    showGrid: true,
+    gridOpacity: 0.3
     // pileBorderColor: '#000000',
     // pileBorderSize: 1
   };
@@ -83,7 +85,7 @@ export default async function create(element, pilingOptions) {
 
   const piling = createPilingJs(element, spec);
 
-  piling.arrangeBy('data', dims);
+  piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
 
   piling.subscribe('pileDragEnd', pileDragEnd);
   piling.subscribe('zoom', camera => {
@@ -105,35 +107,29 @@ export default async function create(element, pilingOptions) {
 
       if (dimY == 'std') {
         const dimNum = parseInt(dimX.split('_')[1]);
-        piling.arrangeBy('data', [item => item[dimX], item => item['std'][dimNum]]);
+        piling.arrangeBy('data', [item => item[dimX], item => -1 * item['std'][dimNum]]);
       } else {
-        piling.arrangeBy('data', dims);
+        piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
       }
     },
     stackX: dim => {
-      piling.arrangeBy('data', [item => item['assignments'][dim] || 0, 0]);
+      piling.arrangeBy('data', [item => item['assignments'][dim], 0]);
       piling.groupBy('category', item => item['assignments'][dim] || 0);
     },
     gridGroup: dims => {
-      // TODO
+      // piling.arrangeBy('data', [item => item['assignments'][dims[0]], item => item['assignments'][dims[1]]]);
+      // piling.groupBy('category', [item => item['assignments'][dims[0]], item => item['assignments'][dims[1]]]);
+      piling.groupBy('grid');
     },
     splitAll: dims => {
-      piling.arrangeBy('data', [dims[0], 'none']);
       piling.splitAll();
+      piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
     },
     UMAP: () => {
-      // piling.arrangeBy(
-      //   'data',
-      //   {
-      //     property: item => item.z,
-      //     propertyIsVector: true
-      //   },
-      //   { forceDimReduction: true }
-      // );
       piling.arrangeBy('uv', 'z');
     },
-    grid: () => {
-      piling.arrangeBy('data', 'dim_0');
+    grid: dim => {
+      piling.arrangeBy('data', dim);
     },
     changeSize: size => {
       piling.set({

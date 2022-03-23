@@ -11,7 +11,7 @@
   position: absolute;
   padding: 5px;
   right: 0px;
-  width: 200px;
+  width: 180px;
   height: 100%;
   transition: width 1s;
   float: right;
@@ -42,7 +42,7 @@
 }
 
 .updateBtn {
-  position: absolute;
+  position: absolute !important;
   bottom: 5px;
   left: 2px;
 }
