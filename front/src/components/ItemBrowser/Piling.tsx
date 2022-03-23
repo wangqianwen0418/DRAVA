@@ -5,7 +5,7 @@ import styles from './Piling.module.css';
 import { Button } from 'antd';
 import { BASE_URL } from 'Const';
 
-import { TResultRow } from 'types';
+import { TFilter, TResultRow } from 'types';
 
 type Item = TResultRow & {
   src: string;
@@ -26,6 +26,8 @@ const Pilling = (props: Props) => {
   });
   const pileDragEnd = (e: any) => console.info('end of piling drag, ', e.target.items);
 
+  const [thisPiling, changePiling] = useState<any>('');
+
   const pilingInitHandler = useCallback(async element => {
     if (element == null) return;
 
@@ -42,6 +44,7 @@ const Pilling = (props: Props) => {
     };
 
     const [piling, actions] = await createPilingExample(element, pilingOptions);
+    changePiling(piling);
 
     // register action
     const reArrangeY = (event: any) => {
@@ -77,11 +80,6 @@ const Pilling = (props: Props) => {
       actions.changeSize(size);
     };
 
-    const onegrid = () => {
-      const dimX = (document.getElementById('xSelector') as any).value;
-      actions.grid(dimX);
-    };
-
     const changeSummary = () => {
       const sType = (document.getElementById('summarySelector') as any).value;
       actions.changeSummary(sType);
@@ -96,8 +94,8 @@ const Pilling = (props: Props) => {
       const group = (document.getElementById('groupSelector') as any).value;
       const dimX = (document.getElementById('xSelector') as any).value;
       const dimY = (document.getElementById('ySelector') as any).value;
-      if (group == 'UMAP') {
-        actions.UMAP;
+      if (group == 'umap') {
+        actions.UMAP();
       } else if (group == 'grid') {
         actions.grid(dimX);
       } else {
@@ -114,8 +112,6 @@ const Pilling = (props: Props) => {
     document.getElementById('XGroupBtn')?.addEventListener('click', stackX);
     document.getElementById('groupBtn')?.addEventListener('click', gridGroup);
     document.getElementById('splitBtn')?.addEventListener('click', splitAll);
-    document.getElementById('umapBtn')?.addEventListener('click', actions.UMAP);
-    document.getElementById('1dBtn')?.addEventListener('click', onegrid);
     document.getElementById('itemSize')?.addEventListener('change', changeSize);
 
     return () => {
@@ -129,11 +125,20 @@ const Pilling = (props: Props) => {
       document.getElementById('XGroupBtn')?.removeEventListener('click', stackX);
       document.getElementById('groupBtn')?.removeEventListener('click', gridGroup);
       document.getElementById('splitBtn')?.removeEventListener('click', splitAll);
-      document.getElementById('umapBtn')?.removeEventListener('click', actions.UMAP);
-      document.getElementById('1dBtn')?.removeEventListener('click', onegrid);
       document.getElementById('itemSize')?.removeEventListener('change', changeSize);
     };
   }, []);
+
+  useEffect(() => {
+    if (thisPiling && props.samples.length > 0) {
+      thisPiling.set({
+        items: props.samples.map(s => {
+          const url = `${BASE_URL}/api/get_${dataset}_sample?id=${s.id}`;
+          return { ...s, src: url }; // y = 0 in case dimYNum = null
+        })
+      });
+    }
+  }, [props.samples]);
 
   return (
     <div className={styles.piling_container}>

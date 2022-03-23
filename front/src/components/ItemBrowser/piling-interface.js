@@ -86,7 +86,8 @@ export default async function create(element, pilingOptions) {
 
   const piling = createPilingJs(element, spec);
 
-  piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
+  // piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
+  piling.arrangeBy('uv', 'z');
 
   piling.subscribe('pileDragEnd', pileDragEnd);
   piling.subscribe('zoom', camera => {

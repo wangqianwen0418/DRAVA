@@ -13,6 +13,7 @@ import { DimRow } from 'components/LatentDim/DimRow';
 import Piling from './Piling';
 
 import { BASE_URL } from 'Const';
+import { filters } from 'pixi.js';
 
 const { Option } = Select;
 
@@ -45,7 +46,8 @@ const ItemBrowser = (props: Props) => {
     // baseSampleIndex,
     dimNames,
     height,
-    isDataLoading
+    isDataLoading,
+    filters
   } = props;
 
   const padding = 24;
@@ -304,12 +306,18 @@ const ItemBrowser = (props: Props) => {
           height={pilingHeight}
         />
       </div>
-      {baselineSelector}
-      <svg width={width - 2 * padding} height={rowHeight} id="ItemBrowser">
-        <g transform={`translate(${rowHeight}, 0)`}>
-          <g>{xRow}</g>
-        </g>
-      </svg>
+      {group != 'umap' ? (
+        <>
+          {baselineSelector}
+          <svg width={width - 2 * padding} height={rowHeight} id="ItemBrowser">
+            <g transform={`translate(${rowHeight}, 0)`}>
+              <g>{xRow}</g>
+            </g>
+          </svg>
+        </>
+      ) : (
+        <></>
+      )}
 
       {config}
     </Card>
