@@ -38,11 +38,13 @@ export default async function create(element, pilingOptions) {
   var spec = {
     dimensionalityReducer: umap,
     cellSize: imageSize,
+    cellPadding: 3,
     renderer: createImageRenderer({ imageSize }),
     items: items,
     itemSize: imageSize,
     showGrid: true,
-    gridOpacity: 0.3
+    gridOpacity: 0.3,
+    pileSizeBadge: pile => pile.items.length > 1
     // pileBorderColor: '#000000',
     // pileBorderSize: 1
   };
@@ -51,7 +53,6 @@ export default async function create(element, pilingOptions) {
     spec = {
       ...spec,
       pileItemOpacity: (item, i, pile) => 1 - i / pile.items.length, //opaciy piles for the sequence dataset
-      pileSizeBadge: pile => pile.items.length > 1,
       pileItemOffset: [0, 0] //force all items overlaid
     };
   } else if (dataset == 'dsprites') {

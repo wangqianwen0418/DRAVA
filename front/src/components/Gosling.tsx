@@ -53,7 +53,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
     const goslingComponentHeight = height - cardPadding * 2 - cardHeadHeight - 30; // gosling axis;
     const labelHeight = 18,
       peakHeight = 30,
-      multiLabelHeight = 10 * 8;
+      multiLabelHeight = 8 * 8;
 
     const labelTrack: any = {
       title: 'Samples',
@@ -197,7 +197,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
     }
 
     return (
-      <Card title="Genomic Browser" size="small" loading={isDataLoading}>
+      <Card title="Context View (Genomic)" size="small" loading={isDataLoading}>
         <GoslingComponent spec={spec as GoslingSpec} experimental={{ reactive: true }} />
       </Card>
     );

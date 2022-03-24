@@ -141,8 +141,8 @@ const ItemBrowser = (props: Props) => {
       src={url}
       className="pixelated"
       alt={`sample_${samples[sampleIdx].id}`}
-      height="64"
-      width="64"
+      height="45"
+      width="45"
       style={{ border: 'solid 1px gray' }}
     />
   );
@@ -184,7 +184,7 @@ const ItemBrowser = (props: Props) => {
         <h5>Arrange</h5>
         <select
           id="groupSelector"
-          style={{ width: '100px' }}
+          style={{ width: '120px' }}
           value={group}
           onChange={(e: any) => {
             changeGroup(e.target.value);
@@ -221,7 +221,7 @@ const ItemBrowser = (props: Props) => {
         {/* --------Summary------------- */}
         <hr className={styles.configHr} />
         <h5> Summary </h5>
-        <select id="summarySelector" style={{ width: '100px' }} defaultValue="representative">
+        <select id="summarySelector" style={{ width: '120px' }} defaultValue="representative">
           <option value="foreshortened">Foreshortened</option>
           <option value="combining">Combining</option>
           <option value="combining2">Combining with offset</option>
@@ -287,7 +287,8 @@ const ItemBrowser = (props: Props) => {
 
   return (
     <Card
-      title={`Items [${isDataLoading ? '...' : samples.length}]`}
+      // title={`Items [${isDataLoading ? '...' : samples.length}]`}
+      title="Item Browser"
       size="small"
       bodyStyle={{ overflowY: 'scroll', height: height - cardHeadHeight }}
       loading={isDataLoading}

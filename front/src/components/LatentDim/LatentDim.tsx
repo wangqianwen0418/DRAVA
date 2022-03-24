@@ -193,7 +193,7 @@ export default class LatentDim extends React.Component<Props, States> {
 
     return (
       <Card
-        title="Concept Space"
+        title="Concept View"
         size="small"
         extra={axisController}
         bodyStyle={{ height: height - cardHeadHeight, width: width, overflowY: 'scroll' }}

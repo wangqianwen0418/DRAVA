@@ -79,7 +79,7 @@ const LatentDim = (props: Props) => {
       />
     ) : (
       // <Tooltip title={<img width={64} src={href} />} destroyTooltipOnHide placement="top">
-      <g transform={rotate ? `translate(${imgSize * 2.5}, ${imgSize * 1.5}) rotate(90)` : ''}>
+      <g transform={rotate ? `translate(${imgSize * 2.5 + 6}, ${imgSize * 1.5}) rotate(90)` : ''}>
         <image
           xlinkHref={href}
           className={clsx(styles.latentImage, selectFlag && styles.isImageSelected)}

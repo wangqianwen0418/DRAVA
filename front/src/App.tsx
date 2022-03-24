@@ -233,8 +233,8 @@ export default class App extends React.Component<{}, State> {
       contentPadding = 10,
       gutter = 16,
       appHeight = (windowInnerSize ? windowInnerSize.height : window.innerHeight) - headerHeight - 2 * contentPadding,
-      leftCol = 9,
-      rightCol = 15,
+      leftCol = 10,
+      rightCol = 14,
       leftColWidth =
         ((windowInnerSize ? windowInnerSize.width : window.innerWidth) - siderWidth - contentPadding * 2) *
           (leftCol / 24) -
