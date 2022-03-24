@@ -149,6 +149,7 @@ def get_matrix_sample():
     im = np.array(img_src)
     im = colormap.get_cmap('viridis')(im) * 255
     pil_img = Image.fromarray(im.astype(np.uint8)).convert('RGB')
+    pil_img = pil_img.resize((64, 64), Image.NEAREST)
 
     img_io = BytesIO()
     pil_img.save(img_io, 'JPEG', quality=70)
