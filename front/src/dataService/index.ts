@@ -72,6 +72,7 @@ const queryDspritesResults = async () => {
 
     return {
       ...row,
+      embedding: [2, 3, 4, 7, 0].map(i => zs[i] / 3 + 0.5),
       z: row['z'].split(',').map(d => parseFloat(d)),
       std: row['std'].split(',').map(d => parseFloat(d)),
       id: i.toString(),

@@ -87,7 +87,11 @@ export default async function create(element, pilingOptions) {
   const piling = createPilingJs(element, spec);
 
   // piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
-  piling.arrangeBy('uv', 'z');
+  if (dataset == 'dsprites') {
+    piling.arrangeBy('uv', 'embedding');
+  } else {
+    piling.arrangeBy('uv', 'z');
+  }
 
   piling.subscribe('pileDragEnd', pileDragEnd);
   piling.subscribe('zoom', camera => {
@@ -138,7 +142,11 @@ export default async function create(element, pilingOptions) {
       piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
     },
     UMAP: () => {
-      piling.arrangeBy('uv', 'z');
+      if (dataset == 'dsprites') {
+        piling.arrangeBy('uv', 'embedding');
+      } else {
+        piling.arrangeBy('uv', 'z');
+      }
     },
     grid: dim => {
       piling.arrangeBy('data', dim);
