@@ -248,7 +248,7 @@ export default class LatentDim extends React.Component<Props, States> {
                   >
                     <rect height={this.barLabelHeight} width={barWidth} stroke="lightgray" fill="transparent"></rect>
                     <rect height={this.barLabelHeight} width={scoreBarWidth} stroke="lightgray" fill="lightgray"></rect>
-                    <text y={this.barLabelHeight}>{score.toFixed(3)}</text>
+                    {/* <text y={this.barLabelHeight}>{score.toFixed(3)}</text> */}
                   </g>
                 ) : (
                   <></>
