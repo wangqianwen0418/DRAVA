@@ -173,10 +173,10 @@ def get_sequence_sample():
     id = request.args.get('id', type=str)
     img = sequence_data[int(id)]*255
     # add a border
-    img[0, :] = 20
-    img[63, :] = 20
-    img[:, 0] = 20
-    img[:, 63] = 20
+    img[0, :] = 50
+    img[62, :] = 50
+    img[:, 0] = 50
+    img[:, 62] = 50
     pil_img = Image.fromarray(img.astype(np.uint8))
     
     
@@ -195,10 +195,10 @@ def get_dsprites_sample():
     # convert white to black
     img = 255- img
     # add a border
-    img[0, :] = 20
-    img[63, :] = 20
-    img[:, 0] = 20
-    img[:, 63] = 20
+    img[0, :] = 50
+    img[62, :] = 50
+    img[:, 0] = 50
+    img[:, 62] = 50
     pil_img = Image.fromarray(img.astype(np.uint8))
     
     
