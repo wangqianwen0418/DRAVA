@@ -278,7 +278,7 @@ const ItemBrowser = (props: Props) => {
         gap={gap}
         imageSize={YStepWidth}
         dataset={props.dataset}
-        latentZ={z}
+        // latentZ={z}
         rotate={true}
       />
     ) : (
