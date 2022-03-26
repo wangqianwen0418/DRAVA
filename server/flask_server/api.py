@@ -237,7 +237,7 @@ def get_simu_images():
         z= [float(i) for i in z.split(',')]
     else:
         z = default_z[dataset]
-
+    
     if dataset in ranges:
         zRange = ranges[dataset][dim]
     else:
@@ -269,7 +269,11 @@ def get_simu_images():
         img_io.seek(0)
         v = base64.b64encode(img_io.getvalue()).decode()
         results.append(f'data:image/png;base64,{v}')
-
+    
+    # a quick hack for the y pos axis
+    # TODO: enable users to reverse an axis
+    if dataset =='dsprites' and dim==4:
+        results = results[::-1]
     return jsonify({"image": results, "score": score})
 
 ######################

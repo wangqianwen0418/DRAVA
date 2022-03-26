@@ -64,7 +64,7 @@ const queryDspritesResults = async () => {
   const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
 
   const samples = pcsv.data.map((row, i) => {
-    const zs = row['z'].split(',').map(d => parseFloat(d));
+    const zs = row['z'].split(',').map((d, i) => (i == 4 ? -1 : 1) * parseFloat(d));
     const dims = zs.reduce((pre, curr, idx) => {
       const dimName = `dim_${idx}`;
       return { ...pre, [dimName]: curr };
