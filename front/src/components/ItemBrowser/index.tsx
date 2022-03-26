@@ -232,6 +232,15 @@ const ItemBrowser = (props: Props) => {
         <select id="labelSelector" style={{ width: '100px' }} defaultValue="representative">
           <option value="none">none</option>
           {dataset == 'IDC' ? <option value="label">label</option> : <></>}
+          {dataset == 'celeb' ? (
+            ['gender', 'smiling', 'hair', 'bangs', 'young'].map(a => (
+              <option value={a} key={a}>
+                {a}
+              </option>
+            ))
+          ) : (
+            <></>
+          )}
         </select>
         <Button
           type="primary"
