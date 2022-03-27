@@ -12,6 +12,7 @@ import z_ranges_matrix from 'assets/z_range_matrix.json';
 import LatentDim from 'components/LatentDim/LatentDim';
 import ItemBrowser from 'components/ItemBrowser';
 import GoslingVis from 'components/Gosling';
+import ImageContext from 'components/ImageContext';
 
 import { queryResults } from 'dataService';
 import { MenuInfo } from 'rc-menu/lib/interface';
@@ -29,11 +30,12 @@ const Z_Ranges: { [k: string]: number[][] } = {
 };
 
 const non_genomic_dataset = ['celeb', 'IDC', 'dsprites'];
+const context_img_dataset = ['IDC'];
 
 interface State {
   dataset: string;
   filters: TFilter;
-  samples: TResultRow[];
+  // samples: TResultRow[];
   dimUserNames: { [key: string]: string }; // user can specify new names for latent dim
   isDataLoading: boolean;
   windowInnerSize?: { width: number; height: number };
@@ -45,14 +47,15 @@ export default class App extends React.Component<{}, State> {
    * only update when query new dataset
    ****/
   matrixData: TMatrixData = {};
-  filteredSamples: TResultRow[] = [];
+  // filteredSamples: TResultRow[] = [];
+  samples: TResultRow[] = [];
   constructor(prop: {}) {
     super(prop);
     this.state = {
       dataset: 'IDC',
       dimUserNames: {},
       filters: {},
-      samples: [],
+      // samples: [],
       isDataLoading: true,
       windowInnerSize: undefined
     };
@@ -70,8 +73,10 @@ export default class App extends React.Component<{}, State> {
     });
     const [matrixData, samplesWithAssign] = this.calculateMatrixData(samples, dataset);
     this.matrixData = matrixData;
-    this.filteredSamples = samples;
-    this.setState({ filters, samples: samplesWithAssign, isDataLoading: false });
+    this.samples = samplesWithAssign.map(s => {
+      return { ...s, filtered: false };
+    });
+    this.setState({ filters, isDataLoading: false });
   }
   resize() {
     this.setState({
@@ -93,9 +98,10 @@ export default class App extends React.Component<{}, State> {
   onChangeDataset(e: MenuInfo): void {
     const dataset = e.key;
     if (dataset == 'upload') return;
+    this.samples = [];
     this.setState({
       dataset,
-      samples: [],
+      // samples: [],
       filters: {},
       dimUserNames: {},
       isDataLoading: true
@@ -107,7 +113,8 @@ export default class App extends React.Component<{}, State> {
    * @state_update
    * */
   updateDims(dimNames: string[]): void {
-    const { filters, samples } = this.state;
+    const samples = this.samples;
+    const { filters } = this.state;
     const currentDimNames = Object.keys(filters);
     const deleteDimNames = currentDimNames.filter(d => !dimNames.includes(d)),
       addDimNames = dimNames.filter(d => !currentDimNames.includes(d));
@@ -119,7 +126,7 @@ export default class App extends React.Component<{}, State> {
       filters[n] = range(this.matrixData[n].histogram.length).map(d => true);
     });
     if (deleteDimNames.length > 0) {
-      this.filteredSamples = this.getFilteredSamples(samples, filters);
+      this.samples = this.getFilteredSamples(samples, filters);
     }
 
     this.setState({ filters });
@@ -130,7 +137,8 @@ export default class App extends React.Component<{}, State> {
    * @state_update
    * */
   setFilters(dimName: string, col: number): void {
-    const { filters, samples } = this.state;
+    const samples = this.samples;
+    const { filters } = this.state;
     if (col === -1) {
       // set filters for the whole row
       if (filters[dimName].some(d => d)) {
@@ -142,7 +150,7 @@ export default class App extends React.Component<{}, State> {
       filters[dimName][col] = !filters[dimName][col];
     }
 
-    this.filteredSamples = this.getFilteredSamples(samples, filters);
+    this.samples = this.getFilteredSamples(samples, filters);
     this.setState({ filters });
   }
   /**
@@ -216,17 +224,24 @@ export default class App extends React.Component<{}, State> {
    * @compute
    */
   getFilteredSamples(samples: TResultRow[], filters: TFilter) {
-    const filteredSamples = samples.filter(sample =>
-      Object.keys(sample.assignments).every(dimName => {
+    // const filteredSamples = samples.filter(sample =>
+    //   Object.keys(sample.assignments).every(dimName => {
+    //     const col = sample.assignments[dimName];
+    //     return filters[dimName] ? filters[dimName][col] : true;
+    //   })
+    // );
+    const filteredSamples = samples.map(sample => {
+      const flag = Object.keys(sample.assignments).every(dimName => {
         const col = sample.assignments[dimName];
         return filters[dimName] ? filters[dimName][col] : true;
-      })
-    );
+      });
+      return { ...sample, filtered: !flag };
+    });
     return filteredSamples;
   }
 
   render() {
-    const { filters, dataset, isDataLoading, dimUserNames, samples, windowInnerSize } = this.state;
+    const { filters, dataset, isDataLoading, dimUserNames, windowInnerSize } = this.state;
 
     const siderWidth = 150,
       headerHeight = 0,
@@ -285,10 +300,13 @@ export default class App extends React.Component<{}, State> {
               <Col span={leftCol}>
                 <LatentDim
                   dataset={dataset}
-                  samples={samples}
+                  samples={this.samples}
                   filters={filters}
                   matrixData={this.matrixData}
-                  height={appHeight * (non_genomic_dataset.includes(dataset) ? 1 : 0.6)}
+                  height={
+                    appHeight *
+                    (non_genomic_dataset.includes(dataset) && !context_img_dataset.includes(dataset) ? 1 : 0.6)
+                  }
                   width={leftColWidth}
                   isDataLoading={isDataLoading}
                   dimUserNames={dimUserNames}
@@ -297,11 +315,21 @@ export default class App extends React.Component<{}, State> {
                   setFilters={this.setFilters}
                 />
                 {non_genomic_dataset.includes(dataset) ? (
-                  <></>
+                  context_img_dataset.includes(dataset) ? (
+                    <ImageContext
+                      isDataLoading={isDataLoading}
+                      height={appHeight * 0.4}
+                      width={rightColWidth}
+                      samples={this.samples}
+                      dataset={dataset}
+                    />
+                  ) : (
+                    <></>
+                  )
                 ) : (
                   <GoslingVis
                     dataset={dataset}
-                    samples={this.filteredSamples}
+                    samples={this.samples.filter(d => !d.filtered)}
                     width={leftColWidth}
                     height={appHeight * 0.4}
                     isDataLoading={isDataLoading}
@@ -311,7 +339,7 @@ export default class App extends React.Component<{}, State> {
               <Col span={rightCol}>
                 <ItemBrowser
                   dataset={dataset}
-                  samples={this.filteredSamples}
+                  samples={this.samples.filter(d => !d.filtered)}
                   height={appHeight}
                   width={rightColWidth}
                   isDataLoading={isDataLoading}
