@@ -44,7 +44,10 @@ export default async function create(element, pilingOptions) {
     itemSize: imageSize,
     showGrid: true,
     gridOpacity: 0.3,
-    pileSizeBadge: pile => pile.items.length > 1
+    pileItemRotation: 0,
+    pileSizeBadge: pile => pile.items.length > 1,
+    pileLabelSizeTransform: 'histogram'
+    // pileLabelStackAlign: 'vertical'
     // pileBorderColor: '#000000',
     // pileBorderSize: 1
   };
@@ -130,13 +133,23 @@ export default async function create(element, pilingOptions) {
       }
     },
     stackX: dim => {
-      piling.arrangeBy('data', [item => item['assignments'][dim], 0]);
+      piling.arrangeBy('data', [item => item['assignments'][dim] || 0, 0]);
       piling.groupBy('category', item => item['assignments'][dim] || 0);
     },
     gridGroup: dims => {
-      // piling.arrangeBy('data', [item => item['assignments'][dims[0]], item => item['assignments'][dims[1]]]);
-      // piling.groupBy('category', [item => item['assignments'][dims[0]], item => item['assignments'][dims[1]]]);
-      piling.groupBy('grid');
+      // piling.groupBy('category', [
+      //   item => Math.floor(item['assignments'][dims[0]] / 2),
+      //   item => -1 * Math.floor(item['assignments'][dims[1]] / 2)
+      // ]);
+      piling.groupBy('category', [item => item['assignments'][dims[0]], item => -1 * item['assignments'][dims[1]]]);
+      // piling.groupBy('grid');
+      // piling.arrangeBy('data', [item => item['assignments'][dims[0]], item => -1 * item['assignments'][dims[1]]]);
+      // piling.groupBy('grid', { columns: 21, cellAspectRatio: 1 });
+      piling.set({
+        pileItemRotation: 0,
+        pileItemOffset: [0, 0]
+      });
+      // piling.groupBy('category', [item => item['assignments'][dims[0]], item => -1 * item['assignments'][dims[1]]]);
     },
     splitAll: dims => {
       piling.splitAll();
@@ -152,6 +165,13 @@ export default async function create(element, pilingOptions) {
     grid: dim => {
       piling.arrangeBy('data', dim);
     },
+    grid2D: dims => {
+      piling.arrangeBy('data', [item => item['assignments'][dims[0]], item => -1 * item['assignments'][dims[1]]]);
+      piling.set({
+        pileItemRotation: 0,
+        pileItemOffset: [0, 0]
+      });
+    },
     changeSize: size => {
       piling.set({
         itemSize: size,
@@ -161,6 +181,7 @@ export default async function create(element, pilingOptions) {
     changeSummary: sType => {
       if (sType == 'foreshortened') {
         piling.set({
+          pileItemRotation: 0,
           pileItemOpacity: 1, //opaciy piles for the dsprites dataset
           pileItemOffset: (_, i, pile) => [0, i * -3] //force all items overlaid
         });
@@ -173,8 +194,8 @@ export default async function create(element, pilingOptions) {
         // combine with offset
         piling.set({
           // pileItemOpacity: (item, i, pile) => 0.4 + (0.6 * i) / pile.items.length,
-          pileItemOpacity: 0.4,
-          pileItemOffset: (_, i, pile) => [0, i * -3] //force all items overlaid
+          pileItemOpacity: 0.6,
+          pileItemOffset: (_, i, pile) => [0, i * -5] //force all items overlaid
         });
       } else {
         piling.set({
@@ -191,15 +212,25 @@ export default async function create(element, pilingOptions) {
       }
     },
     addLabel: label => {
-      piling.set({
-        pileLabel: item => item[label] || '',
-        pileLabelText: true,
-        pileLabelTextMapping: (label, _) => (label == '0' ? 'neg' : 'pos'),
-        pileLabelColor: ['#3295a8', '#e0722b'],
-        pileLabelFontSize: 14,
-        pileLabelHeight: 10,
-        pileLabelTextColor: '#ffffff'
-      });
+      if (dataset == 'IDC') {
+        piling.set({
+          pileLabel: item => item[label] || '',
+          pileLabelText: true,
+          pileLabelTextMapping: (label, _) => (label == '0' ? 'neg' : 'pos'),
+          pileLabelColor: ['#3295a8', '#e0722b'],
+          pileLabelFontSize: 10,
+          pileLabelHeight: 4,
+          pileLabelTextColor: '#ffffff'
+        });
+      } else {
+        piling.set({
+          pileLabel: item => item[label] || '',
+          pileLabelText: true,
+          pileLabelFontSize: 14,
+          pileLabelHeight: 10,
+          pileLabelTextColor: '#ffffff'
+        });
+      }
     }
   };
 
