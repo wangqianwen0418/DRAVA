@@ -200,6 +200,9 @@ const ItemBrowser = (props: Props) => {
         <br />
         <label>y</label>
         {dimYSelector}
+        <Button type="default" id="gridBtn" size="small">
+          Arrange in 2D Grid
+        </Button>
         {/* --------Group------------- */}
         <hr className={styles.configHr} />
         <h5>Group</h5>
@@ -276,7 +279,7 @@ const ItemBrowser = (props: Props) => {
   );
 
   const yRow =
-    dimY != 'none' && matrixData[dimY] ? (
+    dimY != 'none' && matrixData[dimY] && group === 'concept' ? (
       <DimRow
         row={matrixData[dimY]}
         dimName={dimY}
