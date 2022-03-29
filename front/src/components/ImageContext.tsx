@@ -67,7 +67,7 @@ const ImageContext = (props: Props) => {
         ctx.fillRect(sample.x - 50, sample.y - 50, 50, 50);
         ctx.globalAlpha = 1.0;
       });
-  }, samples);
+  }, [samples]);
 
   return (
     <Card
