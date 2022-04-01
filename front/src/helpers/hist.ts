@@ -124,8 +124,8 @@ const generateHistogram = (
   K: number = 1,
   valueRange?: number[]
 ): { row: TDistribution; sampleAssignments: number[] } => {
-  var histogram: number[] = range(STEP_NUM, 0);
-  var groupedSamples: string[][] = range(STEP_NUM).map(_ => []);
+  var histogram: number[] = range(binNum, 0);
+  var groupedSamples: string[][] = range(binNum).map(_ => []);
   var sampleAssignments: number[] = samples.map(_ => 0); // the assigned group index for each sample at this dim
 
   // in case the csv parser process number to string
@@ -141,8 +141,8 @@ const generateHistogram = (
     var idx = value2rangeIdx(sample, minV, maxV);
     if (idx < 0) {
       idx = 0;
-    } else if (idx >= STEP_NUM) {
-      idx = STEP_NUM - 1;
+    } else if (idx >= binNum) {
+      idx = binNum - 1;
     }
     histogram[idx] += 1;
     sampleAssignments[sampleIdx] = idx;
@@ -158,8 +158,8 @@ const generateHistogram = (
     row: {
       histogram,
       groupedSamples,
-      labels: range(STEP_NUM).map(idx =>
-        [minV + (idx * (maxV - minV)) / STEP_NUM, minV + ((idx + 1) * (maxV - minV)) / STEP_NUM]
+      labels: range(binNum).map(idx =>
+        [minV + (idx * (maxV - minV)) / binNum, minV + ((idx + 1) * (maxV - minV)) / binNum]
           .map(d => shortNum(d))
           .join('~')
       )

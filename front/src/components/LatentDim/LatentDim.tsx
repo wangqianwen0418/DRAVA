@@ -168,7 +168,12 @@ export default class LatentDim extends React.Component<Props, States> {
         .map(d => d.histogram)
         .flat()
     );
-    const yScale = scaleLog().domain([0.1, maxV]).range([0, this.barHeight]);
+    const yScaleLog = scaleLog()
+      .domain([0.1, maxV])
+      .range([this.barHeight / 10, this.barHeight]);
+    const yScaleLinear = scaleLinear()
+      .domain([0.1, maxV])
+      .range([this.barHeight / 10, this.barHeight]);
 
     //   axis controller
     const axisController = (
@@ -209,7 +214,7 @@ export default class LatentDim extends React.Component<Props, States> {
                 row={matrixData[dimName]}
                 dimName={dimName}
                 stepWidth={stepWidth}
-                yScale={yScale}
+                yScale={dimName.includes('dim') ? yScaleLog : yScaleLinear}
                 barHeight={this.barHeight}
                 barLabelHeight={this.barLabelHeight}
                 gap={this.gap}

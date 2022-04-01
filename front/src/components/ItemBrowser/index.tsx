@@ -89,7 +89,12 @@ const ItemBrowser = (props: Props) => {
     .slice(0, samples.length / 4);
 
   const maxV = getMax(matrixData[dimX].histogram);
-  const yScale = scaleLog().domain([0.1, maxV]).range([0, barHeight]);
+  const yScaleLog = scaleLog()
+    .domain([0.1, maxV])
+    .range([barHeight / 10, barHeight]);
+  const yScaleLinear = scaleLinear()
+    .domain([0.1, maxV])
+    .range([barHeight / 10, barHeight]);
 
   const dimXSelector = (
     <select
@@ -267,7 +272,7 @@ const ItemBrowser = (props: Props) => {
       row={matrixData[dimX]}
       dimName={dimX}
       stepWidth={XStepWidth}
-      yScale={yScale}
+      yScale={dimX.includes('dim') ? yScaleLog : yScaleLinear}
       barHeight={barHeight}
       barLabelHeight={barLabelHeight}
       gap={gap}
@@ -284,7 +289,7 @@ const ItemBrowser = (props: Props) => {
         row={matrixData[dimY]}
         dimName={dimY}
         stepWidth={YStepWidth}
-        yScale={yScale}
+        yScale={dimY.includes('dim') ? yScaleLog : yScaleLinear}
         barHeight={barHeight}
         barLabelHeight={barLabelHeight}
         gap={gap}

@@ -57,7 +57,8 @@ def add_info2results():
     label_file = './IDC_regular_ps50_idx5/label.csv'
     pred_file = './IDC_pred.csv'
 
-    patient_id = '12749'
+    # patient_id = '12749'
+    patient_id = '10285'
 
     result_df = pd.read_csv(result_file)
     label_df = pd.read_csv(label_file)
@@ -73,8 +74,9 @@ def add_info2results():
     new_df.drop(columns = ['label_y', 'image'], inplace=True)
     new_df.rename(mapper={'label_x': 'label'}, inplace=True)
     new_df = new_df.sample(frac=1) # shuffle rows
+    new_df.rename(columns={'label_x': 'label'}, inplace=True)
 
-    new_df.to_csv('../../front/public/assets/results_IDC_test.csv', index=False)
+    new_df.to_csv(f'../../front/public/assets/results_IDC_{patient_id}.csv', index=False)
 
 def process_pred_file():
     pred_file = '../IDC_results.csv'
@@ -95,3 +97,4 @@ def process_pred_file():
 if __name__=='__main__':
     # generate_IDC_label()
     add_info2results()
+# %%

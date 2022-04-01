@@ -24,6 +24,7 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
 };
 
 const queryIDCResults = async () => {
+  // const url = '/assets/results_IDC_10285.csv';
   const url = '/assets/results_IDC.csv';
   const response = await axios({
     method: 'get',

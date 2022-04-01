@@ -46,7 +46,9 @@ export default async function create(element, pilingOptions) {
     gridOpacity: 0.3,
     pileItemRotation: 0,
     pileSizeBadge: pile => pile.items.length > 1,
-    pileLabelSizeTransform: 'histogram'
+    pileLabelSizeTransform: 'histogram',
+    pileOrderItems: pileState =>
+      pileState.items.sort((a, b) => items[+a - 1]['recons_loss'] || 0 - items[+b - 1]['recons_loss'] || 0)
     // pileLabelStackAlign: 'vertical'
     // pileBorderColor: '#000000',
     // pileBorderSize: 1
@@ -133,7 +135,6 @@ export default async function create(element, pilingOptions) {
       }
     },
     stackX: dim => {
-      piling.arrangeBy('data', [item => item['assignments'][dim] || 0, 0]);
       piling.groupBy('category', item => item['assignments'][dim] || 0);
     },
     gridGroup: dims => {
@@ -153,7 +154,7 @@ export default async function create(element, pilingOptions) {
     },
     splitAll: dims => {
       piling.splitAll();
-      piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
+      // piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
     },
     UMAP: () => {
       if (dataset == 'dsprites') {
@@ -167,10 +168,6 @@ export default async function create(element, pilingOptions) {
     },
     grid2D: dims => {
       piling.arrangeBy('data', [item => item['assignments'][dims[0]], item => -1 * item['assignments'][dims[1]]]);
-      piling.set({
-        pileItemRotation: 0,
-        pileItemOffset: [0, 0]
-      });
     },
     changeSize: size => {
       piling.set({
@@ -194,7 +191,7 @@ export default async function create(element, pilingOptions) {
         // combine with offset
         piling.set({
           // pileItemOpacity: (item, i, pile) => 0.4 + (0.6 * i) / pile.items.length,
-          pileItemOpacity: 0.6,
+          pileItemOpacity: (item, i, pile) => (pile.items.length > 1 ? 0.6 : 1),
           pileItemOffset: (_, i, pile) => [0, i * -5] //force all items overlaid
         });
       } else {

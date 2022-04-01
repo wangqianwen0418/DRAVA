@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score
 import math
 
 # 'dsprites latents_names': (b'color', b'shape', b'scale', b'orientation', b'posX', b'posY')
-DIM_NAME = 'pos_x'
+DIM_NAME = 'scale'
 #%%
 if DIM_NAME == 'scale':
     ################
@@ -48,7 +48,7 @@ elif DIM_NAME == 'pos_x':
         elif 10<y<=20:
             return 1
         return 2
-    # inital acc: 0.771
+    # inital acc: 0.871
 
 elif DIM_NAME == 'pos_y':
 ################
@@ -101,10 +101,15 @@ def initial_acc():
 def fine_tune(sample='m'):
     raw = np.load('./data/dsprites_test_concepts.npz')
     std = raw['std'][:, dim_y]
+    y_true = raw['gt'][:, dim_gt]
+    y_true_norm = np.vectorize(gt_mapper)(y_true)
+
     y_pred = raw['y'][:, dim_y]
+    y_pred_norm = np.vectorize(y_mapper)(y_pred)
+
     n_feedback = 20
     sample_index = np.argsort(std)[::-1][:n_feedback]
-    for i in range(10):
+    for i in range(15):
         
         
         model_config = {
@@ -117,8 +122,8 @@ def fine_tune(sample='m'):
                 'y_mapper': y_mapper,
                 'gt_mapper': gt_mapper,
                 'sample_index':sample_index,
-                # 'mode': 'active'
-                'mode': 'concept_tune'
+                'mode': 'active'
+                # 'mode': 'concept_tune'
             }
 
         model = ConceptAdaptor(cat_num=3, input_size=[32, 4, 4], params=model_config)
@@ -144,11 +149,16 @@ def fine_tune(sample='m'):
             sample_index = np.argsort(std)[::-1][:n_feedback*(i+1)]
         # based on mean value
         elif sample == 'm':
-            sample_index_a = np.argsort( np.abs(y_pred - 0.3) )[:int(n_feedback*(i+1)/2)]
-            sample_index_b = np.argsort( np.abs(y_pred - (-0.5)) )[:int(n_feedback*(i+1)/2)]
+            if model_config['mode']=='active':
+                sample_index_a = np.argsort( np.abs(y_pred - 0.4) )[:int(n_feedback*(i+1)/2)]
+                sample_index_b = np.argsort( np.abs(y_pred - (-0.9)) )[:int(n_feedback*(i+1)/2)]
+            else:
+                sample_index_a = [ i for i in np.argsort( np.abs(y_pred - 0.4) ) if y_pred_norm[i]!=y_true_norm[i]][:int(n_feedback*(i+1)/2)]
+                sample_index_b = [i for i  in np.argsort( np.abs(y_pred - (-0.9)) ) if y_pred_norm[i]!=y_true_norm[i]][:int(n_feedback*(i+1)/2)]
             sample_index = np.concatenate((sample_index_a, sample_index_b))
         # print(sample_index)
 
-
+#%%
 if __name__=="__main__":
     fine_tune(sample='m')
+# %%

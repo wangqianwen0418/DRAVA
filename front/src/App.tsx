@@ -206,6 +206,8 @@ export default class App extends React.Component<{}, State> {
         distributionResults = generateDistribution(dimValues, false, STEP_NUM, sampleIds, 10);
       } else if (dimName == 'level') {
         distributionResults = generateDistribution(dimValues, true, STEP_NUM, sampleIds);
+      } else if (dimName == 'confidence') {
+        distributionResults = generateDistribution(dimValues, false, 20, sampleIds);
       } else if (dimName == 'label' || dimName == 'prediction') {
         distributionResults = generateDistribution(dimValues, true, 2, sampleIds);
       } else {
@@ -319,7 +321,7 @@ export default class App extends React.Component<{}, State> {
                     <ImageContext
                       isDataLoading={isDataLoading}
                       height={appHeight * 0.4}
-                      width={rightColWidth}
+                      width={leftColWidth}
                       samples={this.samples}
                       dataset={dataset}
                     />

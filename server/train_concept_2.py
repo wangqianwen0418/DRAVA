@@ -45,36 +45,41 @@ classes = ['5_o_Clock_Shadow',
  'Wearing_Necktie',
  'Young']
 #%%
+
+dim = 'bangs'
 # 
-# mappers for dsprites scale
-def y_mapper(y):
-    if y<0.1:
-        return 0
-    return 1
 
-
-def gt_mapper(y):
-    return y
-
-# smiling
-dim_y = 19
-dim_gt = 31
-
-# #########
-# bangs: 0.77
-##############
-def y_mapper(y):
-    if y<-0.6:
+if dim == 'smiling':
+    # mappers for smiling
+    def y_mapper(y):
+        if y<0.1:
+            return 0
         return 1
-    return 0
 
 
-def gt_mapper(y):
-    return y
+    def gt_mapper(y):
+        return y
 
-# bangs: 
-dim_y = 10
-dim_gt = 5
+    # smiling
+    dim_y = 19
+    dim_gt = 31
+
+else:
+    # #########
+    # bangs: 0.77
+    ##############
+    def y_mapper(y):
+        if y<-0.6:
+            return 1
+        return 0
+
+
+    def gt_mapper(y):
+        return y
+
+    # bangs: 
+    dim_y = 10
+    dim_gt = 5
 # %%
 # intial accuracy
 def initial_acc():
@@ -103,12 +108,15 @@ def initial_acc():
 #  model training
 def fine_tune(sample):
     raw = np.load('./data/celeba_concepts.npz')
+    y_true = raw['gt'][:, dim_gt]
+    y_true_norm = np.vectorize(gt_mapper)(y_true)
+
     y_pred = raw['y'][:, dim_y]
-    initial_acc()
+    y_pred_norm = np.vectorize(y_mapper)(y_pred)
     std = raw['std'][:, dim_y]
     n_feedback = 40
     sample_index = np.argsort(std)[::-1][:n_feedback]
-    for i in range(20):
+    for i in range(15):
         
         model_config = {
                 "dataset": "celeba_concepts",
@@ -128,7 +136,7 @@ def fine_tune(sample):
 
         # 'dsprites latents_names': (b'color', b'shape', b'scale', b'orientation', b'posX', b'posY')
 
-        trainer = Trainer(gpus=0, max_epochs = 30, 
+        trainer = Trainer(gpus=0, max_epochs = 30 * (i+1), 
             early_stop_callback = False, 
             logger=False, # disable logs
             checkpoint_callback=False,
@@ -139,18 +147,18 @@ def fine_tune(sample):
         trainer.fit(model)
         trainer.test(model)
 
-        # sample_index = model.get_uncertain_index(n_feedback*(i+1))
-        # print(sample_index)
-        if sample == 'uncertain':
+        # based on probability score
+        if sample == 'uncertain' or model_config['mode']=='active':
             sample_index = model.get_uncertain_index(n_feedback*(i+1))
         #  based on std
         elif sample == 'std':
             sample_index = np.argsort(std)[::-1][:n_feedback*(i+1)]
         # based on mean value
         elif sample == 'm':
-            sample_index = np.argsort( np.abs(y_pred - (0.1)) )[:n_feedback*(i+1)]
-        # print(sample_index)
+            sample_index = [ i for i in np.argsort( np.abs(y_pred -( -0.6)) ) if y_pred_norm[i]!=y_true_norm[i]][:n_feedback*(i+1)]
+            
 
 
 if __name__=="__main__":
     fine_tune(sample = 'm')
+# %%

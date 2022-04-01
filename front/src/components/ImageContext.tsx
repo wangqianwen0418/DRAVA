@@ -38,7 +38,7 @@ const ImageContext = (props: Props) => {
     if (canvas == null) return;
     const ctx = canvas.getContext('2d');
     const scale = width / canvasOverallWidth;
-    ctx.scale(scale, scale);
+    ctx.scale(scale, height / canvasOverallHeight);
 
     imgSamples.forEach(sample => {
       const image = new Image(50, 50); // Using optional size for image
@@ -62,7 +62,7 @@ const ImageContext = (props: Props) => {
       .filter(d => d.filtered)
       .forEach(sample => {
         ctx.beginPath();
-        ctx.globalAlpha = 0.5;
+        ctx.globalAlpha = 0.1;
         ctx.fillStyle = 'white';
         ctx.fillRect(sample.x - 50, sample.y - 50, 50, 50);
         ctx.globalAlpha = 1.0;
