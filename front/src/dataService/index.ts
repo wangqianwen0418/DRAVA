@@ -41,14 +41,16 @@ const queryIDCResults = async () => {
 
     return {
       ...row,
-      z: row['z'].split(',').map(d => parseFloat(d)),
+      z: row['z'].split(',').map(d => parseFloat(d) / 6 + 0.5),
       std: row['std'].split(',').map(d => parseFloat(d)),
       id: row['img_path'],
       assignments: {},
       ...dims,
+      prediction: row['acc'] == 'True' ? 'right' : 'wrong',
       index: i
     };
   });
+
   return samples;
 };
 
@@ -62,7 +64,7 @@ const queryDspritesResults = async () => {
   const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
 
   const samples = pcsv.data.map((row, i) => {
-    const zs = row['z'].split(',').map(d => parseFloat(d));
+    const zs = row['z'].split(',').map((d, i) => (i == 4 ? -1 : 1) * parseFloat(d));
     const dims = zs.reduce((pre, curr, idx) => {
       const dimName = `dim_${idx}`;
       return { ...pre, [dimName]: curr };
@@ -70,6 +72,7 @@ const queryDspritesResults = async () => {
 
     return {
       ...row,
+      embedding: [2, 3, 4, 7, 0].map(i => zs[i] / 3 + 0.5),
       z: row['z'].split(',').map(d => parseFloat(d)),
       std: row['std'].split(',').map(d => parseFloat(d)),
       id: i.toString(),

@@ -1,6 +1,6 @@
 import { TDistribution, TResultRow, TFilter } from 'types';
 import React, { useState } from 'react';
-import { Card, Select, Button } from 'antd';
+import { Card, Select, Button, message } from 'antd';
 import { RightCircleOutlined, LeftCircleOutlined } from '@ant-design/icons';
 
 import styles from './index.module.css';
@@ -13,6 +13,7 @@ import { DimRow } from 'components/LatentDim/DimRow';
 import Piling from './Piling';
 
 import { BASE_URL } from 'Const';
+import { filters } from 'pixi.js';
 
 const { Option } = Select;
 
@@ -45,14 +46,22 @@ const ItemBrowser = (props: Props) => {
     // baseSampleIndex,
     dimNames,
     height,
-    isDataLoading
+    isDataLoading,
+    filters
   } = props;
 
   const padding = 24;
   const barHeight = 30; // height of bar chart
   const gap = 3; //horizontal gap between thumbnails
   const barLabelHeight = 14;
-  const stepWidth = (width - 2 * padding) / STEP_NUM - gap;
+  const imageSize = 64;
+
+  const rowHeight = barHeight + imageSize + barLabelHeight + gap * 2;
+
+  const XStepWidth = (width - 2 * padding - 200 - rowHeight) / STEP_NUM - gap;
+
+  const pilingHeight = height - rowHeight - 150;
+  const YStepWidth = pilingHeight / STEP_NUM - gap;
 
   const rootStyle = getComputedStyle(document.documentElement),
     cardHeadHeight = parseInt(rootStyle.getPropertyValue('--card-head-height')),
@@ -71,32 +80,23 @@ const ItemBrowser = (props: Props) => {
     );
 
   const [dimX, changeDimX] = useState(`dim_0`);
-  const [isShowConfig, toggleConfig] = useState(false);
+  const [dimY, changeDimY] = useState(`none`);
+  const [group, changeGroup] = useState('umap');
   const [sampleIdx, changeSampleIdx] = useState(0);
 
   const baselineOptions = [...samples]
     // .sort((a, b) => +a['recons_loss'] - +b['recons_loss'])
     .slice(0, samples.length / 4);
 
-  const iconWidth = 15;
-  const imageSize = 64;
-
   const maxV = getMax(matrixData[dimX].histogram);
   const yScale = scaleLog().domain([0.1, maxV]).range([0, barHeight]);
-
-  const dimUserName = dimUserNames[dimX] || dimX;
-
-  // const inputName = (
-  //   <>
-  //     <input value={dimUserName} unselectable="on" onChange={e => setDimUserNames({ [dimX]: e.target.value })} />
-  //   </>
-  // );
 
   const dimXSelector = (
     <select
       id="xSelector"
       style={{ width: '100px' }}
       value={dimX}
+      disabled={group == 'umap'}
       onChange={(e: any) => {
         changeDimX(e.target.value);
       }}
@@ -114,7 +114,15 @@ const ItemBrowser = (props: Props) => {
   );
 
   const dimYSelector = (
-    <select id="ySelector" style={{ width: '100px' }}>
+    <select
+      id="ySelector"
+      style={{ width: '100px' }}
+      value={dimY}
+      onChange={(e: any) => {
+        changeDimY(e.target.value);
+      }}
+      disabled={group != 'concept'}
+    >
       <option value="none">none</option>
       <option value="std">std</option>
       {dimNames.map(dimName => {
@@ -133,8 +141,8 @@ const ItemBrowser = (props: Props) => {
       src={url}
       className="pixelated"
       alt={`sample_${samples[sampleIdx].id}`}
-      height="64"
-      width="64"
+      height="45"
+      width="45"
       style={{ border: 'solid 1px gray' }}
     />
   );
@@ -146,7 +154,7 @@ const ItemBrowser = (props: Props) => {
   ));
 
   const baselineSelector = (
-    <>
+    <div style={{ transform: `translate(${rowHeight}px, 0px)` }}>
       <label htmlFor="fname">Explore {dimUserNames[dimX] || dimX} based on image </label>
       <Select
         id="baseline"
@@ -160,91 +168,173 @@ const ItemBrowser = (props: Props) => {
         {options}
       </Select>
       {image}
-    </>
+    </div>
   );
 
   const config = (
     <div className={styles.ConfigContainer}>
-      <Button className={styles.ConfigBtn} type="default" size="small" onClick={() => toggleConfig(!isShowConfig)}>
-        Config <LeftCircleOutlined />
-      </Button>
-      <div className={clsx(styles.ConfigPanel, isShowConfig ? 'show' : 'hide')}>
-        <div className={styles.ConfigHideBtn} onClick={() => toggleConfig(false)}>
+      <div className={clsx(styles.ConfigPanel, 'show')}>
+        <div className={styles.ConfigHideBtn}>
           <span>
-            Config <RightCircleOutlined />
+            <b>Config</b>
           </span>
         </div>
         {/* ----------Arrange----------- */}
         <hr className={styles.configHr} />
         <h5>Arrange</h5>
+        <select
+          id="groupSelector"
+          style={{ width: '120px' }}
+          value={group}
+          onChange={(e: any) => {
+            changeGroup(e.target.value);
+          }}
+        >
+          <option value="umap">UMAP</option>
+          <option value="grid">1D Grid</option>
+          <option value="concept">Concept</option>
+        </select>
+        <br />
         <label>x</label>
         {dimXSelector}
         <br />
         <label>y</label>
         {dimYSelector}
-        <br />
-        <Button type="default" id="umapBtn" size="small">
-          UMAP
-        </Button>
-        <br />
-        <Button type="default" id="1dBtn" size="small">
-          Grid
+        <Button type="default" id="gridBtn" size="small">
+          Arrange in 2D Grid
         </Button>
         {/* --------Group------------- */}
         <hr className={styles.configHr} />
         <h5>Group</h5>
-        <Button type="default" id="stackXBtn" size="small">
-          StackX
+        <Button type="default" id="XGroupBtn" size="small">
+          Group by X
         </Button>
+        <br />
         <Button type="default" id="groupBtn" size="small">
-          AutoGroup
+          Group by grid
         </Button>
+        <br />
         <Button type="default" id="splitBtn" size="small">
           Split-All
+        </Button>
+        {/* --------Item------------- */}
+        <hr className={styles.configHr} />
+        <h5>Item</h5>
+        <label> Size</label> <input id="itemSize" type="number" min="10" max="50" defaultValue={45} />
+        {/* --------Summary------------- */}
+        <hr className={styles.configHr} />
+        <h5> Summary </h5>
+        <select id="summarySelector" style={{ width: '120px' }} defaultValue="representative">
+          <option value="foreshortened">Foreshortened</option>
+          <option value="combining">Combining</option>
+          <option value="combining2">Combining with offset</option>
+          <option value="representative">Representative</option>
+        </select>
+        <br />
+        <label>Label</label>{' '}
+        <select id="labelSelector" style={{ width: '100px' }} defaultValue="representative">
+          <option value="none">none</option>
+          {dataset == 'IDC' ? <option value="label">label</option> : <></>}
+          {dataset == 'celeb' ? (
+            ['gender', 'smiling', 'hair', 'bangs', 'young'].map(a => (
+              <option value={a} key={a}>
+                {a}
+              </option>
+            ))
+          ) : (
+            <></>
+          )}
+        </select>
+        <Button
+          type="primary"
+          className={styles.updateBtn}
+          onClick={() =>
+            message.warning(
+              'Update Concept is not supported in the online demo.\n Please download Drava and run it on your local computer.',
+              5 //duration = 5s
+            )
+          }
+        >
+          Update Concept
         </Button>
       </div>
     </div>
   );
 
   const z = samples[sampleIdx]['z'];
-  const Row = (
+  const xRow = (
     <DimRow
       row={matrixData[dimX]}
       dimName={dimX}
-      stepWidth={stepWidth}
+      stepWidth={XStepWidth}
       yScale={yScale}
       barHeight={barHeight}
       barLabelHeight={barLabelHeight}
       gap={gap}
-      imageSize={imageSize}
+      imageSize={XStepWidth}
       dataset={props.dataset}
       latentZ={z}
+      rotate={false}
     />
   );
 
+  const yRow =
+    dimY != 'none' && matrixData[dimY] && group === 'concept' ? (
+      <DimRow
+        row={matrixData[dimY]}
+        dimName={dimY}
+        stepWidth={YStepWidth}
+        yScale={yScale}
+        barHeight={barHeight}
+        barLabelHeight={barLabelHeight}
+        gap={gap}
+        imageSize={YStepWidth}
+        dataset={props.dataset}
+        // latentZ={z}
+        rotate={true}
+      />
+    ) : (
+      <></>
+    );
+
   return (
     <Card
-      title={`Items [${isDataLoading ? '...' : samples.length}]`}
+      // title={`Items [${isDataLoading ? '...' : samples.length}]`}
+      title="Item Browser"
       size="small"
       bodyStyle={{ overflowY: 'scroll', height: height - cardHeadHeight }}
       loading={isDataLoading}
     >
-      {baselineSelector}
-      <svg width={width - 2 * padding} height={barHeight + imageSize + barLabelHeight + gap * 2} id="ItemBrowser">
-        <g>{Row}</g>
-      </svg>
-      <Piling dataset={dataset} samples={samples} dimNames={dimNames} dimUserNames={dimUserNames} />
+      <div>
+        <svg width={120} height={pilingHeight} style={{ float: 'left' }} id="ItemBrowserY">
+          <g transform={` translate(0 , ${pilingHeight}) rotate(-90)`}>
+            <g>{yRow}</g>
+          </g>
+        </svg>
+        <Piling
+          dataset={dataset}
+          samples={samples}
+          dimNames={dimNames}
+          dimUserNames={dimUserNames}
+          height={pilingHeight}
+        />
+      </div>
+      {group != 'umap' ? (
+        <>
+          {baselineSelector}
+          <svg width={width - 2 * padding} height={rowHeight} id="ItemBrowser">
+            <g transform={`translate(${rowHeight}, 0)`}>
+              <g>{xRow}</g>
+            </g>
+          </svg>
+        </>
+      ) : (
+        <></>
+      )}
 
       {config}
     </Card>
   );
 };
-
-const get_tool_icon = (width: number) => (
-  <path
-    transform={`scale(${(0.01 * width) / 8})`}
-    d="M876.6 239.5c-.5-.9-1.2-1.8-2-2.5-5-5-13.1-5-18.1 0L684.2 409.3l-67.9-67.9L788.7 169c.8-.8 1.4-1.6 2-2.5 3.6-6.1 1.6-13.9-4.5-17.5-98.2-58-226.8-44.7-311.3 39.7-67 67-89.2 162-66.5 247.4l-293 293c-3 3-2.8 7.9.3 11l169.7 169.7c3.1 3.1 8.1 3.3 11 .3l292.9-292.9c85.5 22.8 180.5.7 247.6-66.4 84.4-84.5 97.7-213.1 39.7-311.3zM786 499.8c-58.1 58.1-145.3 69.3-214.6 33.6l-8.8 8.8-.1-.1-274 274.1-79.2-79.2 230.1-230.1s0 .1.1.1l52.8-52.8c-35.7-69.3-24.5-156.5 33.6-214.6a184.2 184.2 0 01144-53.5L537 318.9a32.05 32.05 0 000 45.3l124.5 124.5a32.05 32.05 0 0045.3 0l132.8-132.8c3.7 51.8-14.4 104.8-53.6 143.9z"
-  ></path>
-);
 
 export default ItemBrowser;

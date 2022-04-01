@@ -65,3 +65,23 @@ df['atac_left'] = col_atac_left
 df['atac_right'] = col_atac_right
 df.to_csv(filename, index=False)
 # %%
+celeba_df = pd.read_csv('../public/assets/results_celeba.csv')
+label_df = pd.read_csv('../../server/data/celeba/list_attr_celeba.txt', sep=r"\s+")
+label_df = label_df.loc[:len(celeba_df)]
+# add gender
+celeba_df['gender'] = label_df['Male'].apply(lambda x: 'M' if x== 1 else 'F')
+# hair color
+celeba_df['hair'] = 'unknown'
+celeba_df.loc[ label_df['Black_Hair'] == 1, 'hair'] = 'black'
+celeba_df.loc[ label_df['Brown_Hair'] == 1, 'hair'] = 'brown'
+celeba_df.loc[ label_df['Gray_Hair'] == 1, 'hair'] = 'gray'
+celeba_df.loc[ label_df['Blond_Hair'] == 1, 'hair'] = 'blond'
+# 
+celeba_df['smiling'] = label_df['Smiling'].apply(lambda x: 'Y' if x== 1 else 'N')
+# 
+celeba_df['young'] = label_df['Young'].apply(lambda x: 'Y' if x== 1 else 'N')
+# 
+celeba_df['bangs'] = label_df['Bangs'].apply(lambda x: 'Y' if x== 1 else 'N')
+
+celeba_df.to_csv('../public/assets/results_celeba.csv', index=False)
+# %%

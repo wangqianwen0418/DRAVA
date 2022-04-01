@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 #%%
-def color_convert(filename, savename=None, mapname='viridis', factor=1.5):
+def color_convert(filename, savename=None, mapname='viridis', factor=1):
     if savename == None:
         savename = filename
     cm = colormap.get_cmap(mapname)
@@ -18,6 +18,7 @@ def color_convert(filename, savename=None, mapname='viridis', factor=1.5):
 
 
     im = np.array(im)
+    im = im + 30 * (im<50) *(im>0)
     im = cm(im)
     im = np.uint8(im * 255)
     im = Image.fromarray(im)
@@ -25,10 +26,12 @@ def color_convert(filename, savename=None, mapname='viridis', factor=1.5):
     im.save(savename)
 
 #%%
-file_folder = '../public/assets/matrix_simu_copy'
+file_folder = '../../server/logs/tad/'
 for f in os.listdir(file_folder):
     filepath = os.path.join(file_folder, f)
-    savepath = filepath.replace('/matrix_simu_copy/', '/matrix_simu/')
+    savepath = filepath.replace('.png', '_color2.png')
     color_convert(filepath, savepath)
 
+# %%
+color_convert('../../server/logs/tad/recons_BetaVAE_TAD_1879.png', '../../server/logs/tad/recons_BetaVAE_TAD_1879_color.png',factor=2) 
 # %%

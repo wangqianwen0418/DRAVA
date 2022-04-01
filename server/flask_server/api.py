@@ -149,6 +149,7 @@ def get_matrix_sample():
     im = np.array(img_src)
     im = colormap.get_cmap('viridis')(im) * 255
     pil_img = Image.fromarray(im.astype(np.uint8)).convert('RGB')
+    pil_img = pil_img.resize((64, 64), Image.NEAREST)
 
     img_io = BytesIO()
     pil_img.save(img_io, 'JPEG', quality=70)
@@ -172,10 +173,10 @@ def get_sequence_sample():
     id = request.args.get('id', type=str)
     img = sequence_data[int(id)]*255
     # add a border
-    img[0, :] = 20
-    img[63, :] = 20
-    img[:, 0] = 20
-    img[:, 63] = 20
+    img[0, :] = 50
+    img[62, :] = 50
+    img[:, 0] = 50
+    img[:, 62] = 50
     pil_img = Image.fromarray(img.astype(np.uint8))
     
     
@@ -194,10 +195,10 @@ def get_dsprites_sample():
     # convert white to black
     img = 255- img
     # add a border
-    img[0, :] = 20
-    img[63, :] = 20
-    img[:, 0] = 20
-    img[:, 63] = 20
+    img[0, :] = 50
+    img[62, :] = 50
+    img[:, 0] = 50
+    img[:, 62] = 50
     pil_img = Image.fromarray(img.astype(np.uint8))
     
     
@@ -236,7 +237,7 @@ def get_simu_images():
         z= [float(i) for i in z.split(',')]
     else:
         z = default_z[dataset]
-
+    
     if dataset in ranges:
         zRange = ranges[dataset][dim]
     else:
@@ -268,7 +269,11 @@ def get_simu_images():
         img_io.seek(0)
         v = base64.b64encode(img_io.getvalue()).decode()
         results.append(f'data:image/png;base64,{v}')
-
+    
+    # a quick hack for the y pos axis
+    # TODO: enable users to reverse an axis
+    if dataset =='dsprites' and dim==4:
+        results = results[::-1]
     return jsonify({"image": results, "score": score})
 
 ######################

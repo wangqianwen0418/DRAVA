@@ -63,7 +63,7 @@ class ConceptAdaptor(pl.LightningModule):
         [c, h, w] = input_size
         self.cat_num = cat_num
         kernel_size = 2
-        stride = 2
+        stride = 1
         self.params = params
 
         if cat_num == 1:

@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import styles from './LatentDim.module.css';
 import clsx from 'clsx';
 
-import { Card, Select, Tooltip } from 'antd';
+import { Button, Card, Select, Tooltip } from 'antd';
 
 import { getMax, debounce } from 'helpers';
 import { STEP_NUM } from 'Const';
@@ -193,7 +193,7 @@ export default class LatentDim extends React.Component<Props, States> {
 
     return (
       <Card
-        title="Concept Space"
+        title="Concept View"
         size="small"
         extra={axisController}
         bodyStyle={{ height: height - cardHeadHeight, width: width, overflowY: 'scroll' }}
@@ -248,7 +248,7 @@ export default class LatentDim extends React.Component<Props, States> {
                   >
                     <rect height={this.barLabelHeight} width={barWidth} stroke="lightgray" fill="transparent"></rect>
                     <rect height={this.barLabelHeight} width={scoreBarWidth} stroke="lightgray" fill="lightgray"></rect>
-                    <text y={this.barLabelHeight}>{score.toFixed(3)}</text>
+                    {/* <text y={this.barLabelHeight}>{score.toFixed(3)}</text> */}
                   </g>
                 ) : (
                   <></>
