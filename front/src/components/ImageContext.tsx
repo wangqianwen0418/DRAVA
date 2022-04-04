@@ -22,8 +22,8 @@ const ImageContext = (props: Props) => {
   const canvasRef = useRef(null);
   const imgSamples = samples.map(s => {
     const { id, filtered } = s;
-    const x = parseInt(id.match(/(?<=_x)\d+/)![0]);
-    const y = parseInt(id.match(/(?<=_y)\d+/)![0]);
+    const x = parseInt(id.match(/(_x)\d+/)![0].replace('_x', ''));
+    const y = parseInt(id.match(/(_y)\d+/)![0].replace('_y', ''));
     const url = `${BASE_URL}/api/get_${dataset}_sample?id=${id}`;
     return { x, y, url, filtered };
   });
