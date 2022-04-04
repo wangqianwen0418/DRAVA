@@ -51,7 +51,7 @@ const ImageContext = (props: Props) => {
     return () => {
       ctx.clearRect(0, 0, width, height - cardHeadHeight);
     };
-  }, [samples.length]);
+  }, [samples.length, width, height]);
 
   // draw image mask
   useEffect(() => {
