@@ -1,19 +1,51 @@
-# DRAVA: Drava: Utilizing **D**isentangled **R**epresentation Learning as **A** **V**isual **A**nalytics method for pattern-based data exploration
+# DRAVA: Utilizing **D**isentangled **R**epresentation Learning as **A** **V**isual **A**nalytics method for pattern-based data exploration
 
-This repo has a front-end and a back-end.
+This repository has two main components: a frontend interface and a back-end server.
 
-## Development mode
-To run the front end, go to front fold.  
-Run `npm install` for the first time to install the dependency packages.  
-Run `npm start` to start the Drava react app.
+## Development
 
-To run the back end, go to server/flask_server.  
-Install dependency packages through `pip install -r requirements.txt`  
-Run `python app.py` to start the flask server.  
-Pre-trained models are stored at `server/flask/server/saved_models`
+### Backend
 
+First, install all dependent packages:
 
-## Dataset used
-https://www.kaggle.com/paultimothymooney/breast-histopathology-images
+```sh
+cd server
+pip install -r requirements.txt
+```
 
-https://drive.google.com/file/d/0B7EVK8r0v71pZjFTYXZWM3FlRnM/view?usp=sharing&resourcekey=0-dYn9z10tMJOBAkviAcfdyQ 
+Then, start the flask server:
+
+```sh
+cd flask_server
+python app.py
+```
+
+To manage dependencies more effectively, you can create and use a [conda environment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) before installing all packages:
+
+```sh
+conda create -n drava
+conda activate drava
+# ...
+conda deactivate
+```
+
+The pre-trained models are stored at `server/flask/server/saved_models`.
+
+### Frontend
+
+First, install all dependent packages:
+
+```sh
+cd front
+npm install
+```
+
+Then, launch the Drava react application on the browser:
+
+```sh
+npm start
+```
+
+## Datasets Used
+- https://www.kaggle.com/paultimothymooney/breast-histopathology-images
+- https://drive.google.com/file/d/0B7EVK8r0v71pZjFTYXZWM3FlRnM/view?usp=sharing&resourcekey=0-dYn9z10tMJOBAkviAcfdyQ 
