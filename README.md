@@ -29,7 +29,7 @@ conda activate drava
 conda deactivate
 ```
 
-The pre-trained models are stored at `server/flask/server/saved_models`.
+The pre-trained models are stored at `server/flask_server/saved_models`.
 
 ### Frontend
 
