@@ -1,4 +1,4 @@
-# DRAVA: Utilizing **D**isentangled **R**epresentation Learning as **A** **V**isual **A**nalytics method for pattern-based data exploration
+# DRAVA: Utilizing <ins>D</ins>isentangled <ins>R</ins>epresentation Learning as <ins>A</ins> <ins>V</ins>isual <ins>A</ins>nalytics Method for Pattern-based Data Exploration
 
 This repository has two main components: a frontend interface and a back-end server.
 
@@ -50,7 +50,7 @@ npm start
 
 To run both the server and the client, you need to put additional files into your local repository. These include
 
-- `server/data/` (Image patches and numpy arrays in `.npz` files)
+- `server/data/` (Image patches of JPG files and compressed numpy arrays of `.npz` files)
 - `front/src/assets/` (JSON files that specify genomic ranges)
 - `front/public/assets/` (CSV files that contain external analysis results)
 
