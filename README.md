@@ -46,6 +46,16 @@ Then, launch the Drava react application on the browser:
 npm start
 ```
 
+### Required Datasets
+
+To run both the server and the client, you need to put additional files into your local repository. These include
+
+- `server/data/` (Image patches and numpy arrays in `.npz` files)
+- `front/src/assets/` (JSON files that specify genomic ranges)
+- `front/public/assets/` (CSV files that contain external analysis results)
+
+These datasets are shared upon request.
+
 ## Datasets Used
 - https://www.kaggle.com/paultimothymooney/breast-histopathology-images
 - https://drive.google.com/file/d/0B7EVK8r0v71pZjFTYXZWM3FlRnM/view?usp=sharing&resourcekey=0-dYn9z10tMJOBAkviAcfdyQ 
