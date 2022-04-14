@@ -1,6 +1,8 @@
 from flask_cors import CORS
 from flask import Flask, jsonify, g
 from config import Config
+import logging
+
 
 from vis import vis
 from api import api
@@ -12,6 +14,9 @@ def create_app(config=None):
     app = Flask(__name__)
     CORS(app)
     app.config.from_object(Config)
+
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
 
     @app.route('/config')
     def config():
@@ -30,7 +35,7 @@ def create_app(config=None):
 parser = argparse.ArgumentParser()
 parser.add_argument('--host', default='0.0.0.0',
                     help='Port in which to run the API')
-parser.add_argument('--port', default=8001,
+parser.add_argument('--port', default=8080,
                     help='Port in which to run the API')
 parser.add_argument('--debug', action='store_true',
                     help='If true, run Flask in debug mode')
@@ -45,3 +50,4 @@ if __name__ == '__main__':
         host=_args.host,
         port=int(_args.port)
     )
+
