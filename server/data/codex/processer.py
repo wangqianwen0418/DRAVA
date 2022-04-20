@@ -90,6 +90,6 @@ for idx, row in cell_centers.iterrows():
 patches = np.stack(patches, axis=0)
 
 # %%
-np.save('cells.npy', patches)
+np.save(f'{foldername}/cells.npy', patches)
 
 # %%
