@@ -87,3 +87,5 @@ matplotlib==3.5.1
 Flask==2.0.3
 flask-cors==3.0.10
 shap==0.40.0
+zarr == 2.11.3
+tifffile == 2021.11.2

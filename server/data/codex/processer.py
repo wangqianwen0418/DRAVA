@@ -5,6 +5,7 @@ dataset HBM622.JXWQ.554 downloaded from https://portal.hubmapconsortium.org/brow
 
 # %%
 import pandas as pd
+from tqdm import tqdm
 from tifffile import TiffFile, imread, imwrite
 import numpy as np
 import math
@@ -50,17 +51,20 @@ print(f'size of the cell image patches is {window_size}')
 cell_centers = pd.read_csv(
     f'{foldername}/reg1_stitched_expressions.ome.tiff-cell_centers.csv')
 
-patches = []
+# patches = np.zeros((len(cell_centers), tif.shape[0], window_size, window_size))
 
-for idx, row in cell_centers.iterrows():
+#%%
+empty_patches = 0
+
+for idx, row in tqdm(cell_centers.iterrows()):
     if row['ID'] == 0:
         continue
 
-    x = row['x']
+    x = row['y'] # x y are switched in the csv file
     x1 = max(0, int(x-window_size/2))
     x2 = min(cell_mask.shape[1]-1, int(x + window_size/2))
 
-    y = row['y']
+    y = row['x']
     y1 = max(0, int(y - window_size/2))
     y2 = min(cell_mask.shape[0]-1, int(y + window_size/2))
 
@@ -68,14 +72,15 @@ for idx, row in cell_centers.iterrows():
 
     tif_patch = tif[:, y1:y2, x1:x2]
     mask_patch = cell_mask[y1:y2, x1:x2]
-    maskout = np.array(
-        [mask_patch != cell_id for i in range(tif_patch.shape[0])])
-    tif_patch[maskout] = 0
+
+    tif_patch[:, mask_patch != cell_id] = 0
+
+    if tif_patch.max()==0:
+        empty_patches += 1
+        continue
     # padding 0 if smaller than the window size
     (c, h, w) = tif_patch.shape
-    if h == 0:
-        print(x1, x2)
-        break
+
     if w < window_size or h < window_size:
 
         tif_patch = np.pad(
@@ -85,11 +90,7 @@ for idx, row in cell_centers.iterrows():
                 (math.floor((window_size - w)/2), math.ceil((window_size - w)/2))
             )
         )
-    patches.append(tif_patch)
+    # patches[idx] = tif_patch
+    np.save(f'{foldername}/cells/cell_{idx}.npy', tif_patch)
 
-patches = np.stack(patches, axis=0)
-
-# %%
-np.save(f'{foldername}/cells.npy', patches)
-
-# %%
+print(f'{empty_patches} empty patches')
