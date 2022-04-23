@@ -18,6 +18,7 @@ tif = imread(f'{foldername}/reg1_stitched_expressions.ome.tif', level=0)
 # numpy array, shape (29, 7491, 12664)
 # 29 indicates 29 antigens
 # must use level=0 to indicate the finest level
+channel_max = [tif[i].max() for i in range(tif.shape[0])]
 
 tif_mask = imread(f'{foldername}/reg1_stitched_mask.ome.tif')
 # numpy array, shape (4, 7491, 12664)
@@ -75,32 +76,42 @@ for idx, row in tqdm(cell_centers.iterrows()):
 
     cell_id = row['ID']
 
-    tif_patch = np.array(tif[:, y1:y2, x1:x2]) # deep copy
+    tif_patch = np.array(tif[:, y1:y2, x1:x2])
+    cell_patch = np.zeros(tif_patch.shape, dtype=np.float32)
     mask_patch = cell_mask[y1:y2, x1:x2]
 
-    tif_patch[:, mask_patch != cell_id] = 0
+    # normalize values
+    for i, v in enumerate(channel_max):
+        cell_patch[i, mask_patch == cell_id] = tif_patch[i, mask_patch == cell_id]/v
 
     # padding 0 if smaller than the window size
-    (c, h, w) = tif_patch.shape
+    (c, h, w) = cell_patch.shape
     if w < window_size or h < window_size:
-        tif_patch = np.pad(
-            tif_patch, (
+        cell_patch = np.pad(
+            cell_patch, (
                 (0, 0),
                 (math.floor((window_size - h)/2), math.ceil((window_size - h)/2)),
                 (math.floor((window_size - w)/2), math.ceil((window_size - w)/2))
             )
         )
 
-    np.save(f'{patches_folder}/cell_{idx}.npy', tif_patch)
+    if cell_patch.max() == 0:
+        print(cell_id, 'empty')
+        break
+
+    # downsampling
+    cell_patch = cell_patch[:, ::2, ::2]
+
+    np.save(f'{patches_folder}/cell_{idx}.npy', cell_patch)
 
 # %%
 # visualize
 from matplotlib import pyplot as plt
-cell_id = 2
-a = np.load(f'{patches_folder}/cell_{cell_id}.npy')
-plt.figure(figsize=(10, 10))
-for i in range(29):
-    ax = plt.subplot(5, 6, i + 1)
-    ax.axis("off")
-    ax.imshow(a[i])
-plt.tight_layout()
+def visualize(cell_id:int, patches_folder=patches_folder):
+    a = np.load(f'{patches_folder}/cell_{cell_id}.npy')
+    plt.figure(figsize=(10, 10))
+    for i in range(29):
+        ax = plt.subplot(5, 6, i + 1)
+        ax.axis("off")
+        ax.imshow(a[i])
+    plt.tight_layout()
