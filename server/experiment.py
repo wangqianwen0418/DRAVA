@@ -40,9 +40,11 @@ class CustomTensorDataset(Dataset):
 
 
 class CodeX_Dataset(Dataset):
-    def __init__(self, root, transform=None):
+    def __init__(self, root, transform=None, split='train'):
         df = pd.read_csv(os.path.join(
             root, 'reg1_stitched_expressions.ome.tiff-cell_cluster.csv'))
+        if split != 'train':
+            df = df.head(1000) # use the first 1000 rows for validating and testing
         self.img_dir = root
         self.img_names = df
         self.transform = transform
@@ -607,6 +609,16 @@ class VAEModule(pl.LightningModule):
                               shuffle=True,
                               drop_last=True)
 
+        elif 'codex' in self.params['dataset']:
+            root = os.path.join(
+                self.params['data_path'], self.params['dataset'])
+            dataset = CodeX_Dataset(root, self.data_transforms())
+            self.num_train_imgs = len(dataset)
+            return DataLoader(dataset,
+                              batch_size=self.params['batch_size'],
+                              shuffle=True,
+                              drop_last=True)
+
         elif self.is_IDC_dataset(self.params['dataset']):
             root = os.path.join(
                 self.params['data_path'], self.params['dataset'])
@@ -698,6 +710,17 @@ class VAEModule(pl.LightningModule):
                                                 drop_last=True)
             self.num_val_imgs = len(self.sample_dataloader)
             return self.sample_dataloader
+
+        elif 'codex' in self.params['dataset']:
+            root = os.path.join(
+                self.params['data_path'], self.params['dataset'])
+            dataset = CodeX_Dataset(root, self.data_transforms(), split='val')
+            self.num_val_imgs = len(dataset)
+            return DataLoader(dataset,
+                              batch_size=self.params['batch_size'],
+                              shuffle=True,
+                              drop_last=True)
+
         elif self.is_hic_dataset(self.params['dataset']) or self.is_tensor_dataset(self.params['dataset']) or self.is_IDC_dataset(self.params['dataset']):
             print('start val data loading')
             # since the two datasets are small, use the train data loader for val
@@ -723,6 +746,16 @@ class VAEModule(pl.LightningModule):
                                                      drop_last=True)
             self.num_test_imgs = len(self.test_sample_dataloader)
             return self.test_sample_dataloader
+
+        elif 'codex' in self.params['dataset']:
+            root = os.path.join(
+                self.params['data_path'], self.params['dataset'])
+            dataset = CodeX_Dataset(root, self.data_transforms(), split='train')
+            self.num_test_imgs = len(dataset)
+            return DataLoader(dataset,
+                              batch_size=self.params['batch_size'],
+                              shuffle=True,
+                              drop_last=True)
 
         elif self.is_hic_dataset(self.params['dataset']):
 
@@ -794,14 +827,18 @@ class VAEModule(pl.LightningModule):
                                                 1), transforms.RandomVerticalFlip(1)], 0.5),
                                             transforms.ToTensor(),
                                             SetRange])
+        elif 'codex' in self.params['dataset']:
+            transform = transforms.Compose([
+                                            transforms.Resize(self.params['img_size'], Image.NEAREST),
+                                            transforms.RandomHorizontalFlip(),
+                                            transforms.RandomVerticalFlip()
+                                            ])
         elif self.is_IDC_dataset(self.params['dataset']):
-            SetRange = transforms.Lambda(
-                lambda X: 2 * X - 1.)  # [0,1] to [-1, 1]
+            SetRange = transforms.Lambda( lambda X: 2 * X - 1.)  # [0,1] to [-1, 1]
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                             transforms.RandomVerticalFlip(),
                                             transforms.Resize(
                                                 (self.params['img_size'], self.params['img_size'])),
-                                            transforms.ToTensor(),
                                             SetRange])
 
         elif self.params['dataset'] == 'celeba':
@@ -831,6 +868,12 @@ class VAEModule(pl.LightningModule):
                                                 self.params['img_size']),
                                             transforms.ToTensor(),
                                             SetRange])
+        elif 'codex' in self.params['dataset']:
+            transform = transforms.Compose([
+                                            transforms.Resize(self.params['img_size'], Image.NEAREST),
+                                            transforms.RandomHorizontalFlip(),
+                                            transforms.RandomVerticalFlip()
+                                            ])
         elif self.is_hic_dataset(self.params['dataset']):
             transform = transforms.Compose([transforms.Resize(self.params['img_size'], Image.NEAREST),
                                             transforms.ToTensor(),
