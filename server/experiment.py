@@ -56,9 +56,10 @@ class CodeX_Dataset(Dataset):
         img_path = os.path.join(
             self.img_dir, 'cells', f'cell_{self.img_names.iloc[idx, 0]}.npy')
         image = np.load(img_path)
+        label = torch.tensor(self.img_names.iloc[idx, 1:])
         if self.transform:
             image = self.transform(image)
-        return image
+        return image, label
 
 
 class HiC_Dataset(Dataset):
@@ -417,6 +418,8 @@ class VAEModule(pl.LightningModule):
         else:
             recons_imgs = recons.cpu().data
 
+        recons_imgs = recons_imgs[:, 0:3, :, :] # [TODO what is the best way to show multiplex images here?]
+
         if as_individual:
             Path(
                 f"{self.logger_folder}/results/simu").mkdir(parents=True, exist_ok=True)
@@ -526,13 +529,13 @@ class VAEModule(pl.LightningModule):
             os.mkdir(filepath)
 
         # input images
-        vutils.save_image(test_input.data,
+        vutils.save_image(test_input.data[:, 0:3, : , :], # [TODO what is the best way to show multiplex images here?]
                           f"{filepath}/real_img_{self.logger.name}_{self.current_epoch}.png",
                           normalize=True,
                           nrow=12)
 
         # reconstructed images
-        vutils.save_image(recons_imgs,
+        vutils.save_image(recons_imgs[:, 0:3, : , :], # [TODO what is the best way to show multiplex images here?]
                           f"{filepath}/recons_{self.logger.name}_{self.current_epoch}.png",
                           normalize=True,
                           nrow=12)
@@ -716,10 +719,11 @@ class VAEModule(pl.LightningModule):
                 self.params['data_path'], self.params['dataset'])
             dataset = CodeX_Dataset(root, self.data_transforms(), split='val')
             self.num_val_imgs = len(dataset)
-            return DataLoader(dataset,
+            self.sample_dataloader = DataLoader(dataset,
                               batch_size=self.params['batch_size'],
                               shuffle=True,
                               drop_last=True)
+            return self.sample_dataloader
 
         elif self.is_hic_dataset(self.params['dataset']) or self.is_tensor_dataset(self.params['dataset']) or self.is_IDC_dataset(self.params['dataset']):
             print('start val data loading')
@@ -819,22 +823,26 @@ class VAEModule(pl.LightningModule):
             raise ValueError('Undefined dataset type')
 
     def data_transforms(self):
+        SetRange = transforms.Lambda( lambda X: 2 * X - 1.)  # [0,1] to [-1, 1]
+            
         if self.is_hic_dataset(self.params['dataset']):
-            SetRange = transforms.Lambda(
-                lambda X: 2 * X - 1.)  # [0,1] to [-1, 1]
-            transform = transforms.Compose([transforms.Resize(self.params['img_size'], Image.NEAREST),
+            transform = transforms.Compose([
+                                            transforms.Resize(self.params['img_size'], Image.NEAREST),
                                             transforms.RandomApply([transforms.RandomHorizontalFlip(
                                                 1), transforms.RandomVerticalFlip(1)], 0.5),
                                             transforms.ToTensor(),
                                             SetRange])
         elif 'codex' in self.params['dataset']:
+            vFlip = transforms.RandomApply([transforms.Lambda(lambda X: np.flip(X, axis=1).copy())], 0.5)
+            hFlip = transforms.RandomApply([transforms.Lambda(lambda X: np.flip(X, axis=2).copy())], 0.5)
+            np2Tensor = transforms.Lambda(lambda X: torch.tensor(X))
             transform = transforms.Compose([
-                                            transforms.Resize(self.params['img_size'], Image.NEAREST),
-                                            transforms.RandomHorizontalFlip(),
-                                            transforms.RandomVerticalFlip()
+                                            vFlip,
+                                            hFlip,
+                                            np2Tensor,
+                                            SetRange
                                             ])
         elif self.is_IDC_dataset(self.params['dataset']):
-            SetRange = transforms.Lambda( lambda X: 2 * X - 1.)  # [0,1] to [-1, 1]
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                             transforms.RandomVerticalFlip(),
                                             transforms.Resize(
@@ -842,7 +850,6 @@ class VAEModule(pl.LightningModule):
                                             SetRange])
 
         elif self.params['dataset'] == 'celeba':
-            SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                             transforms.CenterCrop(148),
                                             transforms.Resize(
@@ -852,7 +859,6 @@ class VAEModule(pl.LightningModule):
 
         else:
             # do not use transforms for tensor datasets for now
-            SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
             transform = transforms.Compose([
                 SetRange
             ])
@@ -861,6 +867,7 @@ class VAEModule(pl.LightningModule):
     def test_data_transforms(self):
 
         SetRange = transforms.Lambda(lambda X: 2 * X - 1.)  # [0,1] to [-1, 1]
+        np2Tensor = transforms.Lambda(lambda X: torch.tensor(X))
         if self.params['dataset'] == 'celeba':
 
             transform = transforms.Compose([transforms.CenterCrop(148),
@@ -868,20 +875,23 @@ class VAEModule(pl.LightningModule):
                                                 self.params['img_size']),
                                             transforms.ToTensor(),
                                             SetRange])
+        
         elif 'codex' in self.params['dataset']:
             transform = transforms.Compose([
-                                            transforms.Resize(self.params['img_size'], Image.NEAREST),
-                                            transforms.RandomHorizontalFlip(),
-                                            transforms.RandomVerticalFlip()
-                                            ])
+                np2Tensor,
+                SetRange
+                ])
+
         elif self.is_hic_dataset(self.params['dataset']):
             transform = transforms.Compose([transforms.Resize(self.params['img_size'], Image.NEAREST),
                                             transforms.ToTensor(),
                                             SetRange])
+        
         elif self.is_IDC_dataset(self.params['dataset']):
             transform = transforms.Compose([transforms.Resize((self.params['img_size'], self.params['img_size'])),
                                             transforms.ToTensor(),
                                             SetRange])
+        
         else:
             #
             # do not use transforms for tensor datasets for now

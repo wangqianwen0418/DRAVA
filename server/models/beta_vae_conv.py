@@ -69,7 +69,7 @@ class BetaVAE_CONV(BaseVAE):
 
         # Build Encoder
         w_dim = img_size
-        padding = 1
+        padding = 2
         stride = 2
         dilation = 1 
         for i, h_dim in enumerate(hidden_dims):
@@ -108,7 +108,7 @@ class BetaVAE_CONV(BaseVAE):
                                        hidden_dims[i + 1],
                                        kernel_size,
                                        stride = stride,
-                                       output_padding=1,
+                                       output_padding= 0,
                                        padding=padding),
                     nn.BatchNorm2d(hidden_dims[i + 1]),
                     # PrintLayer(),
@@ -124,7 +124,7 @@ class BetaVAE_CONV(BaseVAE):
                                                out_channels,
                                                kernel_size=conv_sizes[-1],
                                                stride=stride,
-                                               output_padding=1,
+                                               output_padding=0,
                                                padding= padding),
                             nn.BatchNorm2d(out_channels),
                             nn.ReLU())
