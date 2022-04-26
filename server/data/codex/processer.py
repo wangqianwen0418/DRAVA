@@ -4,12 +4,14 @@ dataset HBM622.JXWQ.554 downloaded from https://portal.hubmapconsortium.org/brow
 """
 
 # %%
+import chunk
 import pandas as pd
 from tqdm import tqdm
 from tifffile import TiffFile, imread, imwrite
 import numpy as np
 import math
 import os
+import zarr
 # %%
 foldername = 'HBM622.JXWQ.554'
 # %%
@@ -62,6 +64,8 @@ patches_folder = f'{foldername}/cells/'
 if not os.path.exists(patches_folder):
     os.mkdir(patches_folder)
 
+z = zarr.zeros((len(cell_centers), tif.shape[0], window_size, window_size), chunks=(100, None, None, None), dtype='float32')    
+
 for idx, row in tqdm(cell_centers.iterrows()):
     if row['ID'] == 0:
         continue
@@ -99,10 +103,11 @@ for idx, row in tqdm(cell_centers.iterrows()):
         print(cell_id, 'empty')
         break
 
-    # downsampling
-    cell_patch = cell_patch[:, ::2, ::2]
+    # # downsampling
+    # cell_patch = cell_patch[:, ::2, ::2]
 
-    np.save(f'{patches_folder}/cell_{idx}.npy', cell_patch)
+    # np.save(f'{patches_folder}/cell_{idx}.npy', cell_patch)
+    z[idx] = cell_patch
 
 # %%
 # visualize
