@@ -4,7 +4,7 @@ dataset HBM622.JXWQ.554 downloaded from https://portal.hubmapconsortium.org/brow
 """
 
 # %%
-import chunk
+from matplotlib import pyplot as plt
 import pandas as pd
 from tqdm import tqdm
 from tifffile import TiffFile, imread, imwrite
@@ -47,30 +47,34 @@ heights = [getLargeSlice(cell_mask[:, i]) for i in range(cell_mask.shape[1])]
 height = max(heights)
 
 window_size = max(width, height)
-print(f'size of the cell image patches is ({tif.shape[0]}, {window_size}, {window_size})')
 
 # %%
 ##############################
 # cut cells
 ##############################
+DOWNSAMPLE_RATIO = 2
+
 cell_centers = pd.read_csv(
     f'{foldername}/reg1_stitched_expressions.ome.tiff-cell_centers.csv')
 
+patch_size = (len(cell_centers), tif.shape[0], math.ceil(
+    window_size/DOWNSAMPLE_RATIO), math.ceil(window_size/DOWNSAMPLE_RATIO))
+
+print(
+    f'size of the cell image patches is {patch_size[1:]}')
+
 # patches = np.zeros((len(cell_centers), tif.shape[0], window_size, window_size))
 
-#%%
+# %%
 
-patches_folder = f'{foldername}/cells/'
-if not os.path.exists(patches_folder):
-    os.mkdir(patches_folder)
-
-z = zarr.zeros((len(cell_centers), tif.shape[0], window_size, window_size), chunks=(100, None, None, None), dtype='float32')    
+z = zarr.zeros(patch_size, chunks=(
+    100, None, None, None), dtype='float32')
 
 for idx, row in tqdm(cell_centers.iterrows()):
     if row['ID'] == 0:
         continue
 
-    x = int(row['y']) # x y are switched in the csv file
+    x = int(row['y'])  # x y are switched in the csv file
     x1 = max(0, int(x-window_size/2))
     x2 = min(cell_mask.shape[1]-1, int(x + window_size/2))
 
@@ -86,7 +90,8 @@ for idx, row in tqdm(cell_centers.iterrows()):
 
     # normalize values
     for i, v in enumerate(channel_max):
-        cell_patch[i, mask_patch == cell_id] = tif_patch[i, mask_patch == cell_id]/v
+        cell_patch[i, mask_patch == cell_id] = tif_patch[i,
+                                                         mask_patch == cell_id]/v
 
     # padding 0 if smaller than the window size
     (c, h, w) = cell_patch.shape
@@ -103,20 +108,23 @@ for idx, row in tqdm(cell_centers.iterrows()):
         print(cell_id, 'empty')
         break
 
-    # # downsampling
-    # cell_patch = cell_patch[:, ::2, ::2]
-
-    # np.save(f'{patches_folder}/cell_{idx}.npy', cell_patch)
+    # downsampling
+    cell_patch = cell_patch[:, ::DOWNSAMPLE_RATIO, ::DOWNSAMPLE_RATIO]
     z[idx] = cell_patch
 
+zarr.save(f'{foldername}/cell_patches.zarr', z)
 # %%
 # visualize
-from matplotlib import pyplot as plt
-def visualize(cell_id:int, patches_folder=patches_folder):
-    a = np.load(f'{patches_folder}/cell_{cell_id}.npy')
+
+
+def visualize(cell_id: int):
+    z = zarr.open(f'{foldername}/cell_patches.zarr', mode='r')
+    a = z[cell_id]
     plt.figure(figsize=(10, 10))
-    for i in range(29):
+    for i in range(a.shape[0]):
         ax = plt.subplot(5, 6, i + 1)
         ax.axis("off")
         ax.imshow(a[i])
     plt.tight_layout()
+
+# %%

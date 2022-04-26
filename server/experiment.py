@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 import json
 import csv
+import zarr
 
 
 import torch
@@ -39,23 +40,50 @@ class CustomTensorDataset(Dataset):
         return self.data_tensor.size(0)
 
 
+# class CodeX_Dataset(Dataset):
+#     def __init__(self, root, transform=None, split='train'):
+#         df = pd.read_csv(os.path.join(
+#             root, 'reg1_stitched_expressions.ome.tiff-cell_cluster.csv'))
+#         if split != 'train':
+#             df = df.head(1000) # use the first 1000 rows for validating and testing
+#         self.img_dir = root
+#         self.img_names = df
+#         self.transform = transform
+
+#     def __len__(self):
+#         return len(self.img_names)
+
+#     def __getitem__(self, idx):
+#         img_path = os.path.join(
+#             self.img_dir, 'cells', f'cell_{self.img_names.iloc[idx, 0]}.npy')
+#         image = np.load(img_path)
+#         label = torch.tensor(self.img_names.iloc[idx, 1:])
+#         if self.transform:
+#             image = self.transform(image)
+#         return image, label
+
 class CodeX_Dataset(Dataset):
     def __init__(self, root, transform=None, split='train'):
         df = pd.read_csv(os.path.join(
             root, 'reg1_stitched_expressions.ome.tiff-cell_cluster.csv'))
         if split != 'train':
-            df = df.head(1000) # use the first 1000 rows for validating and testing
+            # use the first 1000 rows for validating and testing
+            df = df.head(1000)
         self.img_dir = root
         self.img_names = df
+        self.cell_patches = zarr.open(os.path.join(
+            root, 'cell_patches.zarr'), mode='r')
         self.transform = transform
 
     def __len__(self):
         return len(self.img_names)
 
     def __getitem__(self, idx):
-        img_path = os.path.join(
-            self.img_dir, 'cells', f'cell_{self.img_names.iloc[idx, 0]}.npy')
-        image = np.load(img_path)
+        # img_path = os.path.join(
+        #     self.img_dir, 'cells', f'cell_{self.img_names.iloc[idx, 0]}.npy')
+        # image = np.load(img_path)
+        cell_id = self.img_names.iloc[idx, 0]
+        image = np.array(self.cell_patches[cell_id])
         label = torch.tensor(self.img_names.iloc[idx, 1:])
         if self.transform:
             image = self.transform(image)
@@ -418,7 +446,8 @@ class VAEModule(pl.LightningModule):
         else:
             recons_imgs = recons.cpu().data
 
-        recons_imgs = recons_imgs[:, 0:3, :, :] # [TODO what is the best way to show multiplex images here?]
+        # [TODO what is the best way to show multiplex images here?]
+        recons_imgs = recons_imgs[:, 0:3, :, :]
 
         if as_individual:
             Path(
@@ -529,13 +558,13 @@ class VAEModule(pl.LightningModule):
             os.mkdir(filepath)
 
         # input images
-        vutils.save_image(test_input.data[:, 0:3, : , :], # [TODO what is the best way to show multiplex images here?]
+        vutils.save_image(test_input.data[:, 0:3, :, :],  # [TODO what is the best way to show multiplex images here?]
                           f"{filepath}/real_img_{self.logger.name}_{self.current_epoch}.png",
                           normalize=True,
                           nrow=12)
 
         # reconstructed images
-        vutils.save_image(recons_imgs[:, 0:3, : , :], # [TODO what is the best way to show multiplex images here?]
+        vutils.save_image(recons_imgs[:, 0:3, :, :],  # [TODO what is the best way to show multiplex images here?]
                           f"{filepath}/recons_{self.logger.name}_{self.current_epoch}.png",
                           normalize=True,
                           nrow=12)
@@ -720,9 +749,9 @@ class VAEModule(pl.LightningModule):
             dataset = CodeX_Dataset(root, self.data_transforms(), split='val')
             self.num_val_imgs = len(dataset)
             self.sample_dataloader = DataLoader(dataset,
-                              batch_size=self.params['batch_size'],
-                              shuffle=True,
-                              drop_last=True)
+                                                batch_size=self.params['batch_size'],
+                                                shuffle=True,
+                                                drop_last=True)
             return self.sample_dataloader
 
         elif self.is_hic_dataset(self.params['dataset']) or self.is_tensor_dataset(self.params['dataset']) or self.is_IDC_dataset(self.params['dataset']):
@@ -754,7 +783,8 @@ class VAEModule(pl.LightningModule):
         elif 'codex' in self.params['dataset']:
             root = os.path.join(
                 self.params['data_path'], self.params['dataset'])
-            dataset = CodeX_Dataset(root, self.data_transforms(), split='train')
+            dataset = CodeX_Dataset(
+                root, self.data_transforms(), split='train')
             self.num_test_imgs = len(dataset)
             return DataLoader(dataset,
                               batch_size=self.params['batch_size'],
@@ -823,25 +853,27 @@ class VAEModule(pl.LightningModule):
             raise ValueError('Undefined dataset type')
 
     def data_transforms(self):
-        SetRange = transforms.Lambda( lambda X: 2 * X - 1.)  # [0,1] to [-1, 1]
-            
+        SetRange = transforms.Lambda(lambda X: 2 * X - 1.)  # [0,1] to [-1, 1]
+
         if self.is_hic_dataset(self.params['dataset']):
             transform = transforms.Compose([
-                                            transforms.Resize(self.params['img_size'], Image.NEAREST),
-                                            transforms.RandomApply([transforms.RandomHorizontalFlip(
-                                                1), transforms.RandomVerticalFlip(1)], 0.5),
-                                            transforms.ToTensor(),
-                                            SetRange])
+                transforms.Resize(self.params['img_size'], Image.NEAREST),
+                transforms.RandomApply([transforms.RandomHorizontalFlip(
+                    1), transforms.RandomVerticalFlip(1)], 0.5),
+                transforms.ToTensor(),
+                SetRange])
         elif 'codex' in self.params['dataset']:
-            vFlip = transforms.RandomApply([transforms.Lambda(lambda X: np.flip(X, axis=1).copy())], 0.5)
-            hFlip = transforms.RandomApply([transforms.Lambda(lambda X: np.flip(X, axis=2).copy())], 0.5)
+            vFlip = transforms.RandomApply(
+                [transforms.Lambda(lambda X: np.flip(X, axis=1).copy())], 0.5)
+            hFlip = transforms.RandomApply(
+                [transforms.Lambda(lambda X: np.flip(X, axis=2).copy())], 0.5)
             np2Tensor = transforms.Lambda(lambda X: torch.tensor(X))
             transform = transforms.Compose([
-                                            vFlip,
-                                            hFlip,
-                                            np2Tensor,
-                                            SetRange
-                                            ])
+                vFlip,
+                hFlip,
+                np2Tensor,
+                SetRange
+            ])
         elif self.is_IDC_dataset(self.params['dataset']):
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                             transforms.RandomVerticalFlip(),
@@ -875,23 +907,23 @@ class VAEModule(pl.LightningModule):
                                                 self.params['img_size']),
                                             transforms.ToTensor(),
                                             SetRange])
-        
+
         elif 'codex' in self.params['dataset']:
             transform = transforms.Compose([
                 np2Tensor,
                 SetRange
-                ])
+            ])
 
         elif self.is_hic_dataset(self.params['dataset']):
             transform = transforms.Compose([transforms.Resize(self.params['img_size'], Image.NEAREST),
                                             transforms.ToTensor(),
                                             SetRange])
-        
+
         elif self.is_IDC_dataset(self.params['dataset']):
             transform = transforms.Compose([transforms.Resize((self.params['img_size'], self.params['img_size'])),
                                             transforms.ToTensor(),
                                             SetRange])
-        
+
         else:
             #
             # do not use transforms for tensor datasets for now
