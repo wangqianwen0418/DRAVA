@@ -2,14 +2,14 @@ model_params:
   name: 'BetaVAE_CONV'
   in_channels: 29
   latent_dim: 20 
-  hidden_dims: [32, 64, 128]
-  conv_sizes: [4,4,4]
+  hidden_dims: [32, 64, 128, 256, 512]
+  conv_sizes: [4, 4, 4, 4, 4]
   loss_type: 'B'
   img_size: 50
   gamma: 10.0
   max_capacity: 25
   Capacity_max_iter: 10000
-  recons_multi: 1
+  recons_multi: 100
   is_masked: False
 
 exp_params:
