@@ -47,6 +47,7 @@ heights = [getLargeSlice(cell_mask[:, i]) for i in range(cell_mask.shape[1])]
 height = max(heights)
 
 window_size = max(width, height)
+window_size = 128 # 100 -> 128
 
 # %%
 ##############################
