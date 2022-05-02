@@ -39,40 +39,22 @@ class CustomTensorDataset(Dataset):
     def __len__(self):
         return self.data_tensor.size(0)
 
-
-# class CodeX_Dataset(Dataset):
-#     def __init__(self, root, transform=None, split='train'):
-#         df = pd.read_csv(os.path.join(
-#             root, 'reg1_stitched_expressions.ome.tiff-cell_cluster.csv'))
-#         if split != 'train':
-#             df = df.head(1000) # use the first 1000 rows for validating and testing
-#         self.img_dir = root
-#         self.img_names = df
-#         self.transform = transform
-
-#     def __len__(self):
-#         return len(self.img_names)
-
-#     def __getitem__(self, idx):
-#         img_path = os.path.join(
-#             self.img_dir, 'cells', f'cell_{self.img_names.iloc[idx, 0]}.npy')
-#         image = np.load(img_path)
-#         label = torch.tensor(self.img_names.iloc[idx, 1:])
-#         if self.transform:
-#             image = self.transform(image)
-#         return image, label
-
 class CodeX_Dataset(Dataset):
-    def __init__(self, root, transform=None, split='train'):
+    def __init__(self, root, transform=None, split='train', in_channels=None, item_number=None):
         df = pd.read_csv(os.path.join(
             root, 'reg1_stitched_expressions.ome.tiff-cell_cluster.csv'))
-        if split != 'train':
+        
+        if item_number:
+            df = df.head(item_number)
+        elif split != 'train':
             # use the first 1000 rows for validating and testing
             df = df.head(1000)
         self.img_dir = root
         self.img_names = df
         self.cell_patches = zarr.open(os.path.join(
             root, 'cell_patches.zarr'), mode='r')
+        if in_channels:
+            self.cell_patches = self.cell_patches[:, :in_channels, :, : ]
         self.transform = transform
 
     def __len__(self):
@@ -644,7 +626,7 @@ class VAEModule(pl.LightningModule):
         elif 'codex' in self.params['dataset']:
             root = os.path.join(
                 self.params['data_path'], self.params['dataset'])
-            dataset = CodeX_Dataset(root, self.data_transforms())
+            dataset = CodeX_Dataset(root, self.data_transforms(), in_channels=self.params['in_channels'], item_number=self.params['cell_number'])
             self.num_train_imgs = len(dataset)
             return DataLoader(dataset,
                               batch_size=self.params['batch_size'],
@@ -746,7 +728,8 @@ class VAEModule(pl.LightningModule):
         elif 'codex' in self.params['dataset']:
             root = os.path.join(
                 self.params['data_path'], self.params['dataset'])
-            dataset = CodeX_Dataset(root, self.data_transforms(), split='val')
+            # dataset = CodeX_Dataset(root, self.data_transforms(), split='val')
+            dataset = CodeX_Dataset(root, self.data_transforms(), in_channels=self.params['in_channels'], item_number=self.params['cell_number'])
             self.num_val_imgs = len(dataset)
             self.sample_dataloader = DataLoader(dataset,
                                                 batch_size=self.params['batch_size'],
@@ -783,8 +766,7 @@ class VAEModule(pl.LightningModule):
         elif 'codex' in self.params['dataset']:
             root = os.path.join(
                 self.params['data_path'], self.params['dataset'])
-            dataset = CodeX_Dataset(
-                root, self.data_transforms(), split='train')
+            dataset = CodeX_Dataset(root, self.data_transforms(), in_channels=self.params['in_channels'], item_number=self.params['cell_number'])
             self.num_test_imgs = len(dataset)
             return DataLoader(dataset,
                               batch_size=self.params['batch_size'],
