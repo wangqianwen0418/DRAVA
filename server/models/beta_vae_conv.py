@@ -108,7 +108,7 @@ class BetaVAE_CONV(BaseVAE):
                                        hidden_dims[i + 1],
                                        kernel_size,
                                        stride = stride,
-                                       output_padding= 0,
+                                       output_padding= 1,
                                        padding=padding),
                     nn.BatchNorm2d(hidden_dims[i + 1]),
                     PrintLayer(),
