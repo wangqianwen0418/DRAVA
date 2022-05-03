@@ -10,10 +10,14 @@ from tqdm import tqdm
 from tifffile import TiffFile, imread, imwrite
 import numpy as np
 import math
-import os
 import zarr
 # %%
 foldername = 'HBM622.JXWQ.554'
+# log: global log scale to 0-1; 
+# global: global linear sclae to 0-1; 
+# local: local linear scale to 0-1;
+# median: scale [0, median value] to 0-1
+norm_method = 'log' 
 # %%
 
 tif = imread(f'{foldername}/reg1_stitched_expressions.ome.tif', level=0)
@@ -21,6 +25,7 @@ tif = imread(f'{foldername}/reg1_stitched_expressions.ome.tif', level=0)
 # 29 indicates 29 antigens
 # must use level=0 to indicate the finest level
 channel_max = [tif[i].max() for i in range(tif.shape[0])]
+channel_percentile = [np.percentile(tif[i], 75) for i in range(tif.shape[0])]
 
 tif_mask = imread(f'{foldername}/reg1_stitched_mask.ome.tif')
 # numpy array, shape (4, 7491, 12664)
@@ -90,9 +95,21 @@ for idx, row in tqdm(cell_centers.iterrows()):
     mask_patch = cell_mask[y1:y2, x1:x2]
 
     # normalize values
-    for i, v in enumerate(channel_max):
-        cell_patch[i, mask_patch == cell_id] = tif_patch[i,
-                                                         mask_patch == cell_id]/v
+    min_v = 1e(-8)
+    if norm_method == 'global':
+        for i, max_v in enumerate(channel_max):
+                cell_patch[i, mask_patch == cell_id] = tif_patch[i, mask_patch == cell_id]/max_v
+    elif norm_method == 'percentile':
+        for i, v in enumerate(channel_percentile):
+                cell_patch[i, mask_patch == cell_id] = tif_patch[i, mask_patch == cell_id]/v
+    elif norm_method == 'log':
+        for i, max_v in enumerate(channel_max):
+            cell_patch[i, mask_patch == cell_id] = np.log(tif_patch[i, mask_patch == cell_id]/min_v )/ math.log(max_v/min_v)
+    elif norm_method == 'local':
+        for i in range(tif_patch.shape[0]):
+            max_v = tif_patch[i, mask_patch == cell_id].max()
+            cell_patch[i, mask_patch == cell_id] = tif_patch[i, mask_patch == cell_id]/max_v
+                                                    
 
     # padding 0 if smaller than the window size
     (c, h, w) = cell_patch.shape
@@ -113,7 +130,7 @@ for idx, row in tqdm(cell_centers.iterrows()):
     cell_patch = cell_patch[:, ::DOWNSAMPLE_RATIO, ::DOWNSAMPLE_RATIO]
     z[idx] = cell_patch
 
-zarr.save(f'{foldername}/cell_patches.zarr', z)
+zarr.save(f'{foldername}/cell_patches_{norm_method}.zarr', z)
 # %%
 # visualize
 
