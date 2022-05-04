@@ -14,10 +14,14 @@ import zarr
 # %%
 foldername = 'HBM622.JXWQ.554'
 # log: global log scale to 0-1; 
+
 # global: global linear sclae to 0-1; 
+
 # local: local linear scale to 0-1;
-# median: scale [0, median value] to 0-1
-norm_method = 'log' 
+# norm_method = 'local' 
+
+# percentile: scale [0, 75percentile] to 0-1
+norm_method = 'percentile' 
 # %%
 
 tif = imread(f'{foldername}/reg1_stitched_expressions.ome.tif', level=0)
@@ -95,7 +99,7 @@ for idx, row in tqdm(cell_centers.iterrows()):
     mask_patch = cell_mask[y1:y2, x1:x2]
 
     # normalize values
-    min_v = 1e(-8)
+    min_v = 1e-8
     if norm_method == 'global':
         for i, max_v in enumerate(channel_max):
                 cell_patch[i, mask_patch == cell_id] = tif_patch[i, mask_patch == cell_id]/max_v
