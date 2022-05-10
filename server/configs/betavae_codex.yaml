@@ -14,6 +14,8 @@ model_params:
 
 exp_params:
   dataset: codex/HBM622.JXWQ.554
+  norm_method: local
+  # norm_method: percentile
   in_channels: 3
   cell_number: 10000
   data_path: "./data/"
@@ -22,7 +24,6 @@ exp_params:
   batch_size: 196 
   LR: 0.0005
   weight_decay: 0.0
-  weighted_sampler: True
   # scheduler_gamma: 0.95
 
 trainer_params:

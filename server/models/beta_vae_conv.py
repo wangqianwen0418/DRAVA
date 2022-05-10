@@ -79,7 +79,7 @@ class BetaVAE_CONV(BaseVAE):
                     nn.Conv2d(in_channels, h_dim,
                               kernel_size, stride, padding, dilation = dilation),
                     nn.BatchNorm2d(h_dim),
-                    PrintLayer(),
+                    # PrintLayer(),
                     nn.LeakyReLU())
             )
             in_channels = h_dim
@@ -108,10 +108,10 @@ class BetaVAE_CONV(BaseVAE):
                                        hidden_dims[i + 1],
                                        kernel_size,
                                        stride = stride,
-                                       output_padding= 1,
+                                       output_padding= 0,
                                        padding=padding),
                     nn.BatchNorm2d(hidden_dims[i + 1]),
-                    PrintLayer(),
+                    # PrintLayer(),
                     nn.LeakyReLU())
             )
 
