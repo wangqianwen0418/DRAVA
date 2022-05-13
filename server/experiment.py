@@ -576,7 +576,8 @@ class VAEModule(pl.LightningModule):
         optimizer = optimizer_dict[self.params['optimizer']](
             self.model.parameters(),
             lr=self.params['LR'],
-            weight_decay=self.params['weight_decay'],
+            weight_decay= float(self.params['weight_decay']),
+            eps = float(self.params['eps']),
             betas=(0.9, 0.999)
         )
 

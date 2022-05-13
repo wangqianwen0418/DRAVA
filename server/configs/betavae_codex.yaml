@@ -1,29 +1,33 @@
 model_params:
   name: 'BetaVAE_CONV'
-  in_channels: 3
+  in_channels: 1
   latent_dim: 60 
-  hidden_dims: [32, 64, 128, 256, 512]
-  conv_sizes: [4, 4, 4, 4, 4]
-  loss_type: 'B'
+  hidden_dims: [64 , 256, 512]
+  conv_sizes: [7, 5, 5]
+  loss_type: 'H'
+  beta: 1
+  # loss_type: 'B'
   img_size: 64
   gamma: 10.0
   max_capacity: 25
   Capacity_max_iter: 10000
-  recons_multi: 100
+  # recons_multi: 100
+  distribution: bernoulli
   is_masked: False
 
 exp_params:
   dataset: codex/HBM622.JXWQ.554
   norm_method: local
   # norm_method: percentile
-  in_channels: 3
-  cell_number: 10000
+  in_channels: 1
+  cell_number: 1000
   data_path: "./data/"
   img_size: 64
   optimizer: "adam"
   batch_size: 196 
-  LR: 0.0005
-  weight_decay: 0.0
+  LR: 0.001
+  weight_decay: 1e-4
+  eps: 1e-7
   # scheduler_gamma: 0.95
 
 trainer_params:
