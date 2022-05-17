@@ -145,6 +145,7 @@ class BetaVAE_CONV(BaseVAE):
         
         mu = self.fc_mu(flat_out)
         log_var = self.fc_var(flat_out)
+        log_var = torch.clamp(log_var, None, 3)
 
         return [mu, log_var]
 

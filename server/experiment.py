@@ -40,11 +40,11 @@ class CustomTensorDataset(Dataset):
         return self.data_tensor.size(0)
 
 class CodeX_Dataset(Dataset):
-    def __init__(self, root, transform=None, norm_method=None, split='train', in_channels=None, item_number=None):
+    def __init__(self, root, transform=None, norm_method=None, split='train', in_channels=None, item_number=0):
         df = pd.read_csv(os.path.join(
             root, 'reg1_stitched_expressions.ome.tiff-cell_cluster.csv'))
         
-        if item_number:
+        if item_number != 0:
             df = df.head(item_number)
         elif split != 'train':
             # use the first 1000 rows for validating and testing
