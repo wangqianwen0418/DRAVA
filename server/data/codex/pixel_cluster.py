@@ -7,6 +7,7 @@ import pandas as pd
 import math
 import numpy as np
 from tqdm import tqdm
+from matplotlib import pyplot, colors
 
 # %%
 foldername = 'HBM622.JXWQ.554'
@@ -22,6 +23,9 @@ cell_mask = tif_mask[0]
 # extract pixels fromt tif that has cells
 # numpy shape (num_pixels, num_plex)
 pixels = np.transpose(tif[:, cell_mask!=0])
+##################
+
+
 #%%
 # clustering
 k = 9
@@ -31,6 +35,31 @@ kmeans = faiss.Kmeans(d=pixels.shape[1], k=k, niter=max_iter, nredo=n_init)
 kmeans.train(pixels.astype(np.float32))
 D, I = kmeans.index.search(pixels.astype(np.float32), 1)
 pixel_cluster_ids = I.flatten()
+##################
+
+
+#%%
+# pca
+sample_size = 1000
+
+mt = pixels.astype('float32')
+mat = faiss.PCAMatrix (29, 2)
+mat.train(mt)
+assert mat.is_trained
+tr = mat.apply_py(mt)
+points = np.concatenate((tr, I), axis = 1)
+idx = np.random.randint(0, tr.shape[0], size = sample_size)
+new_points = points[idx, :]
+
+cmap=pyplot.get_cmap('tab10')
+norm = colors.BoundaryNorm(boundaries = list(range(k+1)), ncolors=k+1)
+
+pyplot.scatter(new_points[: , 0], new_points[:,1], s=1.1, c=new_points[:, 2], norm=norm, cmap=cmap)
+pyplot.show()
+#############
+
+
+
 #%%
 # pixel_cluster_ids = KMeans(n_clusters=7,
 #                           random_state=0).fit_predict(pixels)
@@ -97,16 +126,15 @@ for idx, row in tqdm(cell_centers.iterrows()):
 
 zarr.save(f'{foldername}/cell_patches_{k}cluster.zarr', z)
 # %%
-from matplotlib import pyplot as plt
-import matplotlib
+
 
 def visualize(cell_id: int, figsize=20):
-    z = zarr.open(f'{foldername}/cell_patches_cluster.zarr', mode='r')
+    z = zarr.open(f'{foldername}/cell_patches_{k}cluster.zarr', mode='r')
     
     # make value discrete and norm into [0, 1]
-    norm = matplotlib.colors.BoundaryNorm(boundaries = list(range(k+1)), ncolors=k+1)
+    norm = colors.BoundaryNorm(boundaries = list(range(k+1)), ncolors=k+1)
 
-    plt.figure(figsize=(figsize, figsize))
+    pyplot.figure(figsize=(figsize, figsize))
     w = 5
     h = 6
     for i in range(w*h):
@@ -115,15 +143,15 @@ def visualize(cell_id: int, figsize=20):
         alpha = np.ones(data.shape)
         alpha[data==0] = 0 # make bacground trasparent
 
-        ax = plt.subplot(5, 6, i + 1)
+        ax = pyplot.subplot(5, 6, i + 1)
 
-        ax.imshow(data, cmap=plt.get_cmap('tab20'), norm=norm, alpha = alpha)
+        ax.imshow(data, cmap=cmap, norm=norm, alpha = alpha)
         ax.axis("off")
 
     
     
-    plt.tight_layout()
-    plt.show()
+    pyplot.tight_layout()
+    pyplot.show()
 
 
 # %%
