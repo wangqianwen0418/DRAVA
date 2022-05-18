@@ -24,7 +24,7 @@ cell_mask = tif_mask[0]
 pixels = np.transpose(tif[:, cell_mask!=0])
 #%%
 # clustering
-k = 20
+k = 9
 n_init = 10
 max_iter = 300
 kmeans = faiss.Kmeans(d=pixels.shape[1], k=k, niter=max_iter, nredo=n_init)
@@ -100,84 +100,25 @@ zarr.save(f'{foldername}/cell_patches_{k}cluster.zarr', z)
 from matplotlib import pyplot as plt
 import matplotlib
 
-def heatmap(data, row_labels=[], col_labels=[], ax=None, show_colorbar = False,
-            cbar_kw={}, cbarlabel="", **kwargs):
-    """
-    Create a heatmap from a numpy array and two lists of labels.
-
-    Parameters
-    ----------
-    data
-        A 2D numpy array of shape (M, N).
-    row_labels
-        A list or array of length M with the labels for the rows.
-    col_labels
-        A list or array of length N with the labels for the columns.
-    ax
-        A `matplotlib.axes.Axes` instance to which the heatmap is plotted.  If
-        not provided, use current axes or create a new one.  Optional.
-    cbar_kw
-        A dictionary with arguments to `matplotlib.Figure.colorbar`.  Optional.
-    cbarlabel
-        The label for the colorbar.  Optional.
-    **kwargs
-        All other arguments are forwarded to `imshow`.
-    """
-
-    if not ax:
-        ax = plt.gca()
-
-    # Plot the heatmap
-    im = ax.imshow(data, **kwargs)
-
-    # Create colorbar
-    if show_colorbar:
-        cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
-        cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")
-    else:
-        cbar = None
-
-    # Show all ticks and label them with the respective list entries.
-    if len(col_labels)>0:
-        ax.set_xticks(np.arange(data.shape[1]), labels=col_labels)
-    if len(row_labels)>0:
-        ax.set_yticks(np.arange(data.shape[0]), labels=row_labels)
-
-    # Let the horizontal axes labeling appear on top.
-    ax.tick_params(top=True, bottom=False,
-                   labeltop=True, labelbottom=False)
-
-    # Rotate the tick labels and set their alignment.
-    plt.setp(ax.get_xticklabels(), rotation=-30, ha="right",
-             rotation_mode="anchor")
-
-    # Turn spines off and create white grid.
-    ax.spines[:].set_visible(False)
-
-    ax.set_xticks(np.arange(data.shape[1]+1)-.5, minor=True)
-    ax.set_yticks(np.arange(data.shape[0]+1)-.5, minor=True)
-    ax.grid(which="minor", color="w", linestyle='-', linewidth=0)
-    ax.tick_params(which="minor", bottom=False, left=False)
-
-    return im, cbar
-
-def visualize(cell_id: int):
+def visualize(cell_id: int, figsize=20):
     z = zarr.open(f'{foldername}/cell_patches_cluster.zarr', mode='r')
     
-    cluster_index = [str(i) for i in range(k+1)]
-    norm = matplotlib.colors.BoundaryNorm(np.linspace(0, k, k+1), k+1)
-    fmt = matplotlib.ticker.FuncFormatter(lambda x, pos: cluster_index[::-1][norm(x)] if x!=0 else None)
+    # make value discrete and norm into [0, 1]
+    norm = matplotlib.colors.BoundaryNorm(boundaries = list(range(k+1)), ncolors=k+1)
 
-    plt.figure(figsize=(20, 20))
+    plt.figure(figsize=(figsize, figsize))
     w = 5
     h = 6
     for i in range(w*h):
         data = z[cell_id + i] # shape of a: 64 x 64
+
+        alpha = np.ones(data.shape)
+        alpha[data==0] = 0 # make bacground trasparent
+
         ax = plt.subplot(5, 6, i + 1)
 
-        im, _ = heatmap(data, cmap=plt.get_cmap('tab20'), norm=norm, ax = ax,
-                        # cbar_kw=dict(ticks=np.arange(-3, 4), format=fmt),
-                        cbarlabel="pixel cluster index")
+        ax.imshow(data, cmap=plt.get_cmap('tab20'), norm=norm, alpha = alpha)
+        ax.axis("off")
 
     
     
