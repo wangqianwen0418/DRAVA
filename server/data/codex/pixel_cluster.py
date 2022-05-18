@@ -1,11 +1,13 @@
 #%%
 import zarr
 from tifffile import TiffFile, imread, imwrite
-from sklearn.cluster import MiniBatchKMeans
+from sklearn.cluster import KMeans
+import faiss
 import pandas as pd
 import math
 import numpy as np
 from tqdm import tqdm
+
 # %%
 foldername = 'HBM622.JXWQ.554'
 tif = imread(f'{foldername}/reg1_stitched_expressions.ome.tif', level=0)
@@ -18,16 +20,24 @@ cell_mask = tif_mask[0]
 
 #%%
 # extract pixels fromt tif that has cells
-pixels = tif[:, cell_mask!=0]
+# numpy shape (num_pixels, num_plex)
+pixels = np.transpose(tif[:, cell_mask!=0])
 #%%
 # clustering
-pixel_cluster_ids = MiniBatchKMeans(n_clusters=7,
-                          random_state=0,
-                          batch_size=256,
-                          max_iter=100).fit_predict(pixels)
+k = 7
+n_init = 10
+max_iter = 300
+kmeans = faiss.Kmeans(d=pixels.shape[1], k=k, niter=max_iter, nredo=n_init)
+kmeans.train(pixels.astype(np.float32))
+D, I = kmeans.index.search(pixels.astype(np.float32), 1)
+pixel_cluster_ids = I.flatten()
+#%%
+# pixel_cluster_ids = KMeans(n_clusters=7,
+#                           random_state=0).fit_predict(pixels)
 
 cluster_mask = cell_mask.copy()
 cluster_mask[cell_mask!=0] = pixel_cluster_ids + 1
+cluster_mask = cluster_mask.astype('int')
 # numpy array, shape (7491, 12664), 
 # number indicates pixel cluster index (starts from 1)
 
@@ -40,12 +50,12 @@ DOWNSAMPLE_RATIO = 2
 cell_centers = pd.read_csv(
     f'{foldername}/reg1_stitched_expressions.ome.tiff-cell_centers.csv')
 
-patch_size = (len(cell_centers), tif.shape[0], math.ceil(
+patch_size = (len(cell_centers), math.ceil(
     window_size/DOWNSAMPLE_RATIO), math.ceil(window_size/DOWNSAMPLE_RATIO))
 
 print(f'size of the cell image patches is {patch_size[1:]}')
 z = zarr.zeros(patch_size, chunks=(
-    100, None, None, None), dtype='float32')
+    100, None, None), dtype='int')
 
 for idx, row in tqdm(cell_centers.iterrows()):
     if row['ID'] == 0:
@@ -62,17 +72,16 @@ for idx, row in tqdm(cell_centers.iterrows()):
     cell_id = row['ID']
 
     cluster_patch = np.array(cluster_mask[ y1:y2, x1:x2])
-    cell_patch = np.zeros(cluster_patch.shape, dtype=np.float32)
+    cell_patch = np.zeros(cluster_patch.shape, dtype='int')
     mask_patch = cell_mask[y1:y2, x1:x2]
 
     cell_patch[mask_patch == cell_id] = cluster_patch[mask_patch == cell_id]
 
     # padding 0 if smaller than the window size
-    (c, h, w) = cell_patch.shape
+    ( h, w) = cell_patch.shape
     if w < window_size or h < window_size:
         cell_patch = np.pad(
             cell_patch, (
-                (0, 0),
                 (math.floor((window_size - h)/2), math.ceil((window_size - h)/2)),
                 (math.floor((window_size - w)/2), math.ceil((window_size - w)/2))
             )
@@ -83,7 +92,8 @@ for idx, row in tqdm(cell_centers.iterrows()):
         break
 
     # downsampling
-    cell_patch = cell_patch[:, ::DOWNSAMPLE_RATIO, ::DOWNSAMPLE_RATIO]
+    cell_patch = cell_patch[ ::DOWNSAMPLE_RATIO, ::DOWNSAMPLE_RATIO]
     z[idx] = cell_patch
 
-zarr.save(f'{foldername}/cell_patches_{norm_method}.zarr', z)
+zarr.save(f'{foldername}/cell_patches_cluster.zarr', z)
+# %%
