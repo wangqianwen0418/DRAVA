@@ -2,11 +2,8 @@ import math
 import numpy as np
 import os
 from pathlib import Path
-import pandas as pd
 import json
 import csv
-import zarr
-
 
 import torch
 from torch import optim
@@ -14,7 +11,7 @@ import pytorch_lightning as pl
 from torchvision import transforms
 import torchvision.utils as vutils
 from torchvision.datasets import CelebA
-from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler, Subset
+from torch.utils.data import DataLoader, WeightedRandomSampler, Subset
 from torch.optim import SGD, Adam, Adagrad
 import torch.nn.functional as F
 
@@ -22,158 +19,9 @@ from PIL import Image
 
 from models import BaseVAE
 from models.types_ import *
-from utils import data_loader
+from utils import data_loader, drawMasks
+from dataloaders import CustomTensorDataset, CodeX_Dataset, CodeX_Landmark_Dataset, HiC_Dataset, IDC_Dataset
 
-
-class CustomTensorDataset(Dataset):
-    def __init__(self, data_tensor, labels=None):
-        self.data_tensor = data_tensor
-        self.labels = labels
-
-    def __getitem__(self, index):
-
-        if torch.is_tensor(self.labels):
-            return self.data_tensor[index], self.labels[index]
-        return self.data_tensor[index], 0
-
-    def __len__(self):
-        return self.data_tensor.size(0)
-
-class CodeX_Dataset(Dataset):
-    def __init__(self, root, transform=None, norm_method=None, split='train', in_channels=None, item_number=0):
-        df = pd.read_csv(os.path.join(
-            root, 'reg1_stitched_expressions.ome.tiff-cell_cluster.csv'))
-        
-        if item_number != 0:
-            df = df.head(item_number)
-        elif split != 'train':
-            # use the first 1000 rows for validating and testing
-            df = df.head(1000)
-        self.img_dir = root
-        self.img_names = df
-
-        if norm_method:
-            self.cell_patches = zarr.open(os.path.join(
-                root, f'cell_patches_{norm_method}.zarr'), mode='r')
-        else:
-            self.cell_patches = zarr.open(os.path.join(
-                root, 'cell_patches.zarr'), mode='r')
-        if in_channels:
-            self.cell_patches = self.cell_patches[:, :in_channels, :, : ]
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.img_names)
-
-    def __getitem__(self, idx):
-        # img_path = os.path.join(
-        #     self.img_dir, 'cells', f'cell_{self.img_names.iloc[idx, 0]}.npy')
-        # image = np.load(img_path)
-        cell_id = self.img_names.iloc[idx, 0]
-        image = np.array(self.cell_patches[cell_id])
-        label = torch.tensor(self.img_names.iloc[idx, 1:])
-        if self.transform:
-            image = self.transform(image)
-        return image, label
-
-class CodeX_Landmark_Dataset(Dataset):
-    def __init__(self, root, transform=None, num_cluster=0, split='train', item_number=0):
-        df = pd.read_csv(os.path.join(
-            root, 'reg1_stitched_expressions.ome.tiff-cell_cluster.csv'))
-        
-        if item_number != 0:
-            df = df.head(item_number)
-        elif split != 'train':
-            # use the first 1000 rows for validating and testing
-            df = df.head(1000)
-        self.img_dir = root
-        self.img_names = df
-
-        
-        self.cell_patches = zarr.open(os.path.join(
-            root, f'cell_patches_{num_cluster}cluster.zarr'), mode='r')
-
-        self.num_cluster = num_cluster
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.img_names)
-
-    def __getitem__(self, idx):
-
-        cell_id = self.img_names.iloc[idx, 0]
-        image = np.array(self.cell_patches[cell_id])
-        pixels = image.flatten()
-        # convert to one hot vector
-        new_pixels = np.zeros( pixels.shape + (self.num_cluster+1,), dtype='int')
-        new_pixels[np.arange(pixels.size), pixels] = 1
-        new_image = new_pixels.reshape(image.shape+(self.num_cluster +1,))
-        new_image = np.moveaxis(new_image, -1 , 0)
-
-        label = torch.tensor(self.img_names.iloc[idx, 1:])
-        if self.transform:
-            new_image = self.transform(new_image)
-        return new_image, label
-
-class HiC_Dataset(Dataset):
-    def __init__(self, root, transform=None, target_transform=None, chr=None):
-        df = pd.read_csv(os.path.join(root, 'label.csv'))
-        if (chr != None):
-            # e.g., chr = 'chr5'
-            self.img_labels = df[df['img'].str.contains(chr)]
-        else:
-            self.img_labels = df
-        self.img_dir = root
-        self.transform = transform
-        self.target_transform = target_transform
-
-    def __len__(self):
-        return len(self.img_labels)
-
-    def __getitem__(self, idx):
-        img_path = os.path.join(
-            self.img_dir, f'{self.img_labels.iloc[idx, 0]}.jpg')
-        image = Image.open(img_path).convert('L')
-        #
-        label = self.img_labels.iloc[idx].copy()
-        try:
-            # get the CHR number from the jpg name
-            label[0] = float(label[0].split(':')[0].replace('chr', ''))
-        except Exception:
-            label[0] = 7  # chr 7 dataset
-        label = label.to_numpy(dtype='float')
-
-        if self.transform:
-            image = self.transform(image)
-        if self.target_transform:
-            label = self.target_transform(label)
-        return image, label
-
-
-class IDC_Dataset(Dataset):
-    def __init__(self, root, transform=None, target_transform=None, chr=None):
-        df = pd.read_csv(os.path.join(root, 'label.csv'))
-        self.img_labels = df
-        self.img_dir = root
-        self.transform = transform
-        self.target_transform = target_transform
-
-    def __len__(self):
-        return len(self.img_labels)
-
-    def __getitem__(self, idx):
-        img_path = os.path.join(
-            self.img_dir, f'{self.img_labels.iloc[idx, 0]}')
-        image = Image.open(img_path)
-        #
-        label = self.img_labels.iloc[idx, 1]
-
-        if self.transform:
-            image = self.transform(image)
-        if self.target_transform:
-            label = self.target_transform(label)
-
-        return image, label
 
 # extend the pytorch lightning module
 
@@ -470,8 +318,9 @@ class VAEModule(pl.LightningModule):
         else:
             recons_imgs = recons.cpu().data
 
+        if 'codex' in self.params['dataset'] and 'num_cluster' not in self.params:
         # [TODO what is the best way to show multiplex images here?]
-        recons_imgs = recons_imgs[:, 0:3, :, :]
+            recons_imgs = recons_imgs[:, 0:3, :, :]
 
         if as_individual:
             Path(
@@ -479,8 +328,14 @@ class VAEModule(pl.LightningModule):
             img_idx = 0
             for img in recons_imgs:
                 q, mod = divmod(img_idx, self.bin_num)
-                vutils.save_image(
-                    img, f"{self.logger_folder}/results/simu/{q}_{mod}.png",)
+                if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
+                    drawMasks(
+                        np.expand_dims(recons_imgs.numpy(), axis=0), 
+                        figsize = 60, nrows = 1, save_path=f"{self.logger_folder}/results/simu/{q}_{mod}.png"
+                        )
+                else:
+                    vutils.save_image(
+                        img, f"{self.logger_folder}/results/simu/{q}_{mod}.png",)
                 img_idx += 1
 
         if is_test:
@@ -488,10 +343,13 @@ class VAEModule(pl.LightningModule):
         else:
             save_path = f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png"
 
-        vutils.save_image(recons_imgs,
-                          save_path,
-                          normalize=True,
-                          nrow=self.bin_num)
+        if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
+            drawMasks(recons_imgs.numpy(), figsize = 60, nrows = self.bin_num, save_path=save_path)
+        else:
+            vutils.save_image(recons_imgs,
+                            save_path,
+                            normalize=True,
+                            nrow=self.bin_num)
 
     def z2recons_sum(self, z):
         '''
@@ -581,17 +439,26 @@ class VAEModule(pl.LightningModule):
         if not(os.path.isdir(filepath)):
             os.mkdir(filepath)
 
+
         # input images
-        vutils.save_image(test_input.data[:, 0:3, :, :],  # [TODO what is the best way to show multiplex images here?]
-                          f"{filepath}/real_img_{self.logger.name}_{self.current_epoch}.png",
-                          normalize=True,
-                          nrow=12)
+        input_save_path = f"{filepath}/real_img_{self.logger.name}_{self.current_epoch}.png"
+        if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
+            drawMasks(test_input.numpy(), figsize = 60, nrows = 12, save_path=input_save_path)        
+        else:
+            vutils.save_image(test_input.data[:, 0:3, :, :],  # [TODO what is the best way to show multiplex images here?]
+                            input_save_path,
+                            normalize=True,
+                            nrow=12)
 
         # reconstructed images
-        vutils.save_image(recons_imgs[:, 0:3, :, :],  # [TODO what is the best way to show multiplex images here?]
-                          f"{filepath}/recons_{self.logger.name}_{self.current_epoch}.png",
-                          normalize=True,
-                          nrow=12)
+        recons_save_path = f"{filepath}/recons_{self.logger.name}_{self.current_epoch}.png"
+        if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
+            drawMasks(recons_imgs.numpy(), figsize = 60, nrows = 12, save_path=recons_save_path)        
+        else:
+            vutils.save_image(recons_imgs[:, 0:3, :, :],  # [TODO what is the best way to show multiplex images here?]
+                            recons_save_path,
+                            normalize=True,
+                            nrow=12)
 
         try:
             self.save_simu_images()
