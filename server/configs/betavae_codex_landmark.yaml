@@ -1,0 +1,41 @@
+model_params:
+  name: 'BetaVAE_CONV'
+  in_channels: 10
+  latent_dim: 25 
+  hidden_dims: [64 , 256, 512]
+  conv_sizes: [7, 5, 5]
+  loss_type: 'H'
+  beta: 1
+  # loss_type: 'B'
+  img_size: 64
+  gamma: 10.0
+  max_capacity: 25
+  Capacity_max_iter: 10000
+  # recons_multi: 100
+  distribution: bernoulli
+  is_masked: False
+
+exp_params:
+  dataset: codex/HBM622.JXWQ.554
+  num_cluster: 9
+  cell_number: 0 # 0 incidate using all cells
+  data_path: "./data/"
+  img_size: 64
+  optimizer: "adam"
+  batch_size: 196 
+  LR: 0.0005
+  weight_decay: 1e-4
+  eps: 1e-7
+  # scheduler_gamma: 0.95
+
+trainer_params:
+  gpus: 1
+  max_nb_epochs: 100
+  max_epochs: 100
+
+logging_params:
+  save_dir: "logs"
+  name: "BetaVAE_CONV"
+  manual_seed: 1265
+
+# experiment: reduce number of cells and number of input channels

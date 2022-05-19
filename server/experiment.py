@@ -76,6 +76,44 @@ class CodeX_Dataset(Dataset):
             image = self.transform(image)
         return image, label
 
+class CodeX_Landmark_Dataset(Dataset):
+    def __init__(self, root, transform=None, num_cluster=0, split='train', item_number=0):
+        df = pd.read_csv(os.path.join(
+            root, 'reg1_stitched_expressions.ome.tiff-cell_cluster.csv'))
+        
+        if item_number != 0:
+            df = df.head(item_number)
+        elif split != 'train':
+            # use the first 1000 rows for validating and testing
+            df = df.head(1000)
+        self.img_dir = root
+        self.img_names = df
+
+        
+        self.cell_patches = zarr.open(os.path.join(
+            root, f'cell_patches_{num_cluster}cluster.zarr'), mode='r')
+
+        self.num_cluster = num_cluster
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.img_names)
+
+    def __getitem__(self, idx):
+
+        cell_id = self.img_names.iloc[idx, 0]
+        image = np.array(self.cell_patches[cell_id])
+        pixels = image.flatten()
+        # convert to one hot vector
+        new_pixels = np.zeros( pixels.shape + (self.num_cluster+1,), dtype='int')
+        new_pixels[np.arange(pixels.size), pixels] = 1
+        new_image = new_pixels.reshape(image.shape+(self.num_cluster +1,))
+        new_image = np.moveaxis(new_image, -1 , 0)
+
+        label = torch.tensor(self.img_names.iloc[idx, 1:])
+        if self.transform:
+            new_image = self.transform(new_image)
+        return new_image, label
 
 class HiC_Dataset(Dataset):
     def __init__(self, root, transform=None, target_transform=None, chr=None):
@@ -628,6 +666,15 @@ class VAEModule(pl.LightningModule):
                               shuffle=True,
                               drop_last=True)
 
+        elif 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
+            root = os.path.join(
+                self.params['data_path'], self.params['dataset'])
+            dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=self.params['cell_number'])
+            self.num_train_imgs = len(dataset)
+            return DataLoader(dataset,
+                              batch_size=self.params['batch_size'],
+                              shuffle=True,
+                              drop_last=True)
         elif 'codex' in self.params['dataset']:
             root = os.path.join(
                 self.params['data_path'], self.params['dataset'])
@@ -730,6 +777,17 @@ class VAEModule(pl.LightningModule):
             self.num_val_imgs = len(self.sample_dataloader)
             return self.sample_dataloader
 
+        elif 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
+            root = os.path.join(
+                self.params['data_path'], self.params['dataset'])
+            dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=self.params['cell_number'])
+            self.num_val_imgs = len(dataset)
+            self.sample_dataloader = DataLoader(dataset,
+                                                batch_size=self.params['batch_size'],
+                                                shuffle=True,
+                                                drop_last=True)
+            return self.sample_dataloader
+
         elif 'codex' in self.params['dataset']:
             root = os.path.join(
                 self.params['data_path'], self.params['dataset'])
@@ -766,6 +824,17 @@ class VAEModule(pl.LightningModule):
                                                      drop_last=True)
             self.num_test_imgs = len(self.test_sample_dataloader)
             return self.test_sample_dataloader
+
+        
+        elif 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
+            root = os.path.join(
+                self.params['data_path'], self.params['dataset'])
+            dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=self.params['cell_number'])
+            self.num_test_imgs = len(dataset)
+            return DataLoader(dataset,
+                              batch_size=self.params['batch_size'],
+                              shuffle=True,
+                              drop_last=True)
 
         elif 'codex' in self.params['dataset']:
             root = os.path.join(
