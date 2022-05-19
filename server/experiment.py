@@ -278,14 +278,13 @@ class VAEModule(pl.LightningModule):
                                         self.num_val_imgs,
                                         optimizer_idx=optimizer_idx,
                                         batch_idx=batch_idx)
-        recons_loss = self.model.recons_loss(*results)
 
         # save output for concept adaptor
         concept_in = self.concept_encoder(real_img)
         self.concept_array.append([concept_in, mu, std, labels])
 
         # save latent vectors of samples in this batch
-        self.save_results(mu, recons_loss, labels, batch_idx)
+        self.save_results(mu, loss['Reconstruction_Loss'], labels, batch_idx)
         return loss
 
     def test_end(self, outputs):

@@ -49,6 +49,7 @@ class BetaVAE_CONV(BaseVAE):
         self.C_max = torch.Tensor([max_capacity])
         self.C_stop_iter = Capacity_max_iter
         out_channels = in_channels
+        self.in_channels = in_channels
 
         modules = []
 
@@ -186,9 +187,11 @@ class BetaVAE_CONV(BaseVAE):
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
         if self.distribution == 'bernoulli':
-            recons_loss = F.binary_cross_entropy_with_logits(recons, input)
+            recons_loss = F.binary_cross_entropy_with_logits(recons, input) * self.recons_multi
         elif self.distribution == 'gaussian':
             recons_loss =F.mse_loss(recons * self.mask, input * self.mask) * self.recons_multi
+        elif self.distribution == 'multi_class':
+            recons_loss = F.cross_entroy(F.softmax(recons.view(-1, self.in_channels), dim=1), input.view(-1, self.in_channels )) * self.recons_multi
         else:
             raise ValueError(f'distribution {self.distribution} not implemented')
 
@@ -208,16 +211,6 @@ class BetaVAE_CONV(BaseVAE):
             raise ValueError('Undefined loss type.')
 
         return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss, 'weighted_KLD': weighted_kld_loss}
-
-    def recons_loss(self,
-                      *args,
-                      **kwargs) -> dict:
-        recons = args[0]
-        input = args[1]
-
-        recons_loss = F.mse_loss(recons, input, reduction='none') # reduction ='none' will return the mse loss for each sample
-        recons_loss = recons_loss.view(recons_loss.size(0), -1).mean(1) # average except along dim 0
-        return recons_loss
 
     def sample(self,
                num_samples:int,
