@@ -51,3 +51,4 @@ def drawMasks(masks, figsize, nrows, save_path):
  
     pyplot.tight_layout()
     pyplot.savefig(save_path)
+    pyplot.close('all')
