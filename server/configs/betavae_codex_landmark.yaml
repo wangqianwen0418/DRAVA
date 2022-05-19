@@ -35,7 +35,7 @@ trainer_params:
 
 logging_params:
   save_dir: "logs"
-  name: "BetaVAE_CONV"
+  name: "BetaVAE_CONV_9cluster"
   manual_seed: 1265
 
 # experiment: reduce number of cells and number of input channels

@@ -98,6 +98,9 @@ class VAEModule(pl.LightningModule):
 
         if self.is_tensor_dataset(self.params['dataset']):
             real_img = real_img.float()
+        
+        if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
+            real_img = real_img.float()
 
         self.curr_device = real_img.device
 
@@ -121,6 +124,8 @@ class VAEModule(pl.LightningModule):
         real_img, labels = batch
 
         if self.is_tensor_dataset(self.params['dataset']):
+            real_img = real_img.float()
+        if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
             real_img = real_img.float()
 
         self.curr_device = real_img.device
@@ -150,6 +155,8 @@ class VAEModule(pl.LightningModule):
         real_img, labels = batch
 
         if self.is_tensor_dataset(self.params['dataset']):
+            real_img = real_img.float()
+        if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
             real_img = real_img.float()
 
         self.curr_device = real_img.device
@@ -330,7 +337,7 @@ class VAEModule(pl.LightningModule):
                 q, mod = divmod(img_idx, self.bin_num)
                 if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
                     drawMasks(
-                        np.expand_dims(recons_imgs.numpy(), axis=0), 
+                        np.expand_dims(recons_imgs.cpu().detach().numpy(), axis=0), 
                         figsize = 60, nrows = 1, save_path=f"{self.logger_folder}/results/simu/{q}_{mod}.png"
                         )
                 else:
@@ -344,7 +351,7 @@ class VAEModule(pl.LightningModule):
             save_path = f"{filepath}/{self.logger.name}_simu_samples_{self.current_epoch}.png"
 
         if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
-            drawMasks(recons_imgs.numpy(), figsize = 60, nrows = self.bin_num, save_path=save_path)
+            drawMasks(recons_imgs.cpu().detach().numpy(), figsize = 60, nrows = self.bin_num, save_path=save_path)
         else:
             vutils.save_image(recons_imgs,
                             save_path,
@@ -422,6 +429,8 @@ class VAEModule(pl.LightningModule):
         test_input, test_label = next(iter(self.sample_dataloader))
         if self.is_tensor_dataset(self.params['dataset']):
             test_input = test_input.float()
+        if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
+            test_input = test_input.float()
 
         test_label = test_label.to(self.curr_device)
         test_input = test_input.to(self.curr_device)
@@ -443,7 +452,7 @@ class VAEModule(pl.LightningModule):
         # input images
         input_save_path = f"{filepath}/real_img_{self.logger.name}_{self.current_epoch}.png"
         if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
-            drawMasks(test_input.numpy(), figsize = 60, nrows = 12, save_path=input_save_path)        
+            drawMasks(test_input.cpu().detach().numpy(), figsize = 60, nrows = 12, save_path=input_save_path)        
         else:
             vutils.save_image(test_input.data[:, 0:3, :, :],  # [TODO what is the best way to show multiplex images here?]
                             input_save_path,
@@ -453,7 +462,7 @@ class VAEModule(pl.LightningModule):
         # reconstructed images
         recons_save_path = f"{filepath}/recons_{self.logger.name}_{self.current_epoch}.png"
         if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
-            drawMasks(recons_imgs.numpy(), figsize = 60, nrows = 12, save_path=recons_save_path)        
+            drawMasks(recons_imgs.cpu().detach().numpy(), figsize = 60, nrows = 12, save_path=recons_save_path)        
         else:
             vutils.save_image(recons_imgs[:, 0:3, :, :],  # [TODO what is the best way to show multiplex images here?]
                             recons_save_path,
