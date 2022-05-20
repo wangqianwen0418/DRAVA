@@ -1,15 +1,15 @@
 model_params:
   name: 'BetaVAE_CONV'
-  in_channels: 3
-  latent_dim: 25 
+  in_channels: 1
+  latent_dim: 10 
   hidden_dims: [64 , 256, 512]
   conv_sizes: [7, 5, 5]
   loss_type: 'H'
-  beta: 1
+  beta: 4
   # loss_type: 'B'
   img_size: 64
   gamma: 10.0
-  max_capacity: 25
+  max_capacity: 10
   Capacity_max_iter: 10000
   # recons_multi: 100
   distribution: bernoulli
@@ -19,7 +19,7 @@ exp_params:
   dataset: codex/HBM622.JXWQ.554
   # norm_method: local
   norm_method: percentile
-  in_channels: 3
+  in_channels: 1
   cell_number: 0 # 0 incidate using all cells
   data_path: "./data/"
   img_size: 64
@@ -33,7 +33,7 @@ exp_params:
 trainer_params:
   gpus: 1
   max_nb_epochs: 100
-  max_epochs: 100
+  max_epochs: 200
 
 logging_params:
   save_dir: "logs"

@@ -12,7 +12,7 @@ model_params:
   max_capacity: 25
   Capacity_max_iter: 10000
   # recons_multi: 100
-  distribution: bernoulli
+  distribution: multi_class
   is_masked: False
 
 exp_params:
@@ -35,7 +35,7 @@ trainer_params:
 
 logging_params:
   save_dir: "logs"
-  name: "BetaVAE_CONV"
+  name: "BetaVAE_CONV_9cluster"
   manual_seed: 1265
 
 # experiment: reduce number of cells and number of input channels
