@@ -34,7 +34,10 @@ max_iter = 300
 kmeans = faiss.Kmeans(d=pixels.shape[1], k=k, niter=max_iter, nredo=n_init)
 kmeans.train(pixels.astype(np.float32))
 D, I = kmeans.index.search(pixels.astype(np.float32), 1)
+I = I + 1 # starts fron index 1, 0 is used to indicate background
 pixel_cluster_ids = I.flatten()
+
+cluster_idxs, cluster_counts = np.unique(pixel_cluster_ids, return_counts=True)
 ##################
 
 
@@ -48,24 +51,41 @@ mat.train(mt)
 assert mat.is_trained
 tr = mat.apply_py(mt)
 points = np.concatenate((tr, I), axis = 1)
+
+# random sampling from all cells
 idx = np.random.randint(0, tr.shape[0], size = sample_size)
-new_points = points[idx, :]
+new_points = points[idx, :] 
 
+#%%
 cmap=pyplot.get_cmap('tab10')
-norm = colors.BoundaryNorm(boundaries = list(range(k+1)), ncolors=k+1)
+norm = colors.BoundaryNorm(boundaries = [ i-0.1 for i in range(0, k+2)], ncolors=k+1)
 
-pyplot.scatter(new_points[: , 0], new_points[:,1], s=1.1, c=new_points[:, 2], norm=norm, cmap=cmap)
+fig, (ax1, ax2) = pyplot.subplots(2, 1, figsize=(4, 8))
+# draw scatter
+scatter = ax1.scatter(x = new_points[: , 0], y = new_points[:,1], s=2.1, c=new_points[:, 2], cmap=cmap, norm = norm)
+legend = ax1.legend(*scatter.legend_elements(),
+                    loc="lower right", title="clusters")
+ax1.add_artist(legend)
+# ax1.axis("off")
+ax1.xaxis.set_ticklabels([])
+ax1.yaxis.set_ticklabels([])
+
+# draw histogram
+bar = ax2.bar(
+    x=cluster_idxs, 
+    height=cluster_counts, 
+    color = cmap.colors[1:] # save colors[0] for background
+    )
+
 pyplot.show()
 #############
 
 
 
 #%%
-# pixel_cluster_ids = KMeans(n_clusters=7,
-#                           random_state=0).fit_predict(pixels)
 
 cluster_mask = cell_mask.copy()
-cluster_mask[cell_mask!=0] = pixel_cluster_ids + 1
+cluster_mask[cell_mask!=0] = pixel_cluster_ids
 cluster_mask = cluster_mask.astype('int')
 # numpy array, shape (7491, 12664), 
 # number indicates pixel cluster index (starts from 1)
