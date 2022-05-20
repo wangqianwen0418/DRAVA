@@ -34,7 +34,7 @@ def drawMasks(masks, figsize, nrows, save_path):
     ncols = num_img//nrows + 1 # number of images at each col
 
     cmap=pyplot.get_cmap('tab10')
-    norm = colors.BoundaryNorm(boundaries = list(range(k+1)), ncolors=k+1)
+    norm = colors.BoundaryNorm(boundaries = [ i-0.1 for i in range(0, k+2)], ncolors=k+1)
     pyplot.figure(figsize=(figsize, figsize))
 
     for i in range(num_img):
