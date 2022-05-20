@@ -191,7 +191,9 @@ class BetaVAE_CONV(BaseVAE):
         elif self.distribution == 'gaussian':
             recons_loss =F.mse_loss(recons * self.mask, input * self.mask) * self.recons_multi
         elif self.distribution == 'multi_class':
-            recons_loss = F.cross_entropy(F.softmax(recons.view(-1, self.in_channels), dim=1), input.view(-1, self.in_channels )) * self.recons_multi
+            recons_softmax = F.softmax(recons, dim=1)
+            input_ = torch.argmax(input, dim=1)
+            recons_loss = F.cross_entropy(recons_softmax, input_) * self.recons_multi
         else:
             raise ValueError(f'distribution {self.distribution} not implemented')
 
