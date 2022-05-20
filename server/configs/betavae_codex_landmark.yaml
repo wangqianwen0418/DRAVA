@@ -12,7 +12,7 @@ model_params:
   max_capacity: 25
   Capacity_max_iter: 10000
   # recons_multi: 100
-  distribution: bernoulli
+  distribution: multi_class
   is_masked: False
 
 exp_params:
