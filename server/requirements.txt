@@ -89,3 +89,5 @@ flask-cors==3.0.10
 shap==0.40.0
 zarr == 2.11.3
 tifffile == 2021.11.2
+faiss == 1.5.3
+umap-learn == 0.5.3     
