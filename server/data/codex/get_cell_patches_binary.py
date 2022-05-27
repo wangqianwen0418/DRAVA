@@ -114,6 +114,9 @@ from matplotlib import pyplot, colors
 def visualize(cell_id: int, figsize=20):
     z = zarr.open(f'{foldername}/cell_patches_cell+nucleus.zarr', mode='r')
 
+    k = z.shape[1]
+    cmap=pyplot.get_cmap('tab10')
+    norm = colors.BoundaryNorm(boundaries = [ i-0.1 for i in range(0, k+2)], ncolors=k+1)
     pyplot.figure(figsize=(figsize, figsize))
     w = 5
     h = 6
@@ -125,7 +128,7 @@ def visualize(cell_id: int, figsize=20):
 
         ax = pyplot.subplot(5, 6, i + 1)
 
-        ax.imshow(data, alpha=alpha)
+        ax.imshow(data, alpha=alpha, cmap = cmap, norm = norm)
         ax.axis("off")
 
     pyplot.tight_layout()
