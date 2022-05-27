@@ -35,5 +35,5 @@ trainer_params:
 
 logging_params:
   save_dir: "logs"
-  name: "BetaVAE_CONV_9cluster"
+  name: "BetaVAE_CONV_2cluster"
   manual_seed: 1265
