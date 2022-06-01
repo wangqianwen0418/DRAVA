@@ -177,7 +177,8 @@ class VAEModule(pl.LightningModule):
         self.concept_array.append([concept_in, mu, std, labels])
 
         # save latent vectors of samples in this batch
-        self.save_results(mu, loss['Reconstruction_Loss'], labels, batch_idx)
+        recons_loss = self.model.recons_loss(*results)
+        self.save_results(mu, recons_loss, labels, batch_idx)
         return loss
 
     def test_end(self, outputs):
@@ -206,7 +207,7 @@ class VAEModule(pl.LightningModule):
         f.close()
 
         # save image reconstruction space
-        self.save_simu_images(as_individual=True, ranges=ranges, is_test=True)
+        self.save_simu_images(ranges=ranges, is_test=True)
         print('test_loss', avg_loss)
 
         return {'test_loss': avg_loss}
@@ -258,7 +259,7 @@ class VAEModule(pl.LightningModule):
 
             if self.is_genomic_dataset(self.params['dataset']):
                 row = labels[i].tolist() + [','.join([str(d)
-                                                      for d in m]), recons_loss[i]]
+                                                    for d in m]), recons_loss[i]]
             else:
                 row = [','.join([str(d) for d in m]), recons_loss[i]]
 
@@ -274,9 +275,8 @@ class VAEModule(pl.LightningModule):
                     self.z_range[j][1][0] = d
                     self.z_range[j][1].sort()
 
-        f.close()
 
-    def save_simu_images(self, as_individual=False, ranges=[], is_test=False):
+    def save_simu_images(self, ranges=[], is_test=False):
         """
         return an image grid,
         each row is a hidden dimension, 
@@ -328,22 +328,6 @@ class VAEModule(pl.LightningModule):
         if 'codex' in self.params['dataset'] and 'num_cluster' not in self.params:
         # [TODO what is the best way to show multiplex images here?]
             recons_imgs = recons_imgs[:, 0:3, :, :]
-
-        if as_individual:
-            Path(
-                f"{self.logger_folder}/results/simu").mkdir(parents=True, exist_ok=True)
-            img_idx = 0
-            for img in recons_imgs:
-                q, mod = divmod(img_idx, self.bin_num)
-                if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
-                    drawMasks(
-                        np.expand_dims(recons_imgs.cpu().detach().numpy(), axis=0), 
-                        figsize = 60, nrows = 1, save_path=f"{self.logger_folder}/results/simu/{q}_{mod}.png"
-                        )
-                else:
-                    vutils.save_image(
-                        img, f"{self.logger_folder}/results/simu/{q}_{mod}.png",)
-                img_idx += 1
 
         if is_test:
             save_path = f"{self.logger_folder}/results/simu.png"
@@ -705,12 +689,12 @@ class VAEModule(pl.LightningModule):
         elif 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
             root = os.path.join(
                 self.params['data_path'], self.params['dataset'])
-            dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=self.params['cell_number'])
+            dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=1000)
             self.num_test_imgs = len(dataset)
             return DataLoader(dataset,
                               batch_size=self.params['batch_size'],
-                              shuffle=True,
-                              drop_last=True)
+                              shuffle=False,
+                              drop_last=False)
 
         elif 'codex' in self.params['dataset']:
             root = os.path.join(
