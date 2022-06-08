@@ -10,6 +10,10 @@ server/data/tad_data_generator/*
 server/data/seq_generator/*
 !server/data/seq_generator/*.py
 
+!server/data/codex/
+server/data/codex/*
+!server/data/codex/*.py
+
 .vscode/
 
 logs/

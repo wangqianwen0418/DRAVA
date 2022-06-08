@@ -19,6 +19,8 @@ export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
     return queryIDCResults();
   } else if (dataset == 'dsprites') {
     return queryDspritesResults();
+  } else if (dataset == 'sc2') {
+    return querySC2Results();
   }
   return [];
 };
@@ -105,6 +107,34 @@ const queryCelebResults = async () => {
       ...row,
       z: row['z'].split(',').map(d => parseFloat(d)),
       std: row['std'].split(',').map(d => parseFloat(d)),
+      id: (i + 1).toString(),
+      assignments: {},
+      ...dims,
+      index: i
+    };
+  });
+  return samples;
+};
+
+const querySC2Results = async () => {
+  const url = '/assets/results_sc2.csv';
+  const response = await axios({
+    method: 'get',
+    url,
+    responseType: 'text'
+  });
+  const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
+
+  const samples = pcsv.data.map((row, i) => {
+    const zs = row['z'].split(',').map(d => parseFloat(d));
+    const dims = zs.reduce((pre, curr, idx) => {
+      const dimName = `dim_${idx}`;
+      return { ...pre, [dimName]: curr };
+    }, {});
+
+    return {
+      ...row,
+      z: row['z'].split(',').map(d => parseFloat(d)),
       id: (i + 1).toString(),
       assignments: {},
       ...dims,
