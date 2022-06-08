@@ -238,12 +238,12 @@ def get_celeb_sample():
 
 @api.route('/get_sc2_sample', methods=['GET'])
 def get_sc2_sample():
+    '''
+    e.g., base_url/api/get_sc2_sample?id=xx
+    '''
     id = request.args.get('id', type=str)
     res = sc2_data[int(id)]
-    colors = [(1, 1, 1), (1, 0.5, 0) , (0, 0.7, 0)] # white (bg), red(cell), green (nucleus)
-    mycolormap = LinearSegmentedColormap.from_list('myCmap', colors, N=3)
-    res = mycolormap(res) * 255
-    pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
+    pil_img = cate_arr_to_image(res, border=True)
     img_io = BytesIO()
     pil_img.save(img_io, 'JPEG', quality=70)
     img_io.seek(0)
@@ -285,23 +285,21 @@ def get_simu_images():
 
         img_io = BytesIO()
 
+        # =========reshape numpy array=========
         if (dataset == 'celeb' or dataset == 'IDC'):
             # image shape from [3, 64, 64] to [64, 64, 3]
             res = np.rollaxis(res, 0, 3)
         elif dataset == 'sc2':
-            res = np.argmax(res, axis=0)
+            res = np.argmax(res, axis=0) # each pixel from one hot vector to class index
         else:
             res = res[0]  # image shape from [1, 64, 64] to [64, 64]
 
+        # ==========numpy array to pil image object=========
         if dataset == 'matrix':  # changef from grayscale to a defined color map
             res = colormap.get_cmap('viridis')(res) * 255
             pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
         if dataset == 'sc2':
-            # TODO: treat sc2 pixel as categorical values
-            colors = [(1, 1, 1), (1, 0.5, 0) , (0, 0.7, 0)] # white (bg), red(cell), green (nucleus)
-            mycolormap = LinearSegmentedColormap.from_list('myCmap', colors, N=3)
-            res = mycolormap(res) * 255
-            pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
+            pil_img = cate_arr_to_image(res)
         else:
             if (dataset) == 'dsprites':
                 res = 1-res
@@ -309,6 +307,7 @@ def get_simu_images():
             res = res.astype(np.uint8)
             pil_img = Image.fromarray(res)
 
+        # ===================
         pil_img.save(img_io, 'png', quality=100)
         img_io.seek(0)
         v = base64.b64encode(img_io.getvalue()).decode()
@@ -318,8 +317,33 @@ def get_simu_images():
     # TODO: enable users to reverse an axis
     if dataset == 'dsprites' and dim == 4:
         results = results[::-1]
+
     return jsonify({"image": results, "score": score})
 
 ######################
 # functions called by the API
 ######################
+def cate_arr_to_image(arr, border=False):
+    '''
+    converting a categorical mask to an image
+    each value in array indicates a class index.
+    pixels belonging to the same class will be coded using the same color
+
+    :param arr: numpy array, shape [h, w]
+    :param border: boolean, whether to add a border to the returned image
+    :return: an image
+    e.g., base_url/api/get_simu_images?dataset=matrix&dim=2&z='0.2,0.3,-0.2,-0.3'
+    '''
+    colors = [(1, 1, 1), (1, 0.5, 0) , (0, 0.7, 0)] # white (bg), red(cell), green (nucleus)
+    mycolormap = LinearSegmentedColormap.from_list('myCmap', colors, N=3)
+    res = mycolormap(arr) * 255
+
+    # add a border
+    if border:
+        res[0, :, :3] = 50
+        res[62, :, :3] = 50
+        res[:, 0, :3] = 50
+        res[:, 62, :3] = 50
+
+    pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
+    return pil_img
