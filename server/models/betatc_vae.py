@@ -4,7 +4,15 @@ from torch import nn
 from torch.nn import functional as F
 from .types_ import *
 import math
-
+# a debug helper
+class PrintLayer(nn.Module):
+    def __init__(self):
+        super(PrintLayer, self).__init__()
+    
+    def forward(self, x):
+        # Do your print / debug stuff here
+        print(x.shape)
+        return x
 
 class BetaTCVAE(BaseVAE):
     num_iter = 0 # Global static variable to keep track of iterations
@@ -17,6 +25,7 @@ class BetaTCVAE(BaseVAE):
                  alpha: float = 1.,
                  beta: float =  6.,
                  gamma: float = 1.,
+                 img_size:int = 64,
                  **kwargs) -> None:
         super(BetaTCVAE, self).__init__()
 
@@ -27,43 +36,60 @@ class BetaTCVAE(BaseVAE):
         self.beta = beta
         self.gamma = gamma
 
+        self.distribution = kwargs.get('distribution', 'gaussian')
+        self.recons_multi = kwargs.get('recons_multi', 1)
+
         modules = []
         if hidden_dims is None:
             hidden_dims = [32, 32, 32, 32]
+        conv_sizes =  kwargs.get('conv_sizes', [ 4 for i in hidden_dims])
+
+        out_channels = in_channels
 
         # Build Encoder
-        for h_dim in hidden_dims:
+        w_dim = img_size
+        padding = 1
+        stride = 2
+        dilation = 1 
+        for i, h_dim in enumerate(hidden_dims):
+            kernel_size = conv_sizes[i]
             modules.append(
                 nn.Sequential(
                     nn.Conv2d(in_channels, out_channels=h_dim,
-                              kernel_size= 4, stride= 2, padding  = 1),
+                              kernel_size=kernel_size, stride= 2, padding  = 1),
+                    # PrintLayer(),
                     nn.LeakyReLU())
             )
             in_channels = h_dim
+            # calculated as https://pytorch.org/docs/master/generated/torch.nn.Conv2d.html#torch.nn.Conv2d
+            w_dim = math.floor((w_dim + 2 * padding - dilation * (kernel_size - 1) - 1)/stride + 1)
+
+        self.encoder_outsize = [h_dim, w_dim, w_dim] # w and h is the same in our case
+        flat_outsize = h_dim * w_dim * w_dim
 
         self.encoder = nn.Sequential(*modules)
-
-        self.fc = nn.Linear(hidden_dims[-1]*16, 256)
-        self.fc_mu = nn.Linear(256, latent_dim)
-        self.fc_var = nn.Linear(256, latent_dim)
-
+        self.fc = nn.Linear(flat_outsize, 256)
+        self.fc_mu = nn.Linear( 256, latent_dim )
+        self.fc_var = nn.Linear( 256, latent_dim )
 
         # Build Decoder
         modules = []
 
-        self.decoder_input = nn.Linear(latent_dim, 256 *  2)
+        self.decoder_input = nn.Linear(latent_dim, flat_outsize)
 
         hidden_dims.reverse()
+        conv_sizes.reverse()
 
         for i in range(len(hidden_dims) - 1):
             modules.append(
                 nn.Sequential(
                     nn.ConvTranspose2d(hidden_dims[i],
                                        hidden_dims[i + 1],
-                                       kernel_size=3,
+                                       kernel_size=conv_sizes[i],
                                        stride = 2,
                                        padding=1,
                                        output_padding=1),
+                    # PrintLayer(),
                     nn.LeakyReLU())
             )
 
@@ -72,12 +98,12 @@ class BetaTCVAE(BaseVAE):
         self.final_layer = nn.Sequential(
                             nn.ConvTranspose2d(hidden_dims[-1],
                                                hidden_dims[-1],
-                                               kernel_size=3,
+                                               kernel_size=conv_sizes[-1],
                                                stride=2,
                                                padding=1,
                                                output_padding=1),
                             nn.LeakyReLU(),
-                            nn.Conv2d(hidden_dims[-1], out_channels= 3,
+                            nn.Conv2d(hidden_dims[-1], out_channels= out_channels,
                                       kernel_size= 3, padding= 1),
                             nn.Tanh())
 
@@ -96,6 +122,7 @@ class BetaTCVAE(BaseVAE):
         # of the latent Gaussian distribution
         mu = self.fc_mu(result)
         log_var = self.fc_var(result)
+        log_var = torch.clamp(log_var, None, 3)
 
         return [mu, log_var]
 
@@ -107,7 +134,7 @@ class BetaTCVAE(BaseVAE):
         :return: (Tensor) [B x C x H x W]
         """
         result = self.decoder_input(z)
-        result = result.view(-1, 32, 4, 4)
+        result = result.view(-1, *self.encoder_outsize) 
         result = self.decoder(result)
         result = self.final_layer(result)
         return result
@@ -160,7 +187,16 @@ class BetaTCVAE(BaseVAE):
 
         weight = 1 #kwargs['M_N']  # Account for the minibatch samples from the dataset
 
-        recons_loss =F.mse_loss(recons, input, reduction='sum')
+        if self.distribution == 'bernoulli':
+            recons_loss = F.binary_cross_entropy_with_logits(recons, input, reduction='sum') * self.recons_multi
+        elif self.distribution == 'gaussian':
+            recons_loss =F.mse_loss(recons * self.mask, input * self.mask, reduction='sum') * self.recons_multi
+        elif self.distribution == 'multi_class':
+            recons_softmax = F.softmax(recons, dim=1)
+            input_ = torch.argmax(input, dim=1)
+            recons_loss = F.cross_entropy(recons_softmax, input_, reduction='sum') * self.recons_multi
+        else:
+            raise ValueError(f'distribution {self.distribution} not implemented')
 
         log_q_zx = self.log_density_gaussian(z, mu, log_var).sum(dim = 1)
 

@@ -1,23 +1,23 @@
 model_params:
   name: 'BetaVAE_CONV'
-  in_channels: 10
+  in_channels: 3
   latent_dim: 25 
   hidden_dims: [64 , 256, 512]
   conv_sizes: [7, 5, 5]
-  loss_type: 'H'
-  beta: 1
-  # loss_type: 'B'
+  # loss_type: 'H'
+  # beta: 4
+  loss_type: 'B'
   img_size: 64
   gamma: 10.0
   max_capacity: 25
   Capacity_max_iter: 10000
-  recons_multi: 100
+  recons_multi: 1
   distribution: multi_class
   is_masked: False
 
 exp_params:
   dataset: codex/HBM622.JXWQ.554
-  num_cluster: 9
+  num_cluster: 2
   cell_number: 0 # 0 incidate using all cells
   data_path: "./data/"
   img_size: 64
@@ -31,9 +31,9 @@ exp_params:
 trainer_params:
   gpus: 1
   max_nb_epochs: 100
-  max_epochs: 100
+  max_epochs: 40
 
 logging_params:
   save_dir: "logs"
-  name: "BetaVAE_CONV_9cluster"
+  name: "BetaVAE_CONV_2cluster"
   manual_seed: 1265

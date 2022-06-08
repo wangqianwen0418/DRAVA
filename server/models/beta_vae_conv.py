@@ -186,16 +186,18 @@ class BetaVAE_CONV(BaseVAE):
         log_var = args[3]
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
-        if self.distribution == 'bernoulli':
-            recons_loss = F.binary_cross_entropy_with_logits(recons, input) * self.recons_multi
-        elif self.distribution == 'gaussian':
-            recons_loss =F.mse_loss(recons * self.mask, input * self.mask) * self.recons_multi
-        elif self.distribution == 'multi_class':
-            recons_softmax = F.softmax(recons, dim=1)
-            input_ = torch.argmax(input, dim=1)
-            recons_loss = F.cross_entropy(recons_softmax, input_) * self.recons_multi
-        else:
-            raise ValueError(f'distribution {self.distribution} not implemented')
+        # if self.distribution == 'bernoulli':
+        #     recons_loss = F.binary_cross_entropy_with_logits(recons, input) * self.recons_multi
+        # elif self.distribution == 'gaussian':
+        #     recons_loss =F.mse_loss(recons * self.mask, input * self.mask) * self.recons_multi
+        # elif self.distribution == 'multi_class':
+        #     recons_softmax = F.softmax(recons, dim=1)
+        #     input_ = torch.argmax(input, dim=1)
+        #     recons_loss = F.cross_entropy(recons_softmax, input_) * self.recons_multi
+        # else:
+        #     raise ValueError(f'distribution {self.distribution} not implemented')
+        recons_loss = self.recons_loss(*args) * self.recons_multi
+        recons_loss = recons_loss.mean()
 
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 
@@ -213,6 +215,25 @@ class BetaVAE_CONV(BaseVAE):
             raise ValueError('Undefined loss type.')
 
         return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss, 'weighted_KLD': weighted_kld_loss}
+
+    def recons_loss(self, *args):
+        recons = args[0]
+        input = args[1]
+
+        # reduction ='none' will return the mse loss for each sample
+        if self.distribution == 'bernoulli':
+            recons_loss = F.binary_cross_entropy_with_logits(recons, reduction='none') 
+        elif self.distribution == 'gaussian':
+            recons_loss =F.mse_loss(recons * self.mask, input * self.mask, reduction='none') 
+        elif self.distribution == 'multi_class':
+            recons_softmax = F.softmax(recons, dim=1)
+            input_ = torch.argmax(input, dim=1)
+            recons_loss = F.cross_entropy(recons_softmax, input_, reduction='none') 
+        else:
+            raise ValueError(f'distribution {self.distribution} not implemented')
+
+        recons_loss = recons_loss.view(recons_loss.size(0), -1).mean(1) # average except along dim 0
+        return recons_loss
 
     def sample(self,
                num_samples:int,

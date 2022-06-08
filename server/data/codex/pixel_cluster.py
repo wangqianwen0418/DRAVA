@@ -2,13 +2,14 @@
 import umap.umap_ as umap
 import zarr
 from tifffile import TiffFile, imread, imwrite
-from sklearn.cluster import KMeans
+# from sklearn.cluster import KMeans
 import faiss
 import pandas as pd
 import math
 import numpy as np
 from tqdm import tqdm
 from matplotlib import pyplot, colors
+import xml.etree.ElementTree as ET
 
 # %%
 foldername = 'HBM622.JXWQ.554'
@@ -41,6 +42,40 @@ pixel_cluster_ids = I.flatten()
 cluster_idxs, cluster_counts = np.unique(pixel_cluster_ids, return_counts=True)
 ##################
 
+#%% [statistics of each cluster]
+cmap=pyplot.get_cmap('tab10')
+
+# get info of each channel
+tags = TiffFile(f'{foldername}/reg1_stitched_expressions.ome.tif').pages[0].tags
+xml_description = [t.value for t in tags if t.name == 'ImageDescription'][0]
+xml_root = ET.fromstring(xml_description)
+channels = [child.attrib['Name'] for child in xml_root[0][1] if 'Name' in child.attrib ]
+
+cluster_means = []
+for i in range(1, k+1):
+    cluster_pixel = pixels[pixel_cluster_ids==i]
+    cluster_mean = [cluster_pixel[:, channel_idx].mean() for channel_idx in range(len(channels))]
+    cluster_means.append(cluster_mean)
+#%%
+width = 0.08
+fig, ax = pyplot.subplots(figsize=(16, 4))
+x = np.arange(len(channels))
+for cluster_idx in range( k ):
+    rect = ax.bar(
+        x + width * (cluster_idx - k/2 ),
+        cluster_means[cluster_idx], 
+        width, 
+        label=f'cluster_{cluster_idx + 1}',
+        color = cmap.colors[cluster_idx+1]
+        )
+    
+ax.set_xticks(x, channels, rotation='vertical')
+ax.legend()
+ax.set_title('mean of each channel')
+fig.tight_layout()
+pyplot.show()
+pyplot.close()
+#%%
 # %%
 # random sampling from all cells
 sample_size = 1000
@@ -61,12 +96,10 @@ mat.train(mt)
 assert mat.is_trained
 tr = mat.apply_py(mt)
 points = np.concatenate((tr, I), axis=1)
-
-
 pca_points = points[idx, :]
 
 # %% draw chart
-cmap = pyplot.get_cmap('tab10')
+
 norm = colors.BoundaryNorm(
     boundaries=[i-0.1 for i in range(0, k+2)], ncolors=k+1)
 
@@ -93,6 +126,7 @@ bar = ax3.bar(
 )
 
 pyplot.show()
+pyplot.close()
 #############
 
 
