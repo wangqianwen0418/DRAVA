@@ -5,6 +5,7 @@ This repository has two main components: a frontend interface and a back-end ser
 ## Development
 
 ### Backend
+The backend is developed and tested with `python@3.7.9`
 
 First, install all dependent packages:
 
