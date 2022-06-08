@@ -9,6 +9,8 @@ from matplotlib import cm as colormap
 from matplotlib.colors import LinearSegmentedColormap
 import torchvision.utils as vutils
 
+import zarr
+
 import flask
 from flask import request, jsonify, safe_join, send_from_directory, send_file, Blueprint, current_app, g
 
@@ -135,6 +137,7 @@ sequence_data = np.load(
     safe_join('../data/', 'HFFc6_ATAC_chr7.npz'), encoding='bytes')['imgs']
 dsprites_data = np.load(
     safe_join('../data/', 'dsprites_test.npz'), encoding='bytes')['imgs']
+sc2_data = zarr.open(f'../data/codex/HBM622.JXWQ.554/cell_patches_2cluster.zarr', mode='r')
 ######################
 # API Starts here
 ######################
@@ -235,7 +238,16 @@ def get_celeb_sample():
 
 @api.route('/get_sc2_sample', methods=['GET'])
 def get_sc2_sample():
-    return ''
+    id = request.args.get('id', type=str)
+    res = sc2_data[int(id)]
+    colors = [(1, 1, 1), (1, 0.5, 0) , (0, 0.7, 0)] # white (bg), red(cell), green (nucleus)
+    mycolormap = LinearSegmentedColormap.from_list('myCmap', colors, N=3)
+    res = mycolormap(res) * 255
+    pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
+    img_io = BytesIO()
+    pil_img.save(img_io, 'JPEG', quality=70)
+    img_io.seek(0)
+    return send_file(img_io, mimetype='image/jpg')
 
 
 @api.route('/get_simu_images', methods=['GET'])
@@ -296,6 +308,7 @@ def get_simu_images():
             res = res*255
             res = res.astype(np.uint8)
             pil_img = Image.fromarray(res)
+
         pil_img.save(img_io, 'png', quality=100)
         img_io.seek(0)
         v = base64.b64encode(img_io.getvalue()).decode()
