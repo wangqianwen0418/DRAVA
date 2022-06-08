@@ -286,7 +286,7 @@ def get_simu_images():
             pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
         if dataset == 'sc2':
             # TODO: treat sc2 pixel as categorical values
-            colors = [(256, 256, 256), (256, 0, 0) , (0, 256, 0)]
+            colors = [(1, 1, 1), (1, 0.5, 0) , (0, 0.7, 0)] # white (bg), red(cell), green (nucleus)
             mycolormap = LinearSegmentedColormap.from_list('myCmap', colors, N=3)
             res = mycolormap(res) * 255
             pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
