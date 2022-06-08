@@ -29,7 +29,7 @@ const Z_Ranges: { [k: string]: number[][] } = {
   matrix: z_ranges_matrix
 };
 
-const non_genomic_dataset = ['celeb', 'IDC', 'dsprites'];
+const non_genomic_dataset = ['celeb', 'IDC', 'dsprites', 'sc2'];
 const context_img_dataset = ['IDC'];
 
 interface State {
@@ -52,7 +52,7 @@ export default class App extends React.Component<{}, State> {
   constructor(prop: {}) {
     super(prop);
     this.state = {
-      dataset: 'IDC',
+      dataset: 'sc2',
       dimUserNames: {},
       filters: {},
       // samples: [],
@@ -282,6 +282,7 @@ export default class App extends React.Component<{}, State> {
             <Menu.Item key="celeb">Celeb</Menu.Item>
             <Menu.Item key="IDC">IDC</Menu.Item>
             <Menu.Item key="dsprites">shapes</Menu.Item>
+            <Menu.Item key="sc2">single cell</Menu.Item>
             <Menu.Item key="upload">
               <Upload>
                 <UploadOutlined style={{ color: 'rgba(255, 255, 255, 0.65)' }} />
