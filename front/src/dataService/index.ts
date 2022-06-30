@@ -117,7 +117,7 @@ const queryCelebResults = async () => {
 };
 
 const querySC2Results = async () => {
-  const url = '/assets/results_sc2.csv';
+  const url = '/assets/results_sc2_labeled.csv';
   const response = await axios({
     method: 'get',
     url,

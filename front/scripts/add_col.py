@@ -3,9 +3,10 @@ import pandas as pd
 filename = '../public/assets/results_chr1-5_10k_onTad.csv'
 df = pd.read_csv(filename.replace('.csv', '_origin.csv'))
 
+#%% [markdown]
+# # add ctct values at edge
+#############################
 #%%
-# add ctct values at edge
-
 import pyBigWig
 bw = pyBigWig.open('./HFFC6_CTCF.mRp.clN.bigWig')
 
@@ -64,6 +65,11 @@ df['atac_mean'] = col_atac_v
 df['atac_left'] = col_atac_left
 df['atac_right'] = col_atac_right
 df.to_csv(filename, index=False)
+
+#%% [markdown]
+#############################
+# # Add col labels to the celeba dataset#
+#############################
 # %%
 celeba_df = pd.read_csv('../public/assets/results_celeba.csv')
 label_df = pd.read_csv('../../server/data/celeba/list_attr_celeba.txt', sep=r"\s+")
@@ -84,4 +90,18 @@ celeba_df['young'] = label_df['Young'].apply(lambda x: 'Y' if x== 1 else 'N')
 celeba_df['bangs'] = label_df['Bangs'].apply(lambda x: 'Y' if x== 1 else 'N')
 
 celeba_df.to_csv('../public/assets/results_celeba.csv', index=False)
+#%% [markdown]
+#############################
+# # Add col labels to the single cell dataset#
+#############################
+# %%
+import pandas as pd
+sc_df = pd.read_csv('../public/assets/results_sc2.csv')
+label_df = pd.read_csv('../../server/data/codex//HBM622.JXWQ.554/reg1_stitched_expressions.ome.tiff-cell_cluster.csv')
+label_df = label_df.loc[:len(sc_df)]
+
+for k in label_df.columns:
+    sc_df[k] = label_df[k]
+
+sc_df.to_csv('../public/assets/results_sc2_labeled.csv', index=False)
 # %%

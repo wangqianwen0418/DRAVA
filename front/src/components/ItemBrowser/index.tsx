@@ -249,6 +249,23 @@ const ItemBrowser = (props: Props) => {
           ) : (
             <></>
           )}
+          {dataset == 'sc2' ? (
+            [
+              'K-Means [Mean] Expression',
+              'K-Means [Covariance] Expression',
+              'K-Means [Total] Expression',
+              'K-Means [Mean-All-SubRegions] Expression',
+              'K-Means [Shape-Vectors]',
+              'K-Means [Texture]',
+              'K-Means [tSNE_All_Features]'
+            ].map(a => (
+              <option value={a} key={a}>
+                {a}
+              </option>
+            ))
+          ) : (
+            <></>
+          )}
         </select>
         <Button
           type="primary"
