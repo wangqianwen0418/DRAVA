@@ -4,6 +4,12 @@ This repository has two main components: a frontend interface and a back-end ser
 
 ## Development
 
+### Run the doc webpage
+
+```
+docsify serve docs
+```
+
 ### Backend
 The backend is developed and tested with `python@3.7.9`
 

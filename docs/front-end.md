@@ -1,4 +1,4 @@
-### Frontend
+# Frontend
 
 The front-end visual interface is developed and tested using node@v16.10.0 at Chrome web browser.
 
