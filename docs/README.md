@@ -12,7 +12,7 @@ Interactive visual piles enable users to effectively organize, summarize, and co
 The concept adaptor assists users in modifying potential imperfect semantic vectors and better facilitates concept-driven exploration.
 
 <figure>
-    <img src="/assets/teaser.jpg" width=800>
+    <img src="./assets/teaser.jpg" width=800>
     <figcaption> <b>Drava extracts explainable concepts using disentangled representation learning to enable concept-driven exploration of small multiples.</b> (A) UMAP
 projection of image patches of breast cancer specimens. (B) All image patches are organized and piled up based on the tissues density.
 (C) All image patches are grouped into a grid layout according to the tissue density and the tissue color. The two visual concepts reveal
