@@ -2,7 +2,9 @@
 
 The backend is developed and tested with `python@3.7.9`
 
-First, install all dependent packages:
+First, download or clone our github repo at https://github.com/wangqianwen0418/DRAVA.
+
+Second, go to the repo folder and install all dependent packages:
 
 ```sh
 cd server
