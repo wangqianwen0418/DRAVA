@@ -25,7 +25,7 @@ const datasetConfig: TDatasetConfig = {
     ],
     views: { left: ['latentDim', 'gosling'], right: ['itemView'] }
   },
-  celeb: {
+  celeba: {
     name: 'CelebA',
     labels: ['gender', 'smiling', 'hair', 'bangs', 'young'],
     customDims: ['recons_loss'],

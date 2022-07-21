@@ -9,7 +9,7 @@ export const whatCHR = (dataset: string) => {
 };
 
 export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
-  if (dataset == 'celeb') {
+  if (dataset == 'celeba') {
     return queryCelebResults();
   } else if (dataset == 'matrix') {
     return queryMatrixResults();
