@@ -9,20 +9,49 @@ export const whatCHR = (dataset: string) => {
 };
 
 export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
-  if (dataset == 'celeba') {
-    return queryCelebResults();
-  } else if (dataset == 'matrix') {
-    return queryMatrixResults();
-  } else if (dataset == 'sequence') {
-    return querySequenceResults();
-  } else if (dataset == 'IDC') {
-    return queryIDCResults();
-  } else if (dataset == 'dsprites') {
-    return queryDspritesResults();
-  } else if (dataset == 'sc2') {
-    return querySC2Results();
+  try {
+    const cap_name = `query${dataset[0].toUpperCase() + dataset.substring(1)}Results`;
+    return queryFunctions[cap_name]();
+  } catch {
+    return defaultResultsQuery(dataset);
   }
-  return [];
+};
+
+/***
+ * Custom query functions
+ */
+const defaultResultsQuery = async (dataset: string) => {
+  const url = `/assets/results_${dataset}.csv`;
+  try {
+    const response = await axios({
+      method: 'get',
+      url,
+      responseType: 'text'
+    });
+    const pcsv = Papa.parse<TCSVResultRow>(response.data, { header: true, skipEmptyLines: true });
+
+    const samples = pcsv.data.map((row, i) => {
+      const zs = row['z'].split(',').map(d => parseFloat(d));
+      const dims = zs.reduce((pre, curr, idx) => {
+        const dimName = `dim_${idx}`;
+        return { ...pre, [dimName]: curr };
+      }, {});
+
+      return {
+        ...row,
+        z: row['z'].split(',').map(d => parseFloat(d) / 6 + 0.5),
+        std: row['std'].split(',').map(d => parseFloat(d)),
+        id: row['id'],
+        assignments: {},
+        ...dims,
+        index: i
+      };
+    });
+    return samples;
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
 };
 
 const queryIDCResults = async () => {
@@ -116,7 +145,7 @@ const queryCelebResults = async () => {
   return samples;
 };
 
-const querySC2Results = async () => {
+const querySc2Results = async () => {
   const url = '/assets/results_sc2_labeled.csv';
   const response = await axios({
     method: 'get',
@@ -246,12 +275,13 @@ const querySequenceResults = async () => {
   return newSamples as TResultRow[];
 };
 
-export const queryRawSamples = async (samples: TResultRow) => {
-  const imgURLs = await axios({
-    method: 'post',
-    url: '',
-    data: samples
-  });
+const queryFunctions: { [k: string]: () => Promise<TResultRow[]> } = {
+  queryCelebResults,
+  queryDspritesResults,
+  queryIDCResults,
+  queryMatrixResults,
+  querySc2Results,
+  querySequenceResults
 };
 
 export const querySimuImages = async (dataset: string, dim: number, z?: number[]) => {
