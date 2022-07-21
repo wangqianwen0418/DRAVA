@@ -14,6 +14,7 @@ import ItemBrowser from 'components/ItemBrowser';
 import GoslingVis from 'components/Gosling';
 import ImageContext from 'components/ImageContext';
 
+import { datasetConfig } from 'config';
 import { queryResults } from 'dataService';
 import { MenuInfo } from 'rc-menu/lib/interface';
 import { TResultRow, TFilter, TDistribution, TMatrixData } from 'types';
@@ -176,25 +177,7 @@ export default class App extends React.Component<{}, State> {
       samples[0].z.forEach((_, idx) => {
         dimNames.push(`dim_${idx}`);
       });
-      dimNames.push('recons_loss');
-      if (dataset == 'matrix') {
-        dimNames = dimNames.concat([
-          'size',
-          'score',
-          'ctcf_mean',
-          'ctcf_left',
-          'ctcf_right',
-          'atac_mean',
-          'atac_left',
-          'atac_right'
-        ]);
-      } else if (dataset == 'IDC') {
-        dimNames.push('label');
-        dimNames.push('confidence');
-        dimNames.push('prediction');
-      } else if (dataset == 'sequence') {
-        dimNames.push('peak_score');
-      }
+      dimNames = dimNames.concat(datasetConfig[dataset].customDims);
     }
     dimNames.forEach((dimName, idx) => {
       const dimValues = getDimValues(samples, dimName);
@@ -277,12 +260,9 @@ export default class App extends React.Component<{}, State> {
           onClick={this.onChangeDataset.bind(this)}
         >
           <SubMenu key="dataset" title="Dataset">
-            <Menu.Item key="sequence">Sequence</Menu.Item>
-            <Menu.Item key="matrix">Matrix</Menu.Item>
-            <Menu.Item key="celeb">Celeb</Menu.Item>
-            <Menu.Item key="IDC">IDC</Menu.Item>
-            <Menu.Item key="dsprites">shapes</Menu.Item>
-            <Menu.Item key="sc2">single cell</Menu.Item>
+            {Object.keys(datasetConfig).map(key => {
+              return <Menu.Item key={key}> {datasetConfig[key]['name']}</Menu.Item>;
+            })}
             <Menu.Item key="upload">
               <Upload>
                 <UploadOutlined style={{ color: 'rgba(255, 255, 255, 0.65)' }} />
@@ -306,10 +286,7 @@ export default class App extends React.Component<{}, State> {
                   samples={this.samples}
                   filters={filters}
                   matrixData={this.matrixData}
-                  height={
-                    appHeight *
-                    (non_genomic_dataset.includes(dataset) && !context_img_dataset.includes(dataset) ? 1 : 0.6)
-                  }
+                  height={appHeight * (datasetConfig[dataset].views.left.length > 1 ? 0.6 : 1)}
                   width={leftColWidth}
                   isDataLoading={isDataLoading}
                   dimUserNames={dimUserNames}
@@ -317,19 +294,17 @@ export default class App extends React.Component<{}, State> {
                   updateDims={this.updateDims}
                   setFilters={this.setFilters}
                 />
-                {non_genomic_dataset.includes(dataset) ? (
-                  context_img_dataset.includes(dataset) ? (
-                    <ImageContext
-                      isDataLoading={isDataLoading}
-                      height={appHeight * 0.4}
-                      width={leftColWidth}
-                      samples={this.samples}
-                      dataset={dataset}
-                    />
-                  ) : (
-                    <></>
-                  )
-                ) : (
+                {datasetConfig[dataset].views.left.includes('contextView') && (
+                  <ImageContext
+                    isDataLoading={isDataLoading}
+                    height={appHeight * 0.4}
+                    width={leftColWidth}
+                    samples={this.samples}
+                    dataset={dataset}
+                  />
+                )}
+
+                {datasetConfig[dataset].views.left.includes('gosling') && (
                   <GoslingVis
                     dataset={dataset}
                     samples={this.samples.filter(d => !d.filtered)}
