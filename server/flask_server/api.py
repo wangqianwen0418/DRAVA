@@ -298,7 +298,7 @@ def get_simu_images():
         if dataset == 'matrix':  # changef from grayscale to a defined color map
             res = colormap.get_cmap('viridis')(res) * 255
             pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
-        if dataset == 'sc2':
+        elif dataset == 'sc2':
             pil_img = cate_arr_to_image(res)
         else:
             if (dataset) == 'dsprites':
