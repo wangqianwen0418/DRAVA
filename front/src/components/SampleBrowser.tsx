@@ -52,7 +52,7 @@ const SampleBrowser = (props: Props) => {
 
   const filteredSampleIds = samples.map(d => d.id);
   const id2Image = (id: string) => {
-    const url = `${BASE_URL}/api/get_${dataset}_sample?id=${id}`;
+    const url = `${BASE_URL}/api/get_item_sample?dataset=${dataset}&id=${id}`;
     return (
       <img
         loading="lazy"

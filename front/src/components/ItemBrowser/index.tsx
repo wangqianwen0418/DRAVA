@@ -1,7 +1,7 @@
 import { TDistribution, TResultRow, TFilter } from 'types';
 import React, { useState } from 'react';
 import { Card, Select, Button, message } from 'antd';
-import { RightCircleOutlined, LeftCircleOutlined } from '@ant-design/icons';
+import { datasetConfig } from 'config';
 
 import styles from './index.module.css';
 import clsx from 'clsx';
@@ -13,7 +13,6 @@ import { DimRow } from 'components/LatentDim/DimRow';
 import Piling from './Piling';
 
 import { BASE_URL } from 'Const';
-import { filters } from 'pixi.js';
 
 const { Option } = Select;
 
@@ -140,7 +139,7 @@ const ItemBrowser = (props: Props) => {
     </select>
   );
 
-  const url = `${BASE_URL}/api/get_${dataset}_sample?id=${samples[sampleIdx].id}`;
+  const url = `${BASE_URL}/api/get_item_sample?dataset=${dataset}&id=${samples[sampleIdx].id}`;
   const image = (
     <img
       src={url}
@@ -239,33 +238,13 @@ const ItemBrowser = (props: Props) => {
         <label>Label</label>{' '}
         <select id="labelSelector" style={{ width: '100px' }} defaultValue="representative">
           <option value="none">none</option>
-          {dataset == 'IDC' ? <option value="label">label</option> : <></>}
-          {dataset == 'celeb' ? (
-            ['gender', 'smiling', 'hair', 'bangs', 'young'].map(a => (
-              <option value={a} key={a}>
-                {a}
+          {datasetConfig[dataset].labels.map((label, i) => {
+            return (
+              <option value={label} key={i}>
+                {label}
               </option>
-            ))
-          ) : (
-            <></>
-          )}
-          {dataset == 'sc2' ? (
-            [
-              'K-Means [Mean] Expression',
-              'K-Means [Covariance] Expression',
-              'K-Means [Total] Expression',
-              'K-Means [Mean-All-SubRegions] Expression',
-              'K-Means [Shape-Vectors]',
-              'K-Means [Texture]',
-              'K-Means [tSNE_All_Features]'
-            ].map(a => (
-              <option value={a} key={a}>
-                {a}
-              </option>
-            ))
-          ) : (
-            <></>
-          )}
+            );
+          })}
         </select>
         <Button
           type="primary"

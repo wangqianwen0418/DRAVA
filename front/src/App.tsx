@@ -30,9 +30,6 @@ const Z_Ranges: { [k: string]: number[][] } = {
   matrix: z_ranges_matrix
 };
 
-const non_genomic_dataset = ['celeb', 'IDC', 'dsprites', 'sc2'];
-const context_img_dataset = ['IDC'];
-
 interface State {
   dataset: string;
   filters: TFilter;

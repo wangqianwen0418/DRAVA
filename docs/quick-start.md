@@ -4,11 +4,13 @@ The easiest way to run Drava on your computer is to download the [zip file from 
 
 1. Download and unzip the file to your local computer
 1. Start a virtual environment and install dependency packages
-   ```
+   ```bash
+   conda create -n drava python==3.7.9
+   conda deactivate && conda activate drava
    pip install -r requirements.txt
    ```
 1. Run the demo
-   ```
+   ```bash
    cd flask-server
    python run app.py
    ```
