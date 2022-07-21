@@ -109,22 +109,12 @@ def get_item_sample():
     id = request.args.get('id', type=str)
     dataset = request.args.get('dataset', type=str)
 
-    if dataset == 'matrix':
-        return get_matrix_sample(id)
-    elif dataset == 'IDC':
-        return get_IDC_sample(id)
-    elif dataset == 'sequence':
-        return get_sequence_sample(id)
-    elif dataset == 'celeba':
-        return get_celeb_sample(id)
-    elif dataset == 'sc2':
-        return get_sc2_sample(id)
-    elif dataset == 'dsprites':
-        return get_dsprites_sample(id)
-    else:
+    try:
+        # call function name based on variable
+        return globals()[f'get_{dataset}_sample'](id)
+    except Exception:
+        print(Exception)
         return send_file(f'../data/{dataset}/{id}')
-
-
 
 @api.route('/get_simu_images', methods=['GET'])
 def get_simu_images():
