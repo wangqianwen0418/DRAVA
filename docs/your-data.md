@@ -23,6 +23,7 @@
   - Drava will automatically save your training processes and checkpoints (based on your training config) inside `Drava/server/logs/[dataset_name]/[model_name]/[version]`.
   
   - After training is finished, you can select the version that you are most stasfied. You can then move the checkpoint file (`[name].ckpt`) and the corresponding training config file (`[name]_config.yaml`) into `Drava/server/flask_server/saved_model`. And the latent vector file (`results_[name].csv`) into `Drava/front/public/assets`
+  - If you have custom dimensions or item labels that you want to add, please add them into the `result_[name].csv` as additional columns.
 
 ### Step 3: Add entry points in the front-end
   - Specify you dataset in `front/src/config/dataset_config.ts` by adding a key-value pair to the `datasetConfig` variable. The added dataset config should include the name of the dataset, the views you want to include, the item labels from metadata, and other user-defined dimensions. The key should should be the `[name]` you used in the checkpoint file, the latent vector file, and the train config file.
