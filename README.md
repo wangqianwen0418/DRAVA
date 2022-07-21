@@ -6,6 +6,8 @@ This repository has two main components: a frontend interface and a back-end ser
 
 ## Development
 
+Please refer to the [documentation webpage](https://qianwen.info/DRAVA) for more details
+
 ### Run the doc webpage
 
 ```
@@ -64,7 +66,3 @@ To run both the server and the client, you need to put additional files into you
 - `front/public/assets/` (CSV files that contain external analysis results)
 
 These datasets are shared upon request.
-
-## Datasets Used
-- https://www.kaggle.com/paultimothymooney/breast-histopathology-images
-- https://drive.google.com/file/d/0B7EVK8r0v71pZjFTYXZWM3FlRnM/view?usp=sharing&resourcekey=0-dYn9z10tMJOBAkviAcfdyQ 
