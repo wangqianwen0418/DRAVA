@@ -98,10 +98,16 @@ celeba_df.to_csv('../public/assets/results_celeba.csv', index=False)
 import pandas as pd
 sc_df = pd.read_csv('../public/assets/results_sc2.csv')
 label_df = pd.read_csv('../../server/data/codex//HBM622.JXWQ.554/reg1_stitched_expressions.ome.tiff-cell_cluster.csv')
+pos_df = pd.read_csv('../../server/data/codex//HBM622.JXWQ.554/reg1_stitched_expressions.ome.tiff-cell_centers.csv')
+
 label_df = label_df.loc[:len(sc_df)]
+pos_df = pos_df.loc[:len(sc_df)]
 
 for k in label_df.columns:
     sc_df[k] = label_df[k]
+
+for k in pos_df.columns:
+    sc_df[k] = pos_df[k]
 
 sc_df.to_csv('../public/assets/results_sc2_labeled.csv', index=False)
 # %%

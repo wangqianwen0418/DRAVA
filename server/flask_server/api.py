@@ -205,20 +205,33 @@ def cate_arr_to_image(arr, border=False):
     :param arr: numpy array, shape [h, w]
     :param border: boolean, whether to add a border to the returned image
     :return: an image
-    e.g., base_url/api/get_simu_images?dataset=matrix&dim=2&z='0.2,0.3,-0.2,-0.3'
     '''
     colors = [(1, 1, 1), (1, 0.5, 0) , (0, 0.7, 0)] # white (bg), red(cell), green (nucleus)
     mycolormap = LinearSegmentedColormap.from_list('myCmap', colors, N=3)
     res = mycolormap(arr) * 255
 
-    # add a border
+    # # add a border
     if border:
         res[0, :, :3] = 50
         res[62, :, :3] = 50
         res[:, 0, :3] = 50
         res[:, 62, :3] = 50
 
-    pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
+        pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGBA')
+    
+    else:
+        # transparent background
+        newData = []
+        pil_img = Image.fromarray(res.astype(np.uint8))
+
+        for item in pil_img.getdata():
+            if item[0] == 255 and item[1] == 255 and item[2] == 255:
+                newData.append((255, 255, 255, 0))
+            else:
+                newData.append(item)
+        
+        pil_img.putdata(newData)
+    
     return pil_img
 
 
@@ -230,9 +243,9 @@ def get_matrix_sample(id):
     pil_img = pil_img.resize((64, 64), Image.NEAREST)
 
     img_io = BytesIO()
-    pil_img.save(img_io, 'JPEG', quality=70)
+    pil_img.save(img_io, 'PNG', quality=70)
     img_io.seek(0)
-    return send_file(img_io, mimetype='image/jpg')
+    return send_file(img_io, mimetype='image/png')
 
 def get_IDC_sample(id):
     return send_file(f'../data/IDC_regular_ps50_idx5/{id}')
@@ -248,9 +261,9 @@ def get_sequence_sample(id):
     pil_img = Image.fromarray(img.astype(np.uint8))
 
     img_io = BytesIO()
-    pil_img.save(img_io, 'JPEG', quality=70)
+    pil_img.save(img_io, 'PNG', quality=70)
     img_io.seek(0)
-    return send_file(img_io, mimetype='image/jpg')
+    return send_file(img_io, mimetype='image/png')
 
 
 def get_dsprites_sample(id):
@@ -269,18 +282,18 @@ def get_dsprites_sample(id):
     pil_img = Image.fromarray(img.astype(np.uint8))
 
     img_io = BytesIO()
-    pil_img.save(img_io, 'JPEG', quality=70)
+    pil_img.save(img_io, 'PNG', quality=70)
     img_io.seek(0)
-    return send_file(img_io, mimetype='image/jpg')
+    return send_file(img_io, mimetype='image/png')
 
 
-def get_celeb_sample(id):
+def get_celeba_sample(id):
     return send_from_directory(f'../data/celeba/img_align_celeba/', f'{int(id):06}.jpg')
 
 def get_sc2_sample(id):
     res = sc2_data[int(id)]
-    pil_img = cate_arr_to_image(res, border=True)
+    pil_img = cate_arr_to_image(res)
     img_io = BytesIO()
-    pil_img.save(img_io, 'JPEG', quality=70)
+    pil_img.save(img_io, 'PNG', quality=70)
     img_io.seek(0)
-    return send_file(img_io, mimetype='image/jpg')
+    return send_file(img_io, mimetype='image/png')

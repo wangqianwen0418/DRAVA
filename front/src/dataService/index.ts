@@ -116,7 +116,7 @@ const queryDspritesResults = async () => {
   return samples;
 };
 
-const queryCelebResults = async () => {
+const queryCelebaResults = async () => {
   const url = '/assets/results_celeba.csv';
   const response = await axios({
     method: 'get',
@@ -276,7 +276,7 @@ const querySequenceResults = async () => {
 };
 
 const queryFunctions: { [k: string]: () => Promise<TResultRow[]> } = {
-  queryCelebResults,
+  queryCelebaResults,
   queryDspritesResults,
   queryIDCResults,
   queryMatrixResults,
