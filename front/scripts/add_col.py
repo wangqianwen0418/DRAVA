@@ -100,14 +100,14 @@ sc_df = pd.read_csv('../public/assets/results_sc2.csv')
 label_df = pd.read_csv('../../server/data/codex//HBM622.JXWQ.554/reg1_stitched_expressions.ome.tiff-cell_cluster.csv')
 pos_df = pd.read_csv('../../server/data/codex//HBM622.JXWQ.554/reg1_stitched_expressions.ome.tiff-cell_centers.csv')
 
-label_df = label_df.loc[:len(sc_df)]
-pos_df = pos_df.loc[:len(sc_df)]
+sc_df['ID'] = sc_df.index+1
 
-for k in label_df.columns:
-    sc_df[k] = label_df[k]
+ids = pos_df[( pos_df['x'] < 5000) & ( pos_df['x'] > 4200) &( pos_df['y'] < 5000) & ( pos_df['y'] > 4200)]['ID']
+sc_df = sc_df[sc_df['ID'].isin(ids)]
 
-for k in pos_df.columns:
-    sc_df[k] = pos_df[k]
+
+sc_df = pd.merge(sc_df, label_df, on='ID', how='left')
+sc_df = pd.merge(sc_df, pos_df, on='ID', how='left')
 
 sc_df.to_csv('../public/assets/results_sc2_labeled.csv', index=False)
 # %%
