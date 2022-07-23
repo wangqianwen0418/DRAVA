@@ -5,6 +5,7 @@ type TDatasetConfig = {
     labels: string[];
     customDims: string[];
     views: { left: viewName[]; right: viewName[] };
+    imgSize?: number;
   };
 };
 
@@ -41,7 +42,8 @@ const datasetConfig: TDatasetConfig = {
     name: 'Breaset Cancer',
     labels: ['label', 'confidence', 'prediction'],
     customDims: ['label', 'confidence', 'prediction', 'recons_loss'],
-    views: { left: ['latentDim', 'contextView'], right: ['itemView'] }
+    views: { left: ['latentDim', 'contextView'], right: ['itemView'] },
+    imgSize: 50
   },
   dsprites: {
     name: 'Shapes',
@@ -61,7 +63,8 @@ const datasetConfig: TDatasetConfig = {
       'K-Means [tSNE_All_Features]'
     ],
     customDims: ['K-Means [Total] Expression'],
-    views: { left: ['latentDim', 'contextView'], right: ['itemView'] }
+    views: { left: ['latentDim', 'contextView'], right: ['itemView'] },
+    imgSize: 64
   }
 };
 

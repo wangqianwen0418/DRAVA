@@ -3,6 +3,7 @@ import { Card, Slider } from 'antd';
 import { TResultRow } from 'types';
 import { BASE_URL } from 'Const';
 import { getMax, getMin } from 'helpers';
+import {datasetConfig} from 'config';
 
 interface Props {
   isDataLoading: boolean;
@@ -47,6 +48,8 @@ const ImageContext = (props: Props) => {
     canvasBottom = getMax(imgSamples.map(s => +s.y)),
     canvasHeight = canvasBottom - canvasTop;
 
+  const imgSize = datasetConfig[dataset].imgSize || 50;
+
   // draw images
   useEffect(() => {
     const canvas: any = canvasRef.current;
@@ -56,11 +59,11 @@ const ImageContext = (props: Props) => {
     // ctx.scale(scale, scale);
 
     imgSamples.forEach(sample => {
-      const image = new Image(50, 50); // Using optional size for image
+      const image = new Image(imgSize, imgSize); // Using optional size for image
       image.src = sample.url;
       image.onload = () => {
         // console.info(sample.x, sample.y, canvasTop, canvasLeft);
-        ctx.drawImage(image, sample.x - 50 - canvasLeft, sample.y - 50 - canvasTop, 50, 50);
+        ctx.drawImage(image, sample.x - canvasLeft, sample.y - canvasTop, imgSize, imgSize);
       };
     });
     return () => {
@@ -79,7 +82,7 @@ const ImageContext = (props: Props) => {
         ctx.beginPath();
         ctx.globalAlpha = 0.1;
         ctx.fillStyle = 'white';
-        ctx.fillRect(sample.x - 50 - canvasLeft, sample.y - 50 - canvasTop, 50, 50);
+        ctx.fillRect(sample.x - canvasLeft, sample.y - canvasTop, imgSize, imgSize);
         ctx.globalAlpha = 1.0;
       });
   }, [samples]);
