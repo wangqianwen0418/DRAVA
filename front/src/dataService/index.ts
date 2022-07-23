@@ -104,8 +104,8 @@ const queryDspritesResults = async () => {
 
     return {
       ...row,
-      embedding: [2, 3, 4, 7, 0].map(i => zs[i] / 3 + 0.5),
-      z: row['z'].split(',').map(d => parseFloat(d)),
+      embedding: [2, 3, 4, 7, 0].map(i => zs[i] / 6 + 0.5),
+      z: row['z'].split(',').map(d => parseFloat(d) / 6 + 0.5),
       std: row['std'].split(',').map(d => parseFloat(d)),
       id: i.toString(),
       assignments: {},
@@ -134,7 +134,7 @@ const queryCelebaResults = async () => {
 
     return {
       ...row,
-      z: row['z'].split(',').map(d => parseFloat(d)),
+      z: row['z'].split(',').map(d => parseFloat(d) / 6 + 0.5),
       std: row['std'].split(',').map(d => parseFloat(d)),
       id: (i + 1).toString(),
       assignments: {},
@@ -163,7 +163,7 @@ const querySc2Results = async () => {
 
     return {
       ...row,
-      z: row['z'].split(',').map(d => parseFloat(d)),
+      z: row['z'].split(',').map(d => parseFloat(d) / 6 + 0.5),
       id: (i + 1).toString(),
       assignments: {},
       ...dims,
@@ -189,7 +189,7 @@ const queryMatrixResults = async () => {
   const samples = pcsv.data
     .filter(d => parseInt(d.chr as any) === chr)
     .map((row, i) => {
-      const zs = row['z'].split(',').map(d => parseFloat(d));
+      const zs: number[] = row['z'].split(',').map(d => parseFloat(d));
       const dims = zs.reduce((pre, curr, idx) => {
         const dimName = `dim_${idx}`;
         return { ...pre, [dimName]: curr };
@@ -200,7 +200,7 @@ const queryMatrixResults = async () => {
         chr: parseInt(row.chr as any),
         start: parseInt(row.start as any) * resolution,
         end: parseInt(row.end as any) * resolution,
-        z: row['z'].split(',').map(d => parseFloat(d)),
+        z: row['z'].split(',').map(d => parseFloat(d) / 6 + 0.5),
         std: row['std'].split(',').map(d => parseFloat(d)),
         id: (i + 1).toString(),
         index: i,
@@ -239,7 +239,7 @@ const querySequenceResults = async () => {
         chr: parseInt(row.chr as any),
         start: parseInt(row.start as any),
         end: parseInt(row.end as any),
-        z: row['z'].split(',').map(d => parseFloat(d)),
+        z: row['z'].split(',').map(d => parseFloat(d) / 6 + 0.5),
         std: row['std'].split(',').map(d => parseFloat(d)),
         id: i.toString(),
         assignments: {},
