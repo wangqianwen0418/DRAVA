@@ -21,6 +21,7 @@ type Props = {
   setFilters?: (dimName: string, col_idx: number) => void;
   changeDimScores?: (dimName: string, score: number) => void;
   rotate?: boolean;
+  hideHistogram?: boolean;
 };
 
 export const DimRow = (props: Props) => {
@@ -42,7 +43,8 @@ const LatentDim = (props: Props) => {
     imageSize,
     latentZ,
     changeDimScores,
-    rotate
+    rotate,
+    hideHistogram
   } = props;
 
   const imgSize = imageSize || Math.min(stepWidth, barHeight);
@@ -79,7 +81,7 @@ const LatentDim = (props: Props) => {
       />
     ) : (
       // <Tooltip title={<img width={64} src={href} />} destroyTooltipOnHide placement="top">
-      <g transform={rotate ? `translate(${imgSize * 2.5 + 6}, ${imgSize * 1.5}) rotate(90)` : ''}>
+      <g transform={rotate ? ` rotate(90)` : ''}>
         <image
           xlinkHref={href}
           className={clsx(styles.latentImage, selectFlag && styles.isImageSelected)}
@@ -107,21 +109,25 @@ const LatentDim = (props: Props) => {
         transform={`translate(${(stepWidth + gap) * col_idx}, 0)`}
       >
         {/* histogram */}
-        <text
-          x={(stepWidth + gap) * 0.5}
-          fontSize={8}
-          textAnchor="middle"
-          y={barHeight + barLabelHeight - yScale(h) || 0}
-        >
-          {h > 0 ? h : ''}
-        </text>
-        <rect
-          height={yScale(h) || 0}
-          width={stepWidth}
-          y={barHeight + barLabelHeight - yScale(h) || 0}
-          fill="lightgray"
-          className={clsx(selectFlag && styles.isBarSelected)}
-        />
+        {!hideHistogram && (
+          <>
+            <text
+              x={(stepWidth + gap) * 0.5}
+              fontSize={8}
+              textAnchor="middle"
+              y={barHeight + barLabelHeight - yScale(h) || 0}
+            >
+              {h > 0 ? h : ''}
+            </text>
+            <rect
+              height={yScale(h) || 0}
+              width={stepWidth}
+              y={barHeight + barLabelHeight - yScale(h) || 0}
+              fill="lightgray"
+              className={clsx(selectFlag && styles.isBarSelected)}
+            />
+          </>
+        )}
 
         {/* thumbnails and their borders */}
         {col_idx % 2 == 0 ? image : <></>}

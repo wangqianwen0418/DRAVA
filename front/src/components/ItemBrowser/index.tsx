@@ -57,7 +57,7 @@ const ItemBrowser = (props: Props) => {
 
   const rowHeight = barHeight + imageSize + barLabelHeight + gap * 2;
 
-  const XStepWidth = (width - 2 * padding - 200 - rowHeight) / STEP_NUM - gap;
+  const XStepWidth = (width - padding - rowHeight - 180) / STEP_NUM - gap; // 180 is the width of the configure panel
 
   const pilingHeight = height - rowHeight - 150;
   const YStepWidth = pilingHeight / STEP_NUM - gap;
@@ -276,6 +276,7 @@ const ItemBrowser = (props: Props) => {
       dataset={props.dataset}
       latentZ={z}
       rotate={false}
+      hideHistogram={true}
     />
   );
 
@@ -293,6 +294,7 @@ const ItemBrowser = (props: Props) => {
         dataset={props.dataset}
         // latentZ={z}
         rotate={true}
+        hideHistogram={true}
       />
     ) : (
       <></>
@@ -308,7 +310,7 @@ const ItemBrowser = (props: Props) => {
     >
       <div>
         <svg width={120} height={pilingHeight} style={{ float: 'left' }} id="ItemBrowserY">
-          <g transform={` translate(0 , ${pilingHeight}) rotate(-90)`}>
+          <g transform={` translate(${rowHeight / 2} , ${pilingHeight - (rowHeight / 2 - YStepWidth)}) rotate(-90)`}>
             <g>{yRow}</g>
           </g>
         </svg>
