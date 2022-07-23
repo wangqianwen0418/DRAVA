@@ -242,7 +242,7 @@ export default class LatentDim extends React.Component<Props, States> {
                   />
                 </foreignObject>
                 {/* dim importance score */}
-                {dimName.includes('dim_') ? (
+                {dimName.includes('dim_') && (
                   <g
                     transform={`translate(0, ${this.barHeight + 2 * this.barLabelHeight})`}
                     className={styles.toggleFilter}
@@ -255,8 +255,6 @@ export default class LatentDim extends React.Component<Props, States> {
                     <rect height={this.barLabelHeight} width={scoreBarWidth} stroke="lightgray" fill="lightgray"></rect>
                     {/* <text y={this.barLabelHeight}>{score.toFixed(3)}</text> */}
                   </g>
-                ) : (
-                  <></>
                 )}
 
                 {/* get each cell of a row */}

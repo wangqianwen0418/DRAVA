@@ -153,7 +153,7 @@ const AdditionalDim = (props: Props) => {
           className={clsx(selectFlag && styles.isBarSelected)}
         />
         <text x={(stepWidth + gap) * 0.5} y={barHeight + barLabelHeight * 2} fontSize={8} textAnchor="middle">
-          {col_idx % 4 == 0 ? row['labels'][col_idx] : ''}
+          {row['labels'][col_idx].length * 10 < stepWidth || col_idx % 4 == 0 ? row['labels'][col_idx] : ''}
         </text>
       </g>
     );

@@ -60,7 +60,7 @@ const datasetConfig: TDatasetConfig = {
       'K-Means [Texture]',
       'K-Means [tSNE_All_Features]'
     ],
-    customDims: ['recons_loss'],
+    customDims: ['K-Means [Total] Expression'],
     views: { left: ['latentDim', 'contextView'], right: ['itemView'] }
   }
 };

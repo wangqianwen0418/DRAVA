@@ -178,18 +178,22 @@ export default class App extends React.Component<{}, State> {
     }
     dimNames.forEach((dimName, idx) => {
       const dimValues = getDimValues(samples, dimName);
+      // define the distribution for certain dims
       if (dimName.includes('dim')) {
         // use the same range we used to generate simu images
         const range = Z_Ranges[dataset] ? Z_Ranges[dataset][idx] : [RANGE_MIN, RANGE_MAX];
         distributionResults = generateDistribution(dimValues, false, STEP_NUM, sampleIds, 1, range);
       } else if (dimName == 'size') {
         distributionResults = generateDistribution(dimValues, false, STEP_NUM, sampleIds, 10);
-      } else if (dimName == 'level') {
+      } else if (dimName == 'level' || dimName.includes('K-Means')) {
         distributionResults = generateDistribution(dimValues, true, STEP_NUM, sampleIds);
       } else if (dimName == 'confidence') {
         distributionResults = generateDistribution(dimValues, false, 20, sampleIds);
       } else if (dimName == 'label' || dimName == 'prediction') {
         distributionResults = generateDistribution(dimValues, true, 2, sampleIds);
+        // draw distribution based on data type
+      } else if (typeof samples[0][dimName] == 'string') {
+        distributionResults = generateDistribution(dimValues, true, STEP_NUM, sampleIds);
       } else {
         distributionResults = generateDistribution(dimValues, false, STEP_NUM, sampleIds);
       }
