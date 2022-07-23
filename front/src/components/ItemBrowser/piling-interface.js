@@ -100,27 +100,27 @@ export default async function create(element, pilingOptions) {
   }
 
   piling.subscribe('pileDragEnd', pileDragEnd);
-  piling.subscribe('zoom', camera => {
-    const svgXGroup = getXSvgGroup();
-    const svgYGroup = getYSvgGroup();
-    svgXGroup.attr(
-      'transform',
-      `translate(${camera.translation[0]}, 0) scale(${camera.scaling} 1)` // only update translate x and scale x
-    );
-    // to prevent the distortion of svg elements
-    svgXGroup.selectAll('image').attr('transform', `scale(${1 / camera.scaling} 1)`);
-    svgXGroup.selectAll('rect').attr('transform', `scale(${1 / camera.scaling} 1)`);
-    // svgXGroup.selectAll('text').attr('transform', `scale(${1 / camera.scaling} 1)`);
+  // piling.subscribe('zoom', camera => {
+  //   const svgXGroup = getXSvgGroup();
+  //   const svgYGroup = getYSvgGroup();
+  //   svgXGroup.attr(
+  //     'transform',
+  //     `translate(${camera.translation[0]}, 0) scale(${camera.scaling} 1)` // only update translate x and scale x
+  //   );
+  //   // to prevent the distortion of svg elements
+  //   svgXGroup.selectAll('image').attr('transform', `scale(${1 / camera.scaling} 1)`);
+  //   svgXGroup.selectAll('rect').attr('transform', `scale(${1 / camera.scaling} 1)`);
+  //   // svgXGroup.selectAll('text').attr('transform', `scale(${1 / camera.scaling} 1)`);
 
-    svgYGroup.attr(
-      'transform',
-      `translate(${camera.translation[1]}, 0) scale(${camera.scaling} 1)` // x, y are switched since yGroup is rotated by 90deg
-    );
-    // to prevent the distortion of svg elements
-    svgYGroup.selectAll('image').attr('transform', `scale(1 ${1 / camera.scaling})`);
-    svgYGroup.selectAll('rect').attr('transform', `scale(1 ${1 / camera.scaling})`);
-    // svgYGroup.selectAll('text').attr('transform', `scale(${1 / camera.scaling} 1)`);
-  });
+  //   svgYGroup.attr(
+  //     'transform',
+  //     `translate(${-1 * camera.translation[1]}, 0) scale(${camera.scaling} 1)` // x, y are switched since yGroup is rotated by 90deg
+  //   );
+  //   // to prevent the distortion of svg elements
+  //   svgYGroup.selectAll('image').attr('transform', `translate(0, ${camera.translation[1]}) scale(1 ${1 / camera.scaling})`);
+  //   svgYGroup.selectAll('rect').attr('transform', `translate(0, ${camera.translation[1]}) scale(1 ${1 / camera.scaling})`);
+  //   // svgYGroup.selectAll('text').attr('transform', `scale(${1 / camera.scaling} 1)`);
+  // });
 
   // a set of functions to be called
   const actions = {

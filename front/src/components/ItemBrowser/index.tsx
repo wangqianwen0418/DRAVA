@@ -310,7 +310,7 @@ const ItemBrowser = (props: Props) => {
     >
       <div>
         <svg width={120} height={pilingHeight} style={{ float: 'left' }} id="ItemBrowserY">
-          <g transform={` translate(${rowHeight / 2} , ${pilingHeight - (rowHeight / 2 - YStepWidth)}) rotate(-90)`}>
+          <g transform={` translate(${rowHeight / 2} , ${pilingHeight - (rowHeight - YStepWidth)}) rotate(-90)`}>
             <g>{yRow}</g>
           </g>
         </svg>
