@@ -25,10 +25,10 @@ type Props = {
 };
 
 export const DimRow = (props: Props) => {
-  return props.dimName.includes('dim_') ? <LatentDim {...props} /> : <AdditionalDim {...props} />;
+  return props.dimName.includes('dim_') ? <ModelDim {...props} /> : <AdditionalDim {...props} />;
 };
 
-const LatentDim = (props: Props) => {
+const ModelDim = (props: Props) => {
   const {
     row,
     dimName,
