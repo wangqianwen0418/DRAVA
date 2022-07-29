@@ -213,7 +213,6 @@ export default async function create(element, pilingOptions) {
         piling.set({
           pileLabel: item => item[label] || '',
           pileLabelText: true,
-          pileLabelTextMapping: (label, _) => (label == '0' ? 'neg' : 'pos'),
           pileLabelColor: ['#3295a8', '#e0722b'],
           pileLabelFontSize: 10,
           pileLabelHeight: 4,

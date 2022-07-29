@@ -8,14 +8,14 @@ The front-end visual interface is developed and tested using node@v16.10.0 at Ch
 
 - Go to the repo front-end folder and install all dependent packages:
 
-```sh
+```
 cd front
 npm install
 ```
 
 - Then, launch the Drava react application on the browser:
 
-```sh
+```
 npm start
 ```
 
@@ -27,7 +27,7 @@ The backend is developed and tested with `python@3.7.9`
 - Go to the repo folder and install all dependent packages.  
 To manage dependencies more effectively, you can create and use a [conda environment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) before installing all packages:
 
-```sh
+```
 cd server
 conda create -n drava python==3.7.9
 conda deactivate && conda activate drava
@@ -36,7 +36,7 @@ pip install -r requirements.txt
 
 - Start the flask server:
 
-```sh
+```
 cd flask_server
 python app.py
 ```

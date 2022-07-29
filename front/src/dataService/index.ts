@@ -8,14 +8,15 @@ export const whatCHR = (dataset: string) => {
   return dataset == 'sequence' ? 7 : 5;
 };
 
-export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
-  try {
-    const cap_name = `query${dataset[0].toUpperCase() + dataset.substring(1)}Results`;
-    return queryFunctions[cap_name]();
-  } catch {
-    return defaultResultsQuery(dataset);
-  }
-};
+// export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
+//   try {
+//     const cap_name = `query${dataset[0].toUpperCase() + dataset.substring(1)}Results`;
+//     return queryFunctions[cap_name]();
+//   } catch {
+//     return defaultResultsQuery(dataset);
+//   }
+// };
+
 
 /***
  * Custom query functions
@@ -282,6 +283,15 @@ const queryFunctions: { [k: string]: () => Promise<TResultRow[]> } = {
   queryMatrixResults,
   querySc2Results,
   querySequenceResults
+};
+
+export const queryResults = async (dataset: string): Promise<TResultRow[]> => {
+  const url = `${BASE_URL}/api/get_model_results?dataset=${dataset}`;
+  const res = await axios({
+    method: 'get',
+    url
+  });
+  return res.data;
 };
 
 export const querySimuImages = async (dataset: string, dim: number, z?: number[]) => {

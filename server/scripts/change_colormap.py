@@ -48,12 +48,12 @@ def color_convert_sc(filename, savename=None, mapname='viridis', factor=1):
 
     cm_im.save(savename)
 #%%
-file_folder = '../../server/logs/tad/'
+file_folder = '../logs/tad/'
 for f in os.listdir(file_folder):
     filepath = os.path.join(file_folder, f)
     savepath = filepath.replace('.png', '_color2.png')
     color_convert(filepath, savepath)
 
 # %%
-color_convert('../../server/logs/tad/recons_BetaVAE_TAD_1879.png', '../../server/logs/tad/recons_BetaVAE_TAD_1879_color.png',factor=2) 
+color_convert('../logs/tad/recons_BetaVAE_TAD_1879.png', '../logs/tad/recons_BetaVAE_TAD_1879_color.png',factor=2) 
 # %%

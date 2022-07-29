@@ -1,7 +1,11 @@
+# %%
+# 
+# %% 
 from crypt import methods
 import json
 from operator import mod
 import numpy as np
+import pandas as pd
 from PIL import Image
 from io import BytesIO
 import base64
@@ -193,6 +197,22 @@ def get_simu_images():
 
     return jsonify({"image": results, "score": score})
 
+
+@api.route('/get_model_results', methods=['GET'])
+def get_model_results():
+    '''
+    :param dataset: name of dataset
+    :return: Array<{[key:string]: value}>
+    e.g., base_url/api/get_model_results?dataset=matrix
+    '''
+    dataset = request.args.get('dataset', type=str)
+
+    try:
+        # call function name based on variable
+        return globals()[f'get_{dataset}_results']()
+    except Exception:
+        return get_default_results(dataset)
+
 ######################
 # functions called by the API
 ######################
@@ -234,7 +254,7 @@ def cate_arr_to_image(arr, border=False):
     
     return pil_img
 
-
+########### get data item for different dataset
 def get_matrix_sample(id):
     img_src = Image.open(f'../data/tad_imgs/chr5:{int(id)}.jpg').convert('L')
     im = np.array(img_src)
@@ -297,3 +317,65 @@ def get_sc2_sample(id):
     pil_img.save(img_io, 'PNG', quality=70)
     img_io.seek(0)
     return send_file(img_io, mimetype='image/png')
+
+############### get results for different datasets
+def parse_results(df):
+
+    df['z'] = df['z'].apply(lambda x: [ float(i)/6+0.5 for i in x.split(',')])
+
+    for i in range(len(df['z'][0])):
+        df[f'dim_{i}'] = df['z'].apply(lambda x: x[i])
+    df['index'] = df.index
+    df['id'] = df['index'].apply(lambda x: str(x+1))
+
+    return df
+
+def return_results(df):
+    '''
+    pandas df to a json array
+    '''
+    res = json.loads(df.to_json(orient='records'))
+    for i, r in enumerate(res):
+        r['assignments'] = {}
+
+    return jsonify(res)
+
+def get_default_results(dataset):
+    url = f'./saved_models/results_{dataset}.csv'
+    df = pd.read_csv(url)
+    return return_results( parse_results(df) )
+
+def get_matrix_results():
+    url = './saved_models/results_chr1-5_10k_onTad.csv'
+    resolution = 10000 # 10k
+
+    df = pd.read_csv(url)
+    df = df[df['chr'] == 5]
+
+    df = parse_results(df)
+    df['start'] = df['start'] * resolution
+    df['end'] = df['end'] * resolution
+    df['size'] = df['end'] - df['start']
+    
+
+    return return_results(df)
+
+def get_dsprites_results():
+    url = f'./saved_models/results_dsprites.csv'
+    df = pd.read_csv(url)
+    df = parse_results(df)
+    df['id'] = df['index'].apply(str)
+    df['dim_4'] = -1*df['dim_4']
+    df['embedding'] = df['z'].apply(lambda z: [z[i] for i in [2, 3, 4, 7, 0]])
+    return return_results( df )
+
+def get_IDC_results():
+    url = f'./saved_models/results_IDC.csv'
+    df = pd.read_csv(url)
+    df = parse_results(df)
+
+    df = df.drop(columns=['id'])
+    df = df.rename(columns={'acc': 'prediction', 'img_path': 'id'})
+    df['prediction'] = df['prediction'].apply(lambda x: 'pos' if x else 'neg')
+    df['label'] = df['label'].apply(lambda x: 'pos' if x==1 else 'neg')
+    return return_results( df )

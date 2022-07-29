@@ -3,7 +3,7 @@ import { Card, Slider } from 'antd';
 import { TResultRow } from 'types';
 import { BASE_URL } from 'Const';
 import { getMax, getMin } from 'helpers';
-import {datasetConfig} from 'config';
+import { datasetConfig } from 'config';
 
 interface Props {
   isDataLoading: boolean;
