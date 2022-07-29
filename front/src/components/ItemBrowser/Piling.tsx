@@ -2,10 +2,9 @@ import createPilingExample from './piling-interface';
 import React, { useCallback, useEffect, useState } from 'react';
 import { select as d3select } from 'd3-selection';
 import styles from './Piling.module.css';
-import { Button } from 'antd';
-import { BASE_URL } from 'Const';
 
 import { TFilter, TResultRow } from 'types';
+import { getItemURL } from 'dataService';
 
 type TItem = TResultRow & {
   src: string;
@@ -21,7 +20,7 @@ type Props = {
 const Pilling = (props: Props) => {
   const { samples, dimNames, dimUserNames, dataset } = props;
   const items = samples.map(s => {
-    const url = `${BASE_URL}/api/get_item_sample?dataset=${dataset}&id=${s.id}`;
+    const url = getItemURL(dataset, s.id);
     return { ...s, src: url }; // y = 0 in case dimYNum = null
   });
   const pileDragEnd = (e: any) => console.info('end of piling drag, ', e.target.items);
@@ -141,7 +140,7 @@ const Pilling = (props: Props) => {
     if (thisPiling && props.samples.length > 0) {
       thisPiling.set({
         items: props.samples.map(s => {
-          const url = `${BASE_URL}/api/get_item_sample?dataset=${dataset}&id=${s.id}`;
+          const url = getItemURL(dataset, s.id);
           return { ...s, src: url }; // y = 0 in case dimYNum = null
         })
       });

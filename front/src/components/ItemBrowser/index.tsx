@@ -11,8 +11,7 @@ import { scaleLinear, scaleLog, ScaleLogarithmic } from 'd3-scale';
 import { getMax } from 'helpers';
 import { DimRow } from 'components/LatentDim/DimRow';
 import Piling from './Piling';
-
-import { BASE_URL } from 'Const';
+import { getItemURL } from 'dataService';
 
 const { Option } = Select;
 
@@ -139,7 +138,7 @@ const ItemBrowser = (props: Props) => {
     </select>
   );
 
-  const url = `${BASE_URL}/api/get_item_sample?dataset=${dataset}&id=${samples[sampleIdx].id}`;
+  const url = getItemURL(dataset, samples[sampleIdx].id);
   const image = (
     <img
       src={url}

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Slider } from 'antd';
 import { TResultRow } from 'types';
-import { BASE_URL } from 'Const';
 import { getMax, getMin } from 'helpers';
 import { datasetConfig } from 'config';
+import { getItemURL } from 'dataService';
 
 interface Props {
   isDataLoading: boolean;
@@ -37,7 +37,7 @@ const ImageContext = (props: Props) => {
       }
     }
 
-    const url = `${BASE_URL}/api/get_item_sample?dataset=${dataset}&id=${id}`;
+    const url = getItemURL(dataset, id);
     return { x, y, url, filtered };
   });
 

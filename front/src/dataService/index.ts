@@ -25,8 +25,11 @@ export const querySimuImages = async (dataset: string, dim: number, z?: number[]
   return res.data;
 };
 
+export const getItemURL = (dataset: string, id: string) =>
+  `${BASE_URL}/api/get_item_sample?dataset=${dataset}&id=${id}`;
+
 export const queryItem = async (dataset: string, id: string) => {
-  const url = `${BASE_URL}/api/get_item_sample?dataset=${dataset}&id=${id}`;
+  const url = getItemURL(dataset, id);
   const res = await axios({
     method: 'get',
     url
