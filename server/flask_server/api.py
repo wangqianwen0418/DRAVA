@@ -120,6 +120,21 @@ def get_item_sample():
         print(Exception)
         return send_file(f'../data/{dataset}/{id}')
 
+@api.route('/get_model_results', methods=['GET'])
+def get_model_results():
+    '''
+    :param dataset: name of dataset
+    :return: Array<{[key:string]: value}>
+    e.g., base_url/api/get_model_results?dataset=matrix
+    '''
+    dataset = request.args.get('dataset', type=str)
+
+    try:
+        # call function name based on variable
+        return globals()[f'get_{dataset}_results']()
+    except Exception:
+        return get_default_results(dataset)
+
 @api.route('/get_simu_images', methods=['GET'])
 def get_simu_images():
     '''
@@ -198,21 +213,6 @@ def get_simu_images():
     return jsonify({"image": results, "score": score})
 
 
-@api.route('/get_model_results', methods=['GET'])
-def get_model_results():
-    '''
-    :param dataset: name of dataset
-    :return: Array<{[key:string]: value}>
-    e.g., base_url/api/get_model_results?dataset=matrix
-    '''
-    dataset = request.args.get('dataset', type=str)
-
-    try:
-        # call function name based on variable
-        return globals()[f'get_{dataset}_results']()
-    except Exception:
-        return get_default_results(dataset)
-
 ######################
 # functions called by the API
 ######################
@@ -254,7 +254,7 @@ def cate_arr_to_image(arr, border=False):
     
     return pil_img
 
-########### get data item for different dataset
+########### get individual data items for different dataset
 def get_matrix_sample(id):
     img_src = Image.open(f'../data/tad_imgs/chr5:{int(id)}.jpg').convert('L')
     im = np.array(img_src)
@@ -318,7 +318,7 @@ def get_sc2_sample(id):
     img_io.seek(0)
     return send_file(img_io, mimetype='image/png')
 
-############### get results for different datasets
+############### get csv results for different datasets
 def parse_results(df):
 
     df['z'] = df['z'].apply(lambda x: [ float(i) for i in x.split(',')])

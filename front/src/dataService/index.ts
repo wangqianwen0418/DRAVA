@@ -24,3 +24,12 @@ export const querySimuImages = async (dataset: string, dim: number, z?: number[]
   });
   return res.data;
 };
+
+export const queryItem = async (dataset: string, id: string) => {
+  const url = `${BASE_URL}/api/get_item_sample?dataset=${dataset}&id=${id}`;
+  const res = await axios({
+    method: 'get',
+    url
+  });
+  return res.data;
+};
