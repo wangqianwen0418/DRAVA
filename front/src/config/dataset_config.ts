@@ -40,7 +40,7 @@ const datasetConfig: TDatasetConfig = {
   // },
   IDC: {
     name: 'Breaset Cancer',
-    labels: ['label', 'confidence', 'prediction'],
+    labels: ['label', 'prediction'],
     customDims: ['label', 'confidence', 'prediction', 'recons_loss'],
     views: { left: ['latentDim', 'contextView'], right: ['itemView'] },
     imgSize: 50

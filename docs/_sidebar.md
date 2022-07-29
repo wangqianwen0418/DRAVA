@@ -2,7 +2,6 @@
 
 * [Home](/)
 * [Quick Start](quick-start.md)
-* [Front End Visualization](front-end.md)
-* [Back End Models](back-end.md)
+* [Development Mode](dev.md)
 * [Use Cases](use-cases.md)
 * [Try Drava on Your Dataset](your-data.md)

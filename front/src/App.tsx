@@ -9,7 +9,7 @@ import { generateDistribution, getDimValues, range } from 'helpers';
 import z_ranges_sequence from 'assets/z_range_sequence.json';
 import z_ranges_matrix from 'assets/z_range_matrix.json';
 
-import LatentDim from 'components/LatentDim/LatentDim';
+import LatentDims from 'components/LatentDim/LatentDim';
 import ItemBrowser from 'components/ItemBrowser';
 import GoslingVis from 'components/Gosling';
 import ImageContext from 'components/ImageContext';
@@ -210,12 +210,6 @@ export default class App extends React.Component<{}, State> {
    * @compute
    */
   getFilteredSamples(samples: TResultRow[], filters: TFilter) {
-    // const filteredSamples = samples.filter(sample =>
-    //   Object.keys(sample.assignments).every(dimName => {
-    //     const col = sample.assignments[dimName];
-    //     return filters[dimName] ? filters[dimName][col] : true;
-    //   })
-    // );
     const filteredSamples = samples.map(sample => {
       const flag = Object.keys(sample.assignments).every(dimName => {
         const col = sample.assignments[dimName];
@@ -282,7 +276,7 @@ export default class App extends React.Component<{}, State> {
           <Content style={{ padding: contentPadding, backgroundColor: 'white' }}>
             <Row gutter={gutter}>
               <Col span={leftCol}>
-                <LatentDim
+                <LatentDims
                   dataset={dataset}
                   samples={this.samples}
                   filters={filters}

@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import styles from './LatentDim.module.css';
 import clsx from 'clsx';
 
-import { Button, Card, Select, Tooltip } from 'antd';
+import { Card, Select } from 'antd';
 
 import { getMax, debounce } from 'helpers';
 import { STEP_NUM } from 'Const';
@@ -32,7 +32,7 @@ interface States {
   dimScores: { [dimName: string]: number };
 }
 
-export default class LatentDim extends React.Component<Props, States> {
+export default class LatentDims extends React.Component<Props, States> {
   spanWidth = 80; // width used for left-side dimension annotation
   barHeight = 30; // height of bar chart
   gap = 3; //horizontal gap between thumbnails
@@ -56,59 +56,6 @@ export default class LatentDim extends React.Component<Props, States> {
     return this.props.filters[dimName][col_idx];
   }
 
-  // @drawing
-  // getLinks(matrixData: { [k: string]: TDistribution }, stepWidth: number) {
-  //   const { filters } = this.props,
-  //     dims = Object.keys(filters);
-  //   const linkGroups: ReactNode[] = [];
-
-  //   for (let i = 0; i < dims.length - 1; i++) {
-  //     const links: ReactNode[] = [];
-  //     const prevRow = matrixData[dims[i]],
-  //       nextRow = matrixData[dims[i + 1]];
-
-  //     prevRow['groupedSamples'].forEach((prevSampleIds, prevIdx) => {
-  //       nextRow['groupedSamples'].forEach((nextSampleIds, nextIdx) => {
-  //         const isShow =
-  //           this.isSelected(dims[i], prevIdx) &&
-  //           this.isSelected(dims[i + 1], nextIdx) &&
-  //           (!dims[i].includes('dim') || !dims[i + 1].includes('dim'));
-
-  //         const insectSampleIds = prevSampleIds.filter(sampleId => nextSampleIds.includes(sampleId)),
-  //           prevX = this.spanWidth + prevIdx * (stepWidth + this.gap) + stepWidth / 2,
-  //           prevY = i * (this.barHeight * 2 + this.barLabelHeight + this.rowGap) + this.barHeight + this.barLabelHeight,
-  //           nextX = this.spanWidth + nextIdx * (stepWidth + this.gap) + stepWidth / 2,
-  //           nextY = prevY + (this.barHeight * 2 + this.barLabelHeight + this.rowGap);
-
-  //         const link = (
-  //           <line
-  //             x1={prevX}
-  //             y1={prevY}
-  //             x2={nextX}
-  //             y2={nextY}
-  //             stroke="steelblue"
-  //             strokeWidth={2}
-  //             opacity={0.3}
-  //             key={`${prevIdx}_${nextIdx}`}
-  //           />
-  //         );
-  //         if (
-  //           (insectSampleIds.length / prevSampleIds.length > 0.1 ||
-  //             insectSampleIds.length / nextSampleIds.length > 0.1) &&
-  //           isShow
-  //         ) {
-  //           links.push(link);
-  //         }
-  //       });
-  //     });
-  //     linkGroups.push(
-  //       <g key={i} className={`row_${i}`}>
-  //         {links}
-  //       </g>
-  //     );
-  //   }
-  //   return <g className="links">{linkGroups}</g>;
-  // }
 
   /***
    *  @call_props_functions

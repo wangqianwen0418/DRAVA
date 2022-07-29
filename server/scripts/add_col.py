@@ -1,6 +1,6 @@
 #%%
 import pandas as pd
-filename = '../public/assets/results_chr1-5_10k_onTad.csv'
+filename = '../flask_server/saved_models/results_chr1-5_10k_onTad.csv'
 df = pd.read_csv(filename.replace('.csv', '_origin.csv'))
 
 #%% [markdown]
@@ -71,8 +71,8 @@ df.to_csv(filename, index=False)
 # # Add col labels to the celeba dataset#
 #############################
 # %%
-celeba_df = pd.read_csv('../public/assets/results_celeba.csv')
-label_df = pd.read_csv('../../server/data/celeba/list_attr_celeba.txt', sep=r"\s+")
+celeba_df = pd.read_csv('../flask_server/saved_models/results_celeba.csv')
+label_df = pd.read_csv('../data/celeba/list_attr_celeba.txt', sep=r"\s+")
 label_df = label_df.loc[:len(celeba_df)]
 # add gender
 celeba_df['gender'] = label_df['Male'].apply(lambda x: 'M' if x== 1 else 'F')
@@ -89,16 +89,16 @@ celeba_df['young'] = label_df['Young'].apply(lambda x: 'Y' if x== 1 else 'N')
 # 
 celeba_df['bangs'] = label_df['Bangs'].apply(lambda x: 'Y' if x== 1 else 'N')
 
-celeba_df.to_csv('../public/assets/results_celeba.csv', index=False)
+celeba_df.to_csv('../flask_server/saved_models/results_celeba.csv', index=False)
 #%% [markdown]
 #############################
 # # Add col labels to the single cell dataset#
 #############################
 # %%
 import pandas as pd
-sc_df = pd.read_csv('../public/assets/results_sc2.csv')
-label_df = pd.read_csv('../../server/data/codex//HBM622.JXWQ.554/reg1_stitched_expressions.ome.tiff-cell_cluster.csv')
-pos_df = pd.read_csv('../../server/data/codex//HBM622.JXWQ.554/reg1_stitched_expressions.ome.tiff-cell_centers.csv')
+sc_df = pd.read_csv('../flask_server/saved_models/results_sc2.csv')
+label_df = pd.read_csv('../data/codex//HBM622.JXWQ.554/reg1_stitched_expressions.ome.tiff-cell_cluster.csv')
+pos_df = pd.read_csv('../data/codex//HBM622.JXWQ.554/reg1_stitched_expressions.ome.tiff-cell_centers.csv')
 
 sc_df['ID'] = sc_df.index+1
 
@@ -109,5 +109,5 @@ sc_df = sc_df[sc_df['ID'].isin(ids)]
 sc_df = pd.merge(sc_df, label_df, on='ID', how='left')
 sc_df = pd.merge(sc_df, pos_df, on='ID', how='left')
 
-sc_df.to_csv('../public/assets/results_sc2_labeled.csv', index=False)
+sc_df.to_csv('../flask_server/saved_models/results_sc2_labeled.csv', index=False)
 # %%

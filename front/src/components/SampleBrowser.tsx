@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import { Card, Select } from 'antd';
 
 import { TFilter, TResultRow, TDistribution } from 'types';
-import { BASE_URL } from 'Const';
+import { getItemURL } from 'dataService';
 
 const { Option } = Select;
 
@@ -52,7 +52,7 @@ const SampleBrowser = (props: Props) => {
 
   const filteredSampleIds = samples.map(d => d.id);
   const id2Image = (id: string) => {
-    const url = `${BASE_URL}/api/get_item_sample?dataset=${dataset}&id=${id}`;
+    const url = getItemURL(dataset, id);
     return (
       <img
         loading="lazy"
