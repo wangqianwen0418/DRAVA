@@ -1,23 +1,6 @@
 # Run Drava in Development Mode
 First, download or clone our github repo at https://github.com/wangqianwen0418/DRAVA.
 
-## Frontend
-
-The front-end visual interface is developed and tested using node@v16.10.0 at Chrome web browser.
-
-
-- Go to the repo front-end folder and install all dependent packages:
-
-```
-cd front
-npm install
-```
-
-- Then, launch the Drava react application on the browser:
-
-```
-npm start
-```
 
 ## Backend
 
@@ -34,17 +17,37 @@ conda deactivate && conda activate drava
 pip install -r requirements.txt
 ```
 
-- Start the flask server:
-
-```
-cd flask_server
-python app.py
-```
-
-- Example Data  
+- Download Example Datasets  
   
     The pre-trained models are stored at `Drava/server/flask_server/saved_models`.
     You can download our pretrained models at [here](https://drive.google.com/drive/folders/11K-v8Fn4PbbRqCcrRpLSsnvxBaOPH1db?usp=sharing).
 
     The datasets are stored at `server/data`.
-    You can download the example datsets at [here](https://drive.google.com/drive/folders/16kbJq_46-4Busrz_87vGFyKAsy15oIU3?usp=sharing). 
+    You can download the example datsets at [here](https://drive.google.com/drive/folders/16kbJq_46-4Busrz_87vGFyKAsy15oIU3?usp=sharing).
+
+- Start the flask server:
+
+```
+cd flask_server
+python app.py --debug
+```
+
+## Frontend
+
+The front-end visual interface is developed and tested using `node@v16.10.0` at Chrome web browser.
+
+
+- Go to the repo front-end folder and install all dependent packages:
+
+```
+cd front
+npm install
+```
+
+- Then, launch the Drava react application on the browser:
+
+```
+npm start
+```
+
+Now you can open `localhost:3000` in your web browser and interact with your dataset :tada:
