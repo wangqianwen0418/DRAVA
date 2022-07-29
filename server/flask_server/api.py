@@ -321,7 +321,8 @@ def get_sc2_sample(id):
 ############### get results for different datasets
 def parse_results(df):
 
-    df['z'] = df['z'].apply(lambda x: [ float(i)/6+0.5 for i in x.split(',')])
+    df['z'] = df['z'].apply(lambda x: [ float(i) for i in x.split(',')])
+    df['embedding'] = df['z'].apply(lambda x: [ float(i)/6+0.5 for i in x])
 
     for i in range(len(df['z'][0])):
         df[f'dim_{i}'] = df['z'].apply(lambda x: x[i])
@@ -366,7 +367,7 @@ def get_dsprites_results():
     df = parse_results(df)
     df['id'] = df['index'].apply(str)
     df['dim_4'] = -1*df['dim_4']
-    df['embedding'] = df['z'].apply(lambda z: [z[i] for i in [2, 3, 4, 7, 0]])
+    df['embedding'] = df['embedding'].apply(lambda z: [z[i] for i in [2, 3, 4, 7, 0]])
     return return_results( df )
 
 def get_IDC_results():

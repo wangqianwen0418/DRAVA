@@ -93,12 +93,7 @@ export default async function create(element, pilingOptions) {
   const piling = createPilingJs(element, spec);
 
   // piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
-  if (dataset == 'dsprites') {
-    piling.arrangeBy('uv', 'embedding');
-  } else {
-    piling.arrangeBy('uv', 'z');
-  }
-
+  piling.arrangeBy('uv', 'embedding');
   piling.subscribe('pileDragEnd', pileDragEnd);
   // piling.subscribe('zoom', camera => {
   //   const svgXGroup = getXSvgGroup();
