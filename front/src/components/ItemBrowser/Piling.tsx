@@ -20,7 +20,7 @@ type Props = {
 const Pilling = (props: Props) => {
   const { samples, dimNames, dimUserNames, dataset } = props;
   const items = samples.map(s => {
-    const url = getItemURL(dataset, s.id);
+    const url = `${getItemURL(dataset, s.id)}&border=1`;
     return { ...s, src: url }; // y = 0 in case dimYNum = null
   });
   const pileDragEnd = (e: any) => console.info('end of piling drag, ', e.target.items);
@@ -140,7 +140,7 @@ const Pilling = (props: Props) => {
     if (thisPiling && props.samples.length > 0) {
       thisPiling.set({
         items: props.samples.map(s => {
-          const url = getItemURL(dataset, s.id);
+          const url = `${getItemURL(dataset, s.id)}&border=1`;
           return { ...s, src: url }; // y = 0 in case dimYNum = null
         })
       });

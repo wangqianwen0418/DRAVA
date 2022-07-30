@@ -37,7 +37,7 @@ const ImageContext = (props: Props) => {
       }
     }
 
-    const url = getItemURL(dataset, id);
+    const url = `${getItemURL(dataset, id)}&border=0`;
     return { x, y, url, filtered };
   });
 

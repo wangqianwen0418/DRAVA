@@ -110,12 +110,19 @@ def get_item_sample():
     '''
     e.g., base_url/api/get_matrix_sample?id=xx&dataset=xxx
     '''
-    id = request.args.get('id', type=str)
-    dataset = request.args.get('dataset', type=str)
+    # id = request.args.get('id', type=str)
+    # dataset = request.args.get('dataset', type=str)
+
+    params = request.args.to_dict()
+    dataset = params['dataset']
+    # if dataset == 'sc2':
+    #     border = request.args.get('dataset', type=str) # '1' => true
+    #     return get_sc2_sample(id, border=='1')
+    return globals()[f'get_{dataset}_sample'](**params)
 
     try:
         # call function name based on variable
-        return globals()[f'get_{dataset}_sample'](id)
+        return globals()[f'get_{dataset}_sample'](params)
     except Exception:
         print(Exception)
         return send_file(f'../data/{dataset}/{id}')
@@ -191,7 +198,7 @@ def get_simu_images():
             res = colormap.get_cmap('viridis')(res) * 255
             pil_img = Image.fromarray(res.astype(np.uint8)).convert('RGB')
         elif dataset == 'sc2':
-            pil_img = cate_arr_to_image(res)
+            pil_img = cate_arr_to_image(res, border= False)
         else:
             if (dataset) == 'dsprites':
                 res = 1-res
@@ -216,7 +223,7 @@ def get_simu_images():
 ######################
 # functions called by the API
 ######################
-def cate_arr_to_image(arr, border=False):
+def cate_arr_to_image(arr, border):
     '''
     converting a categorical mask to an image
     each value in array indicates a class index.
@@ -255,7 +262,8 @@ def cate_arr_to_image(arr, border=False):
     return pil_img
 
 ########### get individual data items for different dataset
-def get_matrix_sample(id):
+def get_matrix_sample(**kwargs):
+    id = kwargs['id']
     img_src = Image.open(f'../data/tad_imgs/chr5:{int(id)}.jpg').convert('L')
     im = np.array(img_src)
     im = colormap.get_cmap('viridis')(im) * 255
@@ -271,7 +279,8 @@ def get_IDC_sample(id):
     return send_file(f'../data/IDC_regular_ps50_idx5/{id}')
 
 
-def get_sequence_sample(id):
+def get_sequence_sample(**kwargs):
+    id = kwargs['id']
     img = sequence_data[int(id)]*255
     # add a border
     img[0, :] = 50
@@ -286,11 +295,8 @@ def get_sequence_sample(id):
     return send_file(img_io, mimetype='image/png')
 
 
-def get_dsprites_sample(id):
-    '''
-    e.g., base_url/api/get_dsprites_sample?id=xx
-    '''
-    id = request.args.get('id', type=str)
+def get_dsprites_sample(**kwargs):
+    id = kwargs['id']
     img = dsprites_data[int(id)]*255
     # convert white to black
     img = 255 - img
@@ -307,12 +313,15 @@ def get_dsprites_sample(id):
     return send_file(img_io, mimetype='image/png')
 
 
-def get_celeba_sample(id):
+def get_celeba_sample(**kwargs):
+    id = kwargs['id']
     return send_from_directory(f'../data/celeba/img_align_celeba/', f'{int(id):06}.jpg')
 
-def get_sc2_sample(id):
+def get_sc2_sample(**kwargs):
+    id = kwargs['id']
+    border = kwargs['border']
     res = sc2_data[int(id)]
-    pil_img = cate_arr_to_image(res)
+    pil_img = cate_arr_to_image(res, border=='1')
     img_io = BytesIO()
     pil_img.save(img_io, 'PNG', quality=70)
     img_io.seek(0)

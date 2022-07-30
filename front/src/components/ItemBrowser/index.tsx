@@ -138,7 +138,7 @@ const ItemBrowser = (props: Props) => {
     </select>
   );
 
-  const url = getItemURL(dataset, samples[sampleIdx].id);
+  const url = `${getItemURL(dataset, samples[sampleIdx].id)}&border=1`;
   const image = (
     <img
       src={url}
