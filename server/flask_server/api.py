@@ -219,7 +219,10 @@ def get_simu_images():
 
     return jsonify({"image": results, "score": score})
 
-
+@api.route('/post_new_groups', methods=['POST'])
+def post_new_groups():
+    content = request.json
+    return jsonify(content)
 ######################
 # functions called by the API
 ######################

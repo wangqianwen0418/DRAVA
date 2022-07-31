@@ -1,6 +1,6 @@
 import { TDistribution, TResultRow, TFilter } from 'types';
 import React, { useState } from 'react';
-import { Card, Select, Button, message } from 'antd';
+import { Card, Select, Button } from 'antd';
 import { datasetConfig } from 'config';
 
 import styles from './index.module.css';
@@ -247,13 +247,8 @@ const ItemBrowser = (props: Props) => {
         </select>
         <Button
           type="primary"
+          id='updateConcept'
           className={styles.updateBtn}
-          onClick={() =>
-            message.warning(
-              'Update Concept is not supported in the online demo.\n Please download Drava and run it on your local computer.',
-              5 //duration = 5s
-            )
-          }
         >
           Update Concept
         </Button>

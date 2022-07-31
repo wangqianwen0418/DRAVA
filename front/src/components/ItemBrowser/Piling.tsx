@@ -23,8 +23,6 @@ const Pilling = (props: Props) => {
     const url = `${getItemURL(dataset, s.id)}&border=1`;
     return { ...s, src: url }; // y = 0 in case dimYNum = null
   });
-  const pileDragEnd = (e: any) => console.info('end of piling drag, ', e.target.items);
-
   const [thisPiling, changePiling] = useState<any>('');
 
   const pilingInitHandler = useCallback(async element => {
@@ -35,14 +33,13 @@ const Pilling = (props: Props) => {
 
     const pilingOptions = {
       items,
-      pileDragEnd,
       dims: [dimX, dimY],
       getXSvgGroup: () => d3select('svg#ItemBrowser').select(`g`).select(`g`), // pass a function rather than a selection in case the svg components have been rendered yet
       getYSvgGroup: () => d3select('svg#ItemBrowserY').select(`g`).select(`g`),
       dataset
     };
 
-    const [piling, actions] = await createPilingExample(element, pilingOptions);
+    const { piling, actions } = await createPilingExample(element, pilingOptions);
     changePiling(piling);
 
     // register action
@@ -119,9 +116,10 @@ const Pilling = (props: Props) => {
     document.getElementById('gridBtn')?.addEventListener('click', grid2D);
     document.getElementById('splitBtn')?.addEventListener('click', splitAll);
     document.getElementById('itemSize')?.addEventListener('change', changeSize);
+    document.getElementById('updateConcept')?.addEventListener('click', actions.postNewGroups);
 
     return () => {
-      piling.destory();
+      piling.destroy();
       document.querySelector('#ySelector')?.removeEventListener('change', reArrangeY);
       document.querySelector('#xSelector')?.removeEventListener('change', reArrangeX);
       document.querySelector('#summarySelector')?.removeEventListener('change', changeSummary);
@@ -133,6 +131,7 @@ const Pilling = (props: Props) => {
       document.getElementById('gridBtn')?.removeEventListener('click', grid2D);
       document.getElementById('splitBtn')?.removeEventListener('click', splitAll);
       document.getElementById('itemSize')?.removeEventListener('change', changeSize);
+      document.getElementById('updateConcept')?.removeEventListener('click', actions.postNewGroups);
     };
   }, []);
 
