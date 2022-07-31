@@ -1,6 +1,6 @@
 import { postNewGroups } from 'dataService';
 import { message } from 'antd';
-import createPilingJs, { createUmap } from 'piling.js';
+import createPilingJs, { createUmap } from 'lib/piling.js';
 
 import { IS_ONLINE_DEMO } from 'Const';
 
