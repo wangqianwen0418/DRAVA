@@ -50,6 +50,7 @@ export default async function create(element, pilingOptions) {
     pileItemRotation: 0,
     pileSizeBadge: pile => pile.items.length > 1,
     pileLabelSizeTransform: 'histogram',
+    depileMethod: 'hoveredOne',
     pileOrderItems: pileState =>
       pileState.items.sort((a, b) => items[+a - 1]['recons_loss'] || 0 - items[+b - 1]['recons_loss'] || 0)
     // pileLabelStackAlign: 'vertical'
@@ -97,15 +98,6 @@ export default async function create(element, pilingOptions) {
 
   // UMAP project by default
   piling.arrangeBy('uv', 'embedding');
-
-  // piling.subscribe('pileEnter', ({target})=>{
-  //   console.info('target pile', target)
-  // })
-
-  piling.subscribe('itemOver', (a) => {
-    // item.moveTo(item.x + 30, item.y);
-    console.info(a);
-  });
 
   // piling.subscribe('zoom', camera => {
   //   const svgXGroup = getXSvgGroup();
