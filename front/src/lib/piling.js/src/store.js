@@ -12,7 +12,7 @@ import deepEqual from 'deep-equal';
 import { createStore as createReduxStore, combineReducers } from 'redux';
 import { enableBatching } from 'redux-batched-actions';
 
-import { version } from '../package.json';
+import { version } from './package.json';
 
 import createOrderer from './orderer';
 
