@@ -1,5 +1,5 @@
 import { createWorker } from '@flekschas/utils';
-import skmeans from '../node_modules/skmeans/dist/browser/skmeans.min';
+import skmeans from 'skmeans/dist/browser/skmeans.min';
 
 import workerFn from './kmeans-worker';
 
