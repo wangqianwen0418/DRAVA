@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import styles from './LatentDim.module.css';
 import clsx from 'clsx';
 
-import { Card, Select } from 'antd';
+import { Button, Card, Dropdown, Menu, Select } from 'antd';
 
 import { getMax, debounce } from 'helpers';
 import { STEP_NUM } from 'Const';
@@ -122,22 +122,26 @@ export default class LatentDims extends React.Component<Props, States> {
       .domain([0.1, maxV])
       .range([this.barHeight / 10, this.barHeight]);
 
-    //   axis controller
-    const axisController = (
-      <Select
-        mode="multiple"
-        allowClear
-        placeholder="Add more dimensions"
-        style={{ width: '350px', height: '30px', overflowY: 'scroll' }}
-        value={dims}
-        onChange={this.onChangeDim.bind(this)}
+    // Dropdown menu to add a new dimension
+    const dimensionMenuItems = Object.keys(matrixData)
+      .map(dimName => dimUserNames[dimName] || dimName)
+      // show only the dimensions that are not yet added
+      .filter(name => dims.indexOf(name) === -1)
+      .map(name => {
+        return {
+          key: name,
+          disabled: dims.indexOf(name) !== -1,
+          label: <div onClick={() => this.onChangeDim([...dims, name])}>{name}</div>
+        }
+      });
+    const dropdown = (
+      <Dropdown
+        className={clsx(styles.dimDropDown)}
+        overlay={<Menu items={dimensionMenuItems}/>}
+        placement="bottomRight"
       >
-        {Object.keys(matrixData).map(dimName => (
-          <Option key={dimName} value={dimName}>
-            {dimUserNames[dimName] || dimName}
-          </Option>
-        ))}
-      </Select>
+        <Button>+</Button>
+      </Dropdown>
     );
 
     const stepWidth = (width - 2 * cardPadding - this.spanWidth) / STEP_NUM - this.gap;
@@ -147,10 +151,10 @@ export default class LatentDims extends React.Component<Props, States> {
       <Card
         title="Concept View"
         size="small"
-        extra={axisController}
         bodyStyle={{ height: height - cardHeadHeight, width: width, overflowY: 'scroll' }}
         loading={isDataLoading}
       >
+        {dropdown}
         {/* the pcp charts */}
         <svg height={cardInnerHeight} width={width - 2 * cardPadding} className="pcp">
           {/* get rows */}
@@ -180,6 +184,14 @@ export default class LatentDims extends React.Component<Props, States> {
                 key={dimName}
                 transform={`translate(0, ${row_idx * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}
               >
+                <foreignObject width={this.spanWidth} height={30}>
+                  <button
+                    className={clsx(styles.closeBtn)}
+                    onClick={() => this.onChangeDim(dims.filter((_, i) => row_idx !== i))}
+                  >
+                    {'✕'}
+                  </button>
+                </foreignObject>
                 <foreignObject className={styles.inputTextWrapper} width={60} height={30}>
                   <input
                     value={dimUserNames[dimName] || dimName}

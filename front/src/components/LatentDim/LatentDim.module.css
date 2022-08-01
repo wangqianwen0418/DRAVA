@@ -45,6 +45,23 @@
   -ms-user-select: none; /* IE10+ */
 }
 
+.dimDropDown {
+  position: absolute !important;
+  top: 10px;
+  right: 10px;
+}
+
+.closeBtn {
+  transform: translate(0px, 8px);
+  border: 1px solid #D3D3D3;
+  color: darkgrey;
+  background: none;
+  padding: 0px;
+  height: 20px;
+  width: 20px;
+  line-height: 20px;
+}
+
 .toggleFilter {
   cursor: pointer;
 }

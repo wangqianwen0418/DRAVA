@@ -10,7 +10,7 @@
     "@types/node": "^12.20.30",
     "@types/react": "^17.0.29",
     "@types/react-dom": "^17.0.9",
-    "antd": "^4.17.3",
+    "antd": "^4.22.3",
     "axios": "^0.24.0",
     "d3-scale": "^4.0.2",
     "d3-scale-chromatic": "^3.0.0",
