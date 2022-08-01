@@ -1,6 +1,6 @@
 import { postNewGroups } from 'dataService';
 import { message } from 'antd';
-import createPilingJs, { createUmap } from 'lib/piling.js';
+import createPilingJs, { createUmap } from 'lib/piling.js/src';
 
 import { IS_ONLINE_DEMO } from 'Const';
 
@@ -98,13 +98,15 @@ export default async function create(element, pilingOptions) {
   // UMAP project by default
   piling.arrangeBy('uv', 'embedding');
 
-  piling.subscribe('pileEnter', ({target})=>{
-    console.info('target pile', target)
-  })
+  // piling.subscribe('pileEnter', ({target})=>{
+  //   console.info('target pile', target)
+  // })
 
-  piling.subscribe('itemOver', ({ item }) => {
-    item.moveTo(item.x + 30, item.y);
+  piling.subscribe('itemOver', (a) => {
+    // item.moveTo(item.x + 30, item.y);
+    console.info(a);
   });
+
   // piling.subscribe('zoom', camera => {
   //   const svgXGroup = getXSvgGroup();
   //   const svgYGroup = getYSvgGroup();

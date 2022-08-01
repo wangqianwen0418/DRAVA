@@ -1,5 +1,5 @@
 import { createWorker } from '@flekschas/utils';
-import umapScriptStr from '!!raw-loader!umap-js/lib/umap-js.min';
+import umapScriptStr from '../node_modules/umap-js/lib/umap-js.min';
 
 import umapWorkerFn from './umap-worker';
 import createScale from './utils/scale';

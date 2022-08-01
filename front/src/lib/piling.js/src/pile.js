@@ -747,11 +747,10 @@ const createPile = (
         const scaleFactor = _bounds.height / previewItem.height;
         previewItem.scale.y *= scaleFactor;
         if (scaleWidthToCover === 'auto') previewItem.scale.x *= scaleFactor;
-      } 
-      // else if (scaleWidthToCover === true && scaleHeightToCover === true) {
-      //   previewItem.scale.x *= _bounds.width / previewItem.width;
-      //   previewItem.scale.y *= _bounds.height / previewItem.height;
-      // }
+      } else if (scaleWidthToCover === true && scaleHeightToCover === true) {
+        previewItem.scale.x *= _bounds.width / previewItem.width;
+        previewItem.scale.y *= _bounds.height / previewItem.height;
+      }
     };
 
     if (bounds) {

@@ -88,7 +88,7 @@ import createContextMenu from './context-menu';
 import createPopup from './popup';
 import createLasso from './lasso';
 
-import { version } from './package.json';
+import { version } from '../package.json';
 
 // We cannot import the following libraries using the normal `import` statement
 // as this blows up the Rollup bundle massively for some reasons...
