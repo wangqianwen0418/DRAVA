@@ -18,7 +18,7 @@
     "gosling.js": "^0.9.17",
     "higlass": "^1.11.9",
     "papaparse": "^5.3.1",
-    "piling.js": "file:../../piling.js",
+    "piling.js": "github:wangqianwen0418/piling.js",
     "pixi.js": "^6.2.2",
     "react": "16.13.1",
     "react-dom": "16.13.1",
