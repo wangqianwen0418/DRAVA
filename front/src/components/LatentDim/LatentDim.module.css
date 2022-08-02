@@ -31,7 +31,6 @@
 }
 
 .inputTextWrapper {
-  width: 60px;
   height: 30px;
   transform: translate(0px, 30px);
 }
@@ -51,15 +50,18 @@
   right: 10px;
 }
 
-.closeBtn {
-  transform: translate(0px, 8px);
-  border: 1px solid #D3D3D3;
-  color: darkgrey;
-  background: none;
-  padding: 0px;
-  height: 20px;
-  width: 20px;
-  line-height: 20px;
+.deleteBtnGroup {
+  cursor: pointer;
+}
+
+.deleteBtn {
+  stroke-width: 1px;
+  stroke: darkgrey;
+  fill: transparent;
+}
+
+.deleteBtnText {
+  fill: darkgray;
 }
 
 .toggleFilter {
