@@ -1,5 +1,8 @@
-import { style } from 'd3-selection';
+import { postNewGroups } from 'dataService';
+import { message } from 'antd';
 import createPilingJs, { createUmap } from 'piling.js';
+
+import { IS_ONLINE_DEMO } from 'Const';
 
 /**
  * Promised-based image loading
@@ -31,7 +34,7 @@ const createImageRenderer = option => sources =>
 
 export default async function create(element, pilingOptions) {
   const imageSize = 45;
-  const { items, pileDragEnd, dims, getXSvgGroup, getYSvgGroup, dataset } = pilingOptions;
+  const { items, dims, getXSvgGroup, getYSvgGroup, dataset } = pilingOptions;
 
   const umap = createUmap();
 
@@ -47,6 +50,7 @@ export default async function create(element, pilingOptions) {
     pileItemRotation: 0,
     pileSizeBadge: pile => pile.items.length > 1,
     pileLabelSizeTransform: 'histogram',
+    depileMethod: 'hoveredOne',
     pileOrderItems: pileState =>
       pileState.items.sort((a, b) => items[+a - 1]['recons_loss'] || 0 - items[+b - 1]['recons_loss'] || 0)
     // pileLabelStackAlign: 'vertical'
@@ -92,9 +96,9 @@ export default async function create(element, pilingOptions) {
 
   const piling = createPilingJs(element, spec);
 
-  // piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
+  // UMAP project by default
   piling.arrangeBy('uv', 'embedding');
-  piling.subscribe('pileDragEnd', pileDragEnd);
+
   // piling.subscribe('zoom', camera => {
   //   const svgXGroup = getXSvgGroup();
   //   const svgYGroup = getYSvgGroup();
@@ -119,6 +123,20 @@ export default async function create(element, pilingOptions) {
 
   // a set of functions to be called
   const actions = {
+    postNewGroups: () => {
+      if (IS_ONLINE_DEMO) {
+        message.warning(
+          'Update Concept is not supported in the online demo.\n Please download Drava and run it on your local computer.',
+          5 //duration = 5s
+        );
+      } else {
+        const currentPiles = Object.values(piling.exportState()['piles'])
+          .filter(d => d.items.length > 0)
+          .sort((a, b) => a.x - b.x);
+
+        postNewGroups(currentPiles);
+      }
+    },
     reArrange: dims => {
       const [dimX, dimY] = dims;
 
@@ -225,5 +243,5 @@ export default async function create(element, pilingOptions) {
     }
   };
 
-  return [piling, actions];
+  return { piling, actions };
 }
