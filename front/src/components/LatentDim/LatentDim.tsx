@@ -2,12 +2,13 @@ import React, { ReactNode } from 'react';
 import styles from './LatentDim.module.css';
 import clsx from 'clsx';
 
-import { Card, Select } from 'antd';
+import { Button, Card, Dropdown, Menu, Select } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 
 import { getMax, debounce } from 'helpers';
 import { STEP_NUM } from 'Const';
 
-import { scaleLinear, scaleLog, ScaleLogarithmic } from 'd3-scale';
+import { scaleLinear, scaleLog } from 'd3-scale';
 import { TDistribution, TFilter, TResultRow } from 'types';
 
 import { DimRow } from './DimRow';
@@ -33,10 +34,11 @@ interface States {
 }
 
 export default class LatentDims extends React.Component<Props, States> {
-  spanWidth = 80; // width used for left-side dimension annotation
+  spanWidth = 100; // width used for left-side dimension annotation
   barHeight = 30; // height of bar chart
   gap = 3; //horizontal gap between thumbnails
   barLabelHeight = 14;
+  deleteBtnSize = 20;
   rowGap = 10; // vertical gap between rows
   constructor(props: Props) {
     super(props);
@@ -55,7 +57,6 @@ export default class LatentDims extends React.Component<Props, States> {
   isSelected(dimName: string, col_idx: number): boolean {
     return this.props.filters[dimName][col_idx];
   }
-
 
   /***
    *  @call_props_functions
@@ -122,22 +123,26 @@ export default class LatentDims extends React.Component<Props, States> {
       .domain([0.1, maxV])
       .range([this.barHeight / 10, this.barHeight]);
 
-    //   axis controller
-    const axisController = (
-      <Select
-        mode="multiple"
-        allowClear
-        placeholder="Add more dimensions"
-        style={{ width: '350px', height: '30px', overflowY: 'scroll' }}
-        value={dims}
-        onChange={this.onChangeDim.bind(this)}
+    // Dropdown menu to add a new dimension
+    const dimensionMenuItems = Object.keys(matrixData)
+      .map(dimName => dimUserNames[dimName] || dimName)
+      // show only the dimensions that are not yet added
+      .filter(name => dims.indexOf(name) === -1)
+      .map(name => {
+        return {
+          key: name,
+          disabled: dims.indexOf(name) !== -1,
+          label: <div onClick={() => this.onChangeDim([...dims, name])}>{name}</div>
+        };
+      });
+    const dropdown = (
+      <Dropdown
+        className={clsx(styles.dimDropDown)}
+        overlay={<Menu items={dimensionMenuItems} />}
+        placement="bottomRight"
       >
-        {Object.keys(matrixData).map(dimName => (
-          <Option key={dimName} value={dimName}>
-            {dimUserNames[dimName] || dimName}
-          </Option>
-        ))}
-      </Select>
+        <Button shape="circle" icon={<PlusOutlined />} />
+      </Dropdown>
     );
 
     const stepWidth = (width - 2 * cardPadding - this.spanWidth) / STEP_NUM - this.gap;
@@ -147,10 +152,10 @@ export default class LatentDims extends React.Component<Props, States> {
       <Card
         title="Concept View"
         size="small"
-        extra={axisController}
         bodyStyle={{ height: height - cardHeadHeight, width: width, overflowY: 'scroll' }}
         loading={isDataLoading}
       >
+        {dropdown}
         {/* the pcp charts */}
         <svg height={cardInnerHeight} width={width - 2 * cardPadding} className="pcp">
           {/* get rows */}
@@ -180,14 +185,29 @@ export default class LatentDims extends React.Component<Props, States> {
                 key={dimName}
                 transform={`translate(0, ${row_idx * (this.barHeight * 2 + this.barLabelHeight + this.rowGap)})`}
               >
-                <foreignObject className={styles.inputTextWrapper} width={60} height={30}>
+                <foreignObject
+                  transform={`translate(0, ${this.barHeight})`}
+                  width={barWidth - this.deleteBtnSize}
+                  height={this.barHeight}
+                >
                   <input
                     value={dimUserNames[dimName] || dimName}
                     className={clsx(styles.inputText)}
+                    style={{ width: barWidth - this.deleteBtnSize - 5 }}
                     unselectable="on"
                     onChange={e => this.onChangeDimNames(dimName, e.target.value)}
                   />
                 </foreignObject>
+                <g
+                  className={styles.deleteBtnGroup}
+                  onClick={() => this.onChangeDim(dims.filter((_, i) => row_idx !== i))}
+                  transform={`translate(${barWidth - this.deleteBtnSize}, ${this.barHeight})`}
+                >
+                  <rect className={styles.deleteBtn} width={this.deleteBtnSize} height={this.deleteBtnSize} />
+                  <text className={styles.deleteBtnText} x={6} y={this.deleteBtnSize - 6}>
+                    X
+                  </text>
+                </g>
                 {/* dim importance score */}
                 {dimName.includes('dim_') && (
                   <g

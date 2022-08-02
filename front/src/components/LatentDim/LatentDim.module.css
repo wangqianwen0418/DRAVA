@@ -31,7 +31,6 @@
 }
 
 .inputTextWrapper {
-  width: 60px;
   height: 30px;
   transform: translate(0px, 30px);
 }
@@ -43,6 +42,26 @@
   -moz-user-select: none; /* mozilla browsers */
   -khtml-user-select: none; /* webkit (konqueror) browsers */
   -ms-user-select: none; /* IE10+ */
+}
+
+.dimDropDown {
+  position: absolute !important;
+  top: 10px;
+  right: 10px;
+}
+
+.deleteBtnGroup {
+  cursor: pointer;
+}
+
+.deleteBtn {
+  stroke-width: 1px;
+  stroke: darkgrey;
+  fill: transparent;
+}
+
+.deleteBtnText {
+  fill: darkgray;
 }
 
 .toggleFilter {
