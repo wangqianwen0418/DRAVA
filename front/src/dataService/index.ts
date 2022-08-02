@@ -36,3 +36,23 @@ export const queryItem = async (dataset: string, id: string) => {
   });
   return res.data;
 };
+
+type PILE = {
+  items: string[];
+  x: number;
+  y: number;
+  [key: string]: any;
+};
+
+export const postNewGroups = async (groups: PILE[]) => {
+  const url = `${BASE_URL}/api/post_new_groups`;
+  axios({
+    method: 'post',
+    url,
+    data: JSON.stringify(groups),
+    headers: {
+      // Overwrite Axios's automatically set Content-Type
+      'Content-Type': 'application/json'
+    }
+  }).catch(err => console.error(err));
+};

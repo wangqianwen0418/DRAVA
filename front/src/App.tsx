@@ -50,7 +50,7 @@ export default class App extends React.Component<{}, State> {
   constructor(prop: {}) {
     super(prop);
     this.state = {
-      dataset: 'sc2',
+      dataset: 'celeba',
       dimUserNames: {},
       filters: {},
       // samples: [],
