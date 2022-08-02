@@ -1,5 +1,5 @@
 :root {
-  --card-color: lightgray;
+  --card-color: rgb(175, 175, 175);
   --card-body-padding: 12px;
   --card-head-height: 52px;
   --selected-color: orange;
