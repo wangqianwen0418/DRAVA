@@ -36,6 +36,10 @@
   padding: var(--card-body-padding) !important;
 }
 
+#imageContainer .ant-card-body {
+  padding: 0px !important;
+}
+
 /* custome style css */
 .pointer_cursor {
   cursor: pointer;

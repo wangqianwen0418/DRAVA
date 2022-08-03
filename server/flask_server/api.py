@@ -278,7 +278,8 @@ def get_matrix_sample(**kwargs):
     img_io.seek(0)
     return send_file(img_io, mimetype='image/png')
 
-def get_IDC_sample(id):
+def get_IDC_sample(**kwargs):
+    id = kwargs['id']
     return send_file(f'../data/IDC_regular_ps50_idx5/{id}')
 
 
