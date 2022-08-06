@@ -13,14 +13,15 @@ interface Props {
   dataset: string;
 }
 
-const MIN_SCALE = 1;
-const MAX_SCALE = 5;
+const MIN_SCALE = 0.8;
+const MAX_SCALE = 10;
 
 const ImageContext = (props: Props) => {
   const { isDataLoading, samples, height: heightInclHeader, width, dataset } = props;
   
   const pixiRenderer = useRef<PIXI.AbstractRenderer>();
-  const pixiRoot = useRef<PIXI.Container | undefined>(new PIXI.Container());
+  const pixiRoot = useRef<PIXI.Container>(new PIXI.Container());
+  const pixiFilter = useRef<PIXI.Container>(new PIXI.Container());
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const prevMousePos = useRef<{ [k in 'x' | 'y']: number}>();
 
@@ -56,7 +57,7 @@ const ImageContext = (props: Props) => {
   const canvasHeight = maxY - minY + imgSize;
 
   function animate() {
-    if(pixiRoot.current) pixiRenderer.current?.render(pixiRoot.current);
+    pixiRenderer.current?.render(pixiRoot.current);
     requestAnimationFrame(animate);
   }
 
@@ -78,35 +79,38 @@ const ImageContext = (props: Props) => {
       tiles.addChild(tile);
     });
 
-    pixiRoot.current?.removeChildren();
-    pixiRoot.current?.addChild(tiles);
+    pixiRoot.current.removeChildren();
+    pixiRoot.current.addChild(tiles);
+    // TODO (Aug-06-2022): texture is not being rendered initially
+    // const texture = pixiRenderer.current.generateTexture(tiles);
+    // pixiRoot.current.addChild(new Sprite(texture));
+
+    // filtering
+    pixiFilter.current.removeChildren();
+    imgSamples
+      .filter(d => d.filtered)
+      .forEach(({ x, y }) => {
+        const overlay = new PIXI.Sprite(PIXI.Texture.WHITE);
+        overlay.tint = 0xFFFFFF;
+        overlay.alpha = 0.6;
+        overlay.width = overlay.height = imgSize * scale;
+        overlay.x = (x - minX) * scale;
+        overlay.y = (y - minY) * scale;
+        pixiFilter.current.addChild(overlay);
+      });
+    pixiRoot.current.addChild(pixiFilter.current);
 
     animate();
     
     return () => {
-      // pixiRoot.current?.removeChildren();
+      pixiRoot.current?.removeChildren();
+      pixiFilter.current.removeChildren();
       // pixiRoot.current?.destroy();
       // pixiRenderer.current?.destroy();
       // pixiRoot.current = undefined;
       // pixiRenderer.current = undefined;
     }
   }, [canvasRef.current, samples, width, height]);
-
-  // TODO (Aug-3-2022): Support performant filtering
-  // draw image mask
-  // useEffect(() => {
-  //   if (!canvasRef.current) return;
-  //   const ctx = canvasRef.current.getContext('2d')!;
-  //   imgSamples
-  //     .filter(d => d.filtered)
-  //     .forEach(sample => {
-  //       ctx.beginPath();
-  //       ctx.globalAlpha = 0.1;
-  //       ctx.fillStyle = 'white';
-  //       ctx.fillRect(sample.x - offsetX, sample.y - offsetY, imgSize, imgSize);
-  //       ctx.globalAlpha = 1.0;
-  //     });
-  // }, [samples]);
 
   return (
     <Card
