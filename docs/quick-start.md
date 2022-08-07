@@ -12,7 +12,7 @@ The easiest way to run Drava on your computer is to download the [zip file from 
 1. Run the demo
    ```bash
    cd flask-server
-   python run app.py
+   python app.py
    ```
     You can open the demo at `http://localhost:8080` in your web browser.
 
