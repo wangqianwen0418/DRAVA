@@ -228,9 +228,10 @@ const ItemBrowser = (props: Props) => {
         <hr className={styles.configHr} />
         <h5> Summary </h5>
         <select id="summarySelector" style={{ width: '120px' }} defaultValue="representative">
-          <option value="foreshortened">Foreshortened</option>
-          <option value="combining">Combining</option>
-          <option value="combining2">Combining with offset</option>
+          <option value="foreshortened">Partial</option>
+          <option value="foreshortened">Compression</option>
+          <option value="see-through">See-Through</option>
+          <option value="average">Average</option>
           <option value="representative">Representative</option>
         </select>
         <br />
@@ -245,11 +246,7 @@ const ItemBrowser = (props: Props) => {
             );
           })}
         </select>
-        <Button
-          type="primary"
-          id='updateConcept'
-          className={styles.updateBtn}
-        >
+        <Button type="primary" id="updateConcept" className={styles.updateBtn}>
           Update Concept
         </Button>
       </div>

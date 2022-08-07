@@ -195,12 +195,12 @@ export default async function create(element, pilingOptions) {
           pileItemOpacity: 1, //opaciy piles for the dsprites dataset
           pileItemOffset: (_, i, pile) => [0, i * -3] //force all items overlaid
         });
-      } else if (sType == 'combining') {
+      } else if (sType == 'average') {
         piling.set({
           pileItemOpacity: (item, i, pile) => 1 - i / pile.items.length,
           pileItemOffset: [0, 0] //force all items overlaid
         });
-      } else if (sType == 'combining2') {
+      } else if (sType == 'see-through') {
         // combine with offset
         piling.set({
           // pileItemOpacity: (item, i, pile) => 0.4 + (0.6 * i) / pile.items.length,
