@@ -105,10 +105,6 @@ const ImageContext = (props: Props) => {
     return () => {
       pixiRoot.current?.removeChildren();
       pixiFilter.current.removeChildren();
-      // pixiRoot.current?.destroy();
-      // pixiRenderer.current?.destroy();
-      // pixiRoot.current = undefined;
-      // pixiRenderer.current = undefined;
     }
   }, [canvasRef.current, samples, width, height]);
 
