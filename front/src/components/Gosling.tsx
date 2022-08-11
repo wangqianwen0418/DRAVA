@@ -117,7 +117,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
         field: 'value',
         type: 'quantitative'
       },
-      height: goslingComponentHeight - peakHeight - multiLabelHeight
+      height: goslingComponentHeight
     };
 
     const annotationOnMatrix = {
@@ -128,9 +128,9 @@ export default class GoslingVis extends React.Component<Props, {}> {
         genomicFields: ['start', 'end']
       },
       mark: 'bar',
-      x: { field: 'start', type: 'genomic' },
+      x: { field: 'start', type: 'genomic', axis: 'top' },
       xe: { field: 'end', type: 'genomic' },
-      y: { field: 'start', type: 'genomic' },
+      y: { field: 'start', type: 'genomic', axis: 'left' },
       ye: { field: 'end', type: 'genomic' },
       stroke: { value: ORANGE },
       strokeWidth: { value: 2 },
@@ -185,7 +185,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
       spacing: 0,
       xDomain: { chromosome: CHR.toString() },
       width: goslingComponentWidth,
-      tracks: dataset == 'sequence' ? [labelTrack, PeakTrack] : [labelTrack, CTCFTrack, MatrixTrack, annotationOnMatrix]
+      tracks: dataset == 'sequence' ? [labelTrack, PeakTrack] : [MatrixTrack, annotationOnMatrix]
     };
 
     // validate the spec
