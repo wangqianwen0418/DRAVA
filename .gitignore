@@ -1,6 +1,8 @@
 
 server/data/**
+data/**
 !server/data/*.py
+*.zip
 
 !server/data/tad_data_generator/
 server/data/tad_data_generator/*
