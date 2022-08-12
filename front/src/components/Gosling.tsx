@@ -44,6 +44,56 @@ export default class GoslingVis extends React.Component<Props, {}> {
           ...sample
         };
       });
+    
+    const outerPoints: [number, number][] = [];
+    const sorted = labelJSON.sort((a, b) => a.start - b.start);
+    sorted.forEach(({ start, end }, i) => {
+      const lb: [number, number] = [start, end]; // the left bottom point of a rectangle
+      if(outerPoints.length === 0 || end > outerPoints[outerPoints.length - 1][1]) {
+        // This means `lb` is an outer point
+        outerPoints.push(lb);
+      }
+    });
+    const overlayRects: Record<string, string | number>[] = [];
+    const template = { chromosome: 'chr5' }; // Support other chromosomes as well?
+    const CHR5_SIZE = 181538259;
+    outerPoints.forEach(([start, end], i) => {
+      const nextStart = i === outerPoints.length - 1 ? CHR5_SIZE : outerPoints[i + 1][0];
+      /* left bottom side of the diagonal */
+      overlayRects.push({ 
+        ...template, 
+        x: start, 
+        xe: nextStart, 
+        y: end, 
+        ye: CHR5_SIZE
+      });
+      /* right top side of the diagonal */
+      const nextNoOverlap = end < nextStart;
+      if(nextNoOverlap) {
+        overlayRects.push({ 
+          ...template, 
+          x: end, 
+          xe: CHR5_SIZE, 
+          y: start, 
+          ye: end
+        });
+        overlayRects.push({ 
+          ...template, 
+          x: nextStart, 
+          xe: CHR5_SIZE, 
+          y: end, 
+          ye: nextStart
+        });
+      } else {
+        overlayRects.push({ 
+          ...template, 
+          x: end, 
+          xe: CHR5_SIZE, 
+          y: start, 
+          ye: nextStart
+        });
+      }
+    });
 
     const rootStyle = getComputedStyle(document.documentElement),
       cardPadding = parseInt(rootStyle.getPropertyValue('--card-body-padding')),
@@ -139,6 +189,25 @@ export default class GoslingVis extends React.Component<Props, {}> {
       overlayOnPreviousTrack: true
     };
 
+    const fadeOutOnMatrix = {
+      data: {
+        values: overlayRects,
+        type: 'json',
+        chromosomeField: 'chromosome',
+        genomicFields: ['x', 'xe', 'y', 'ye']
+      },
+      mark: 'bar',
+      x: { field: 'x', type: 'genomic' },
+      xe: { field: 'xe', type: 'genomic' },
+      y: { field: 'y', type: 'genomic' },
+      ye: { field: 'ye', type: 'genomic' },
+      // stroke: { value: ORANGE },
+      strokeWidth: { value: 0 },
+      color: { value: 'white' },
+      opacity: { value: 0.3 },
+      overlayOnPreviousTrack: true
+    };
+
     const CTCFTrack = {
       title: 'CTCF',
       id: 'ctcf-track',
@@ -185,7 +254,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
       spacing: 0,
       xDomain: { chromosome: CHR.toString() },
       width: goslingComponentWidth,
-      tracks: dataset == 'sequence' ? [labelTrack, PeakTrack] : [labelTrack, CTCFTrack, MatrixTrack, annotationOnMatrix]
+      tracks: dataset == 'sequence' ? [labelTrack, PeakTrack] : [labelTrack, CTCFTrack, MatrixTrack, fadeOutOnMatrix, annotationOnMatrix]
     };
 
     // validate the spec
