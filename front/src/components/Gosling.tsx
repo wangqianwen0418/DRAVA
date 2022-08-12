@@ -201,7 +201,6 @@ export default class GoslingVis extends React.Component<Props, {}> {
       xe: { field: 'xe', type: 'genomic' },
       y: { field: 'y', type: 'genomic' },
       ye: { field: 'ye', type: 'genomic' },
-      // stroke: { value: ORANGE },
       strokeWidth: { value: 0 },
       color: { value: 'white' },
       opacity: { value: 0.3 },
