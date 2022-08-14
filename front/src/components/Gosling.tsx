@@ -72,19 +72,6 @@ export default class GoslingVis extends React.Component<Props, {}> {
       strokeWidth: { value: 2 }
     };
 
-    if (dataset == 'matrix') {
-      labelTrack['title'] = 'Samples By Depth';
-      labelTrack['row'] = {
-        field: 'level',
-        type: 'nominal',
-        legend: false,
-        domain: ['1.0', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0'].reverse()
-      };
-      // labelTrack['stroke'] = { value: 'steelBlue' };
-      // labelTrack['color'] = { value: ORANGE };
-      labelTrack['height'] = multiLabelHeight;
-    }
-
     const MatrixTrack = {
       title: 'HFFc6_Hi-C',
       id: 'matrix-track',
@@ -117,7 +104,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
         field: 'value',
         type: 'quantitative'
       },
-      height: goslingComponentHeight - peakHeight - multiLabelHeight
+      height: goslingComponentHeight
     };
 
     const annotationOnMatrix = {
@@ -128,36 +115,15 @@ export default class GoslingVis extends React.Component<Props, {}> {
         genomicFields: ['start', 'end']
       },
       mark: 'bar',
-      x: { field: 'start', type: 'genomic' },
+      x: { field: 'start', type: 'genomic', axis: 'top' },
       xe: { field: 'end', type: 'genomic' },
-      y: { field: 'start', type: 'genomic' },
+      y: { field: 'start', type: 'genomic', axis: 'left' },
       ye: { field: 'end', type: 'genomic' },
       stroke: { value: ORANGE },
       strokeWidth: { value: 2 },
       color: { value: 'none' },
       opacity: { value: 1 },
       overlayOnPreviousTrack: true
-    };
-
-    const CTCFTrack = {
-      title: 'CTCF',
-      id: 'ctcf-track',
-      layout: 'linear',
-      data: {
-        url: 'https://s3.amazonaws.com/gosling-lang.org/data/HFFC6_CTCF.mRp.clN.bigWig',
-        type: 'bigwig',
-        column: 'position',
-        value: 'peak',
-        binSize: 1
-      },
-      mark: 'area',
-      x: {
-        field: 'position',
-        type: 'genomic'
-      },
-      y: { field: 'peak', type: 'quantitative', axis: 'none' },
-      color: { value: 'gray' },
-      height: peakHeight
     };
 
     const PeakTrack = {
@@ -185,7 +151,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
       spacing: 0,
       xDomain: { chromosome: CHR.toString() },
       width: goslingComponentWidth,
-      tracks: dataset == 'sequence' ? [labelTrack, PeakTrack] : [labelTrack, CTCFTrack, MatrixTrack, annotationOnMatrix]
+      tracks: dataset == 'sequence' ? [labelTrack, PeakTrack] : [MatrixTrack, annotationOnMatrix]
     };
 
     // validate the spec
