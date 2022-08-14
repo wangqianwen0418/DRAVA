@@ -45,7 +45,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
         };
       });
 
-    const outerPoints: [number, number][] = [];
+    const outerPoints: [number, number][] = [[0, 0]];
     const sorted = labelJSON.sort((a, b) => a.start - b.start);
     sorted.forEach(({ start, end }, i) => {
       const lb: [number, number] = [start, end]; // the left bottom point of a rectangle
@@ -54,9 +54,44 @@ export default class GoslingVis extends React.Component<Props, {}> {
         outerPoints.push(lb);
       }
     });
+    /**
+     * Generate data for semi-transparent overlays for the fade-out effect
+     */
     const overlayRects: Record<string, string | number>[] = [];
-    const template = { chromosome: 'chr5' }; // Support other chromosomes as well?
+    const template = { chromosome: 'chr5' };
+    const CHR5_OFFSET = 879660065;
+    const TOTAL_CHR_SIZE = 3088269832;
     const CHR5_SIZE = 181538259;
+    /* fade-out all other chromosomes */
+    overlayRects.push({ // top
+      chromosome: 'chr1',
+      x: 1,
+      xe: TOTAL_CHR_SIZE,
+      y: 1,
+      ye: CHR5_OFFSET
+    });
+    overlayRects.push({ // mid-left
+      chromosome: 'chr1',
+      x: 1,
+      xe: TOTAL_CHR_SIZE,
+      y: CHR5_OFFSET + CHR5_SIZE + 1,
+      ye: TOTAL_CHR_SIZE
+    });
+    overlayRects.push({ // mid-right
+      chromosome: 'chr1',
+      x: 1,
+      xe: CHR5_OFFSET,
+      y: CHR5_OFFSET,
+      ye: CHR5_OFFSET + CHR5_SIZE
+    });
+    overlayRects.push({ // bottom
+      chromosome: 'chr1',
+      x: CHR5_OFFSET + CHR5_SIZE + 1,
+      xe: TOTAL_CHR_SIZE,
+      y: CHR5_OFFSET,
+      ye:CHR5_OFFSET + CHR5_SIZE
+    });
+    /* fade-out parts of chromosome 5 */
     outerPoints.forEach(([start, end], i) => {
       const nextStart = i === outerPoints.length - 1 ? CHR5_SIZE : outerPoints[i + 1][0];
       /* left bottom side of the diagonal */
