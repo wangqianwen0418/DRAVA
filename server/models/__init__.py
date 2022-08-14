@@ -1,4 +1,4 @@
-from server.models.base import *
+from .base import *
 # from .vanilla_vae import *
 # from .gamma_vae import *
 # from .wae_mmd import *
@@ -20,11 +20,11 @@ from server.models.base import *
 # from .vq_vae import *
 # from .dip_vae import *
 
-from server.models.beta_vae import *
-from server.models.betatc_vae import *
-from server.models.beta_vae_mlp import *
-from server.models.beta_vae_conv import *
-from server.models.beta_vae_conv_2 import * # the model structure used in B loss paper
+from .beta_vae import *
+from .betatc_vae import *
+from .beta_vae_mlp import *
+from .beta_vae_conv import *
+from .beta_vae_conv_2 import * # the model structure used in B loss paper
 
 
 # # Aliases

@@ -44,12 +44,12 @@ export default class GoslingVis extends React.Component<Props, {}> {
           ...sample
         };
       });
-    
+
     const outerPoints: [number, number][] = [];
     const sorted = labelJSON.sort((a, b) => a.start - b.start);
     sorted.forEach(({ start, end }, i) => {
       const lb: [number, number] = [start, end]; // the left bottom point of a rectangle
-      if(outerPoints.length === 0 || end > outerPoints[outerPoints.length - 1][1]) {
+      if (outerPoints.length === 0 || end > outerPoints[outerPoints.length - 1][1]) {
         // This means `lb` is an outer point
         outerPoints.push(lb);
       }
@@ -60,36 +60,36 @@ export default class GoslingVis extends React.Component<Props, {}> {
     outerPoints.forEach(([start, end], i) => {
       const nextStart = i === outerPoints.length - 1 ? CHR5_SIZE : outerPoints[i + 1][0];
       /* left bottom side of the diagonal */
-      overlayRects.push({ 
-        ...template, 
-        x: start, 
-        xe: nextStart, 
-        y: end, 
+      overlayRects.push({
+        ...template,
+        x: start,
+        xe: nextStart,
+        y: end,
         ye: CHR5_SIZE
       });
       /* right top side of the diagonal */
       const nextNoOverlap = end < nextStart;
-      if(nextNoOverlap) {
-        overlayRects.push({ 
-          ...template, 
-          x: end, 
-          xe: CHR5_SIZE, 
-          y: start, 
+      if (nextNoOverlap) {
+        overlayRects.push({
+          ...template,
+          x: end,
+          xe: CHR5_SIZE,
+          y: start,
           ye: end
         });
-        overlayRects.push({ 
-          ...template, 
-          x: nextStart, 
-          xe: CHR5_SIZE, 
-          y: end, 
+        overlayRects.push({
+          ...template,
+          x: nextStart,
+          xe: CHR5_SIZE,
+          y: end,
           ye: nextStart
         });
       } else {
-        overlayRects.push({ 
-          ...template, 
-          x: end, 
-          xe: CHR5_SIZE, 
-          y: start, 
+        overlayRects.push({
+          ...template,
+          x: end,
+          xe: CHR5_SIZE,
+          y: start,
           ye: nextStart
         });
       }
@@ -121,19 +121,6 @@ export default class GoslingVis extends React.Component<Props, {}> {
       stroke: { value: ORANGE },
       strokeWidth: { value: 2 }
     };
-
-    if (dataset == 'matrix') {
-      labelTrack['title'] = 'Samples By Depth';
-      labelTrack['row'] = {
-        field: 'level',
-        type: 'nominal',
-        legend: false,
-        domain: ['1.0', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0'].reverse()
-      };
-      // labelTrack['stroke'] = { value: 'steelBlue' };
-      // labelTrack['color'] = { value: ORANGE };
-      labelTrack['height'] = multiLabelHeight;
-    }
 
     const MatrixTrack = {
       title: 'HFFc6_Hi-C',
@@ -167,7 +154,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
         field: 'value',
         type: 'quantitative'
       },
-      height: goslingComponentHeight - peakHeight - multiLabelHeight
+      height: goslingComponentHeight
     };
 
     const annotationOnMatrix = {
@@ -178,9 +165,9 @@ export default class GoslingVis extends React.Component<Props, {}> {
         genomicFields: ['start', 'end']
       },
       mark: 'bar',
-      x: { field: 'start', type: 'genomic' },
+      x: { field: 'start', type: 'genomic', axis: 'top' },
       xe: { field: 'end', type: 'genomic' },
-      y: { field: 'start', type: 'genomic' },
+      y: { field: 'start', type: 'genomic', axis: 'left' },
       ye: { field: 'end', type: 'genomic' },
       stroke: { value: ORANGE },
       strokeWidth: { value: 2 },
@@ -253,7 +240,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
       spacing: 0,
       xDomain: { chromosome: CHR.toString() },
       width: goslingComponentWidth,
-      tracks: dataset == 'sequence' ? [labelTrack, PeakTrack] : [labelTrack, CTCFTrack, MatrixTrack, fadeOutOnMatrix, annotationOnMatrix]
+      tracks: dataset == 'sequence' ? [labelTrack, PeakTrack] : [MatrixTrack, fadeOutOnMatrix, annotationOnMatrix]
     };
 
     // validate the spec
