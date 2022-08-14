@@ -63,33 +63,37 @@ export default class GoslingVis extends React.Component<Props, {}> {
     const TOTAL_CHR_SIZE = 3088269832;
     const CHR5_SIZE = 181538259;
     /* fade-out all other chromosomes */
-    overlayRects.push({ // top
+    overlayRects.push({
+      // top
       chromosome: 'chr1',
       x: 1,
       xe: TOTAL_CHR_SIZE,
       y: 1,
       ye: CHR5_OFFSET
     });
-    overlayRects.push({ // mid-left
+    overlayRects.push({
+      // mid-left
       chromosome: 'chr1',
       x: 1,
       xe: TOTAL_CHR_SIZE,
       y: CHR5_OFFSET + CHR5_SIZE + 1,
       ye: TOTAL_CHR_SIZE
     });
-    overlayRects.push({ // mid-right
+    overlayRects.push({
+      // mid-right
       chromosome: 'chr1',
       x: 1,
       xe: CHR5_OFFSET,
       y: CHR5_OFFSET,
       ye: CHR5_OFFSET + CHR5_SIZE
     });
-    overlayRects.push({ // bottom
+    overlayRects.push({
+      // bottom
       chromosome: 'chr1',
       x: CHR5_OFFSET + CHR5_SIZE + 1,
       xe: TOTAL_CHR_SIZE,
       y: CHR5_OFFSET,
-      ye:CHR5_OFFSET + CHR5_SIZE
+      ye: CHR5_OFFSET + CHR5_SIZE
     });
     /* fade-out parts of chromosome 5 */
     outerPoints.forEach(([start, end], i) => {
