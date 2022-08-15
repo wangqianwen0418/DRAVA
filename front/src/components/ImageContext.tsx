@@ -18,12 +18,12 @@ const MAX_SCALE = 10;
 
 const ImageContext = (props: Props) => {
   const { isDataLoading, samples, height: heightInclHeader, width, dataset } = props;
-  
+
   const pixiRenderer = useRef<PIXI.AbstractRenderer>();
   const pixiRoot = useRef<PIXI.Container>(new PIXI.Container());
   const pixiFilter = useRef<PIXI.Container>(new PIXI.Container());
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const prevMousePos = useRef<{ [k in 'x' | 'y']: number}>();
+  const prevMousePos = useRef<{ [k in 'x' | 'y']: number }>();
 
   const rootStyle = getComputedStyle(document.documentElement),
     cardHeadHeight = parseInt(rootStyle.getPropertyValue('--card-head-height'));
@@ -62,8 +62,8 @@ const ImageContext = (props: Props) => {
   }
 
   useEffect(() => {
-    if(!canvasRef.current) return;
-    
+    if (!canvasRef.current) return;
+
     const options = { width, height, transparent: true, view: canvasRef.current };
     pixiRenderer.current = PIXI.autoDetectRenderer(options);
 
@@ -91,7 +91,7 @@ const ImageContext = (props: Props) => {
       .filter(d => d.filtered)
       .forEach(({ x, y }) => {
         const overlay = new PIXI.Sprite(PIXI.Texture.WHITE);
-        overlay.tint = 0xFFFFFF;
+        overlay.tint = 0xffffff;
         overlay.alpha = 0.6;
         overlay.width = overlay.height = imgSize * scale;
         overlay.x = (x - minX) * scale;
@@ -101,16 +101,16 @@ const ImageContext = (props: Props) => {
     pixiRoot.current.addChild(pixiFilter.current);
 
     animate();
-    
+
     return () => {
       pixiRoot.current?.removeChildren();
       pixiFilter.current.removeChildren();
-    }
+    };
   }, [canvasRef.current, samples, width, height]);
 
   return (
     <Card
-      id='imageContainer'
+      id="imageContainer"
       title={`Context View`}
       size="small"
       bodyStyle={{ height, overflow: 'hidden', position: 'relative' }}
@@ -121,11 +121,11 @@ const ImageContext = (props: Props) => {
         width={width}
         height={height}
         style={{ overflow: 'hidden', touchAction: 'none' }}
-        onMouseDown={(e) => {
+        onMouseDown={e => {
           prevMousePos.current = { x: e.clientX, y: e.clientY };
         }}
-        onMouseMove={(e) => {
-          if(prevMousePos.current && pixiRoot.current) {
+        onMouseMove={e => {
+          if (prevMousePos.current && pixiRoot.current) {
             const { clientX: x, clientY: y } = e;
             const [deltaX, deltaY] = [x - prevMousePos.current.x, y - prevMousePos.current.y];
             pixiRoot.current.x += deltaX;
@@ -133,9 +133,11 @@ const ImageContext = (props: Props) => {
             prevMousePos.current = { x, y };
           }
         }}
-        onMouseUp={() => { prevMousePos.current = undefined; }}
-        onWheel={(e) => {
-          if(pixiRoot.current) {
+        onMouseUp={() => {
+          prevMousePos.current = undefined;
+        }}
+        onWheel={e => {
+          if (pixiRoot.current) {
             const { x: parentX, y: parentY } = canvasRef.current!.parentElement!.getBoundingClientRect();
             const [mx, my] = [e.clientX - parentX, e.clientY - parentY];
             const wd = (e.deltaX + e.deltaY) / 2.0;
