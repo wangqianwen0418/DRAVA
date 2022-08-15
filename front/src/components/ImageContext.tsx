@@ -111,7 +111,7 @@ const ImageContext = (props: Props) => {
   return (
     <Card
       id="imageContainer"
-      title={`Context View`}
+      title={`Spatial View`}
       size="small"
       bodyStyle={{ height, overflow: 'hidden', position: 'relative' }}
       loading={isDataLoading}

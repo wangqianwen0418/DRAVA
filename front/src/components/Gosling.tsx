@@ -291,7 +291,7 @@ export default class GoslingVis extends React.Component<Props, {}> {
     }
 
     return (
-      <Card title="Context View (Genomic)" size="small" loading={isDataLoading}>
+      <Card title="Spatial View" size="small" loading={isDataLoading}>
         <GoslingComponent spec={spec as GoslingSpec} experimental={{ reactive: true }} />
       </Card>
     );
