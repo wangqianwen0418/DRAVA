@@ -50,5 +50,5 @@
   ```
 
 ### Step 6: Interact with your model and data in Drava
-   Now you can open `localhost:3000` in your web browser and interact with your dataset :tada:
-   Feel free to [open an github issue](https://github.com/wangqianwen0418/DRAVA/issues/new/choose) if you run into any problem :)
+   Now you can open `localhost:3000` in your web browser and interact with your dataset :tada:  
+   Feel free to [open an github issue](https://github.com/wangqianwen0418/DRAVA/issues/new/choose) if you run into any problem!
