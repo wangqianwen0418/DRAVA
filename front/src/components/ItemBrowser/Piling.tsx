@@ -105,6 +105,12 @@ const Pilling = (props: Props) => {
       }
     };
 
+    const postNewGroups = () => {
+      const dimX = (document.getElementById('xSelector') as any).value;
+      const group = (document.getElementById('groupSelector') as any).value;
+      actions.postNewGroups(dimX, group);
+    };
+
     document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);
     document.querySelector('#xSelector')?.addEventListener('change', reArrangeX);
     document.querySelector('#summarySelector')?.addEventListener('change', changeSummary);
@@ -116,7 +122,7 @@ const Pilling = (props: Props) => {
     document.getElementById('gridBtn')?.addEventListener('click', grid2D);
     document.getElementById('splitBtn')?.addEventListener('click', splitAll);
     document.getElementById('itemSize')?.addEventListener('change', changeSize);
-    document.getElementById('updateConcept')?.addEventListener('click', actions.postNewGroups);
+    document.getElementById('updateConcept')?.addEventListener('click', postNewGroups);
 
     return () => {
       piling.destroy();
@@ -131,7 +137,7 @@ const Pilling = (props: Props) => {
       document.getElementById('gridBtn')?.removeEventListener('click', grid2D);
       document.getElementById('splitBtn')?.removeEventListener('click', splitAll);
       document.getElementById('itemSize')?.removeEventListener('change', changeSize);
-      document.getElementById('updateConcept')?.removeEventListener('click', actions.postNewGroups);
+      document.getElementById('updateConcept')?.removeEventListener('click', postNewGroups);
     };
   }, []);
 

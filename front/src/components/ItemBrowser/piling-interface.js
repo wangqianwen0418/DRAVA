@@ -50,9 +50,9 @@ export default async function create(element, pilingOptions) {
     pileItemRotation: 0,
     pileSizeBadge: pile => pile.items.length > 1,
     pileLabelSizeTransform: 'histogram',
-    depileMethod: 'hoveredOne',
-    pileOrderItems: pileState =>
-      pileState.items.sort((a, b) => items[+a - 1]['recons_loss'] || 0 - items[+b - 1]['recons_loss'] || 0)
+    depileMethod: 'hoveredOne'
+    // pileOrderItems: pileState =>
+    //   pileState.items.sort((a, b) => items[+a - 1]['recons_loss'] || 0 - items[+b - 1]['recons_loss'] || 0)
     // pileLabelStackAlign: 'vertical'
     // pileBorderColor: '#000000',
     // pileBorderSize: 1
@@ -123,10 +123,25 @@ export default async function create(element, pilingOptions) {
 
   // a set of functions to be called
   const actions = {
-    postNewGroups: () => {
+    postNewGroups: (dim, arrangeBy) => {
       if (IS_ONLINE_DEMO) {
         message.warning(
           'Update Concept is not supported in the online demo.\n Please download Drava and run it on your local computer.',
+          5 //duration = 5s
+        );
+      } else if (arrangeBy !== 'concept') {
+        message.warning(
+          'Please choose the Concept Arrangement',
+          5 //duration = 5s
+        );
+      } else if (!dim.startsWith('dim_')) {
+        message.warning(
+          'Please choose a latent dimension for the x axis',
+          5 //duration = 5s
+        );
+      } else if (Object.values(piling.exportState()['piles']).some(d => d.items.length == 1)) {
+        message.warning(
+          'Please group items before updating concepts',
           5 //duration = 5s
         );
       } else {
@@ -134,7 +149,7 @@ export default async function create(element, pilingOptions) {
           .filter(d => d.items.length > 0)
           .sort((a, b) => a.x - b.x);
 
-        postNewGroups(currentPiles);
+        postNewGroups({ dim, groups: currentPiles }); // dim is a string, 'dim_x'
       }
     },
     reArrange: dims => {

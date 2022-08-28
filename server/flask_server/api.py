@@ -212,7 +212,6 @@ def get_simu_images():
         v = base64.b64encode(img_io.getvalue()).decode()
         results.append(f'data:image/png;base64,{v}')
 
-    # a quick hack for the y pos axis
     # TODO: enable users to reverse an axis
     if dataset == 'dsprites' and dim == 4:
         results = results[::-1]
