@@ -1,5 +1,7 @@
 # Interact with Drava
 
+<img src='../assets/interface.png' width='850px' >
+
 ### Concept View
 
 In the *Concept View*, all latent dimensions will be ranked based on their saliency scoreas from high to low.  
