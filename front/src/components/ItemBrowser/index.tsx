@@ -81,6 +81,7 @@ const ItemBrowser = (props: Props) => {
   const [dimY, changeDimY] = useState(`none`);
   const [group, changeGroup] = useState('umap');
   const [sampleIdx, changeSampleIdx] = useState(0);
+  const [isUpdating, changeUpadtingStatus] = useState(false);
 
   const baselineOptions = [...samples]
     // .sort((a, b) => +a['recons_loss'] - +b['recons_loss'])
@@ -246,7 +247,7 @@ const ItemBrowser = (props: Props) => {
             );
           })}
         </select>
-        <Button type="primary" id="updateConcept" className={styles.updateBtn}>
+        <Button type="primary" id="updateConcept" className={styles.updateBtn} loading={isUpdating}>
           Update Concept
         </Button>
       </div>
@@ -311,6 +312,7 @@ const ItemBrowser = (props: Props) => {
           dimNames={dimNames}
           dimUserNames={dimUserNames}
           height={pilingHeight}
+          changeUpadtingStatus={changeUpadtingStatus}
         />
       </div>
       {group != 'umap' ? (

@@ -129,27 +129,31 @@ export default async function create(element, pilingOptions) {
           'Update Concept is not supported in the online demo.\n Please download Drava and run it on your local computer.',
           5 //duration = 5s
         );
+        return Promise.resolve();
       } else if (arrangeBy !== 'concept') {
         message.warning(
           'Please choose the Concept Arrangement',
           5 //duration = 5s
         );
+        return Promise.resolve();
       } else if (!dim.startsWith('dim_')) {
         message.warning(
           'Please choose a latent dimension for the x axis',
           5 //duration = 5s
         );
+        return Promise.resolve();
       } else if (Object.values(piling.exportState()['piles']).some(d => d.items.length == 1)) {
         message.warning(
           'Please group items before updating concepts',
           5 //duration = 5s
         );
+        return Promise.resolve();
       } else {
         const currentPiles = Object.values(piling.exportState()['piles'])
           .filter(d => d.items.length > 0)
           .sort((a, b) => a.x - b.x);
 
-        postNewGroups({ dim, groups: currentPiles }); // dim is a string, 'dim_x'
+        return postNewGroups({ dim, groups: currentPiles }); // dim is a string, 'dim_x'
       }
     },
     reArrange: dims => {

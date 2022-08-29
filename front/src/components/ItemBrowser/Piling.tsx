@@ -16,9 +16,10 @@ type Props = {
   dimUserNames: { [k: string]: string };
   dimNames: string[];
   height: number;
+  changeUpadtingStatus: (f: boolean) => void;
 };
 const Pilling = (props: Props) => {
-  const { samples, dimNames, dimUserNames, dataset } = props;
+  const { samples, dimNames, dimUserNames, dataset, changeUpadtingStatus } = props;
   const items = samples.map(s => {
     const url = `${getItemURL(dataset, s.id)}&border=1`;
     return { ...s, src: url }; // y = 0 in case dimYNum = null
@@ -108,7 +109,8 @@ const Pilling = (props: Props) => {
     const postNewGroups = () => {
       const dimX = (document.getElementById('xSelector') as any).value;
       const group = (document.getElementById('groupSelector') as any).value;
-      actions.postNewGroups(dimX, group);
+      changeUpadtingStatus(true);
+      actions.postNewGroups(dimX, group).then(() => changeUpadtingStatus(false));
     };
 
     document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);

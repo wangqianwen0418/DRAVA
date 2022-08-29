@@ -46,7 +46,7 @@ type PILE = {
 
 export const postNewGroups = async (groups: PILE[]) => {
   const url = `${BASE_URL}/api/post_new_groups`;
-  axios({
+  return axios({
     method: 'post',
     url,
     data: JSON.stringify(groups),
