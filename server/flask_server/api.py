@@ -4,6 +4,7 @@
 from crypt import methods
 import json
 from operator import mod
+from tokenize import group
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -12,6 +13,8 @@ import base64
 from matplotlib import cm as colormap
 from matplotlib.colors import LinearSegmentedColormap
 import torchvision.utils as vutils
+
+from pytorch_lightning import Trainer
 
 import zarr
 import os
@@ -34,6 +37,7 @@ import sys
 sys.path.append('../../server')
 from models import *
 from experiment import VAEModule
+from ConceptAdaptor import *
 
 def norm_range(t):
     min = float(t.min())
@@ -81,6 +85,7 @@ def load_model(config_file, checkpoint_file):
 
 models = {}
 ranges = {}
+adaptors = {}
 
 default_z = {
     "dsprites": [-0.027196992188692093, 0.062033019959926605, 1.2151720523834229, -0.7173954248428345, 2.0358076095581055, -0.004620308056473732, 0.031831007450819016, 1.2410718202590942, -0.0464935339987278, 0.03360012546181679],
@@ -115,14 +120,10 @@ def get_item_sample():
 
     params = request.args.to_dict()
     dataset = params['dataset']
-    # if dataset == 'sc2':
-    #     border = request.args.get('dataset', type=str) # '1' => true
-    #     return get_sc2_sample(id, border=='1')
-    return globals()[f'get_{dataset}_sample'](**params)
 
     try:
         # call function name based on variable
-        return globals()[f'get_{dataset}_sample'](params)
+        return globals()[f'get_{dataset}_sample'](**params)
     except Exception:
         print(Exception)
         return send_file(f'../data/{dataset}/{id}')
@@ -220,7 +221,50 @@ def get_simu_images():
 
 @api.route('/post_new_groups', methods=['POST'])
 def post_new_groups():
+    global adaptors
     content = request.json
+    dataset = content['dataset']
+    dim = content['dim']
+    dim = int(dim.split('_')[1])
+    groups = content['groups']
+    
+    # # item_indices = np.array([ np.array([int(i) for i in g['items']]) for g in groups ]).flatten()
+    # item_indices = sum([ [int(i) for i in g['items']] for g in groups ], [])
+    # item_user_labels = sum( [ [l for i in groups[l]['items']] for l in range(len(groups))], [] )
+    # item_ordered_labels = list(range(len(item_indices)))
+    # for i in item_ordered_labels:
+    #     item_ordered_labels[item_indices[i]] = item_user_labels[i]
+
+    # raw = np.load(f'./data/{dataset}_concepts.npz')
+    # y = raw['y'][:, dim]
+    # input_size = y.shape[1:]
+    
+    # model_config = {
+    #         "dataset": f"{dataset}_concepts",
+    #         "data_path": "./data",
+    #         'batch_size': 64,
+    #         'LR': 0.005,
+    #         'dim_y': dim,
+    #         'sample_index': [],
+    #         'mode': 'concept_tune'
+    #     }
+    # trainer = Trainer(gpus=0, max_epochs = 30, 
+    #         early_stop_callback = False, 
+    #         logger=False, # disable logs
+    #         checkpoint_callback=False,
+    #         show_progress_bar=False,
+    #         weights_summary=None
+    #         # reload_dataloaders_every_epoch=True # enable data loader switch between epoches
+    #         )
+
+    # if not adaptors[dataset]:
+    #     adaptors[dataset] = {}
+    # if not adaptors[dataset][dim]:
+    #     adaptor = ConceptAdaptor(cat_num=len(groups), input_size=input_size, params=model_config)
+    #     trainer.fit(adaptor)
+    #     results = trainer.test(adaptor)
+    #     adaptors[dataset][dim] = adaptor
+
     return jsonify(content)
 ######################
 # functions called by the API

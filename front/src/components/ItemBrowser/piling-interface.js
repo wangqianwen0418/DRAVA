@@ -156,6 +156,9 @@ export default async function create(element, pilingOptions) {
         return postNewGroups({ dataset, dim, groups: currentPiles }); // dim is a string, 'dim_x'
       }
     },
+    updateGroups: groups => {
+      piling.setPiles(groups);
+    },
     reArrange: dims => {
       const [dimX, dimY] = dims;
 

@@ -111,7 +111,11 @@ const Pilling = (props: Props) => {
       const dimX = (document.getElementById('xSelector') as any).value;
       const group = (document.getElementById('groupSelector') as any).value;
       changeUpadtingStatus(true);
-      actions.postNewGroups(dataset, dimX, group).then(() => changeUpadtingStatus(false));
+      actions.postNewGroups(dataset, dimX, group).then(res => {
+        // console.info(res?.data);
+        actions.updateGroups(res?.data);
+        changeUpadtingStatus(false);
+      });
     };
 
     document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);
