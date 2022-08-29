@@ -1,18 +1,7 @@
 # DRAVA: Utilizing <ins>D</ins>isentangled <ins>R</ins>epresentation Learning as <ins>A</ins> <ins>V</ins>isual <ins>A</ins>nalytics Method for Pattern-based Data Exploration
 
-Check out our preprint at https://osf.io/gzu27/
+Detailed instructions on installing and using Drava are available at the [documentation webpage](https://anonymous.dcfg7f17k3km1.amplifyapp.com/).
 
-This repository has two main components: a frontend interface and a back-end server.
-
-## Development
-
-Please refer to the [documentation webpage](https://qianwen.info/DRAVA) for more details
-
-### Run the doc webpage
-
-```
-docsify serve docs
-```
 
 ### Backend
 The backend is developed and tested with `python@3.7.9`
