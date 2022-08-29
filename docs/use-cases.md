@@ -1,6 +1,4 @@
 # Use Cases
-Please refer to our [OSF reprint](https://osf.io/gzu27/) and [BioVis Presentation Video](https://drive.google.com/file/d/1-_5kkyez79Y2OvzOUrLeYJp0C-mv0XM6/view?usp=sharing) for more details about the use cases.
-
 
 ## Datasets Used
 - Breast Cancer: https://www.kaggle.com/paultimothymooney/breast-histopathology-images
