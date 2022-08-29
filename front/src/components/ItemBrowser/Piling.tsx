@@ -22,7 +22,8 @@ const Pilling = (props: Props) => {
   const { samples, dimNames, dimUserNames, dataset, changeUpadtingStatus } = props;
   const items = samples.map(s => {
     const url = `${getItemURL(dataset, s.id)}&border=1`;
-    return { ...s, src: url }; // y = 0 in case dimYNum = null
+    // force item id to be undefined, so that piling will use item index as id
+    return { ...s, src: url, id: undefined }; // y = 0 in case dimYNum = null
   });
   const [thisPiling, changePiling] = useState<any>('');
 
@@ -110,7 +111,7 @@ const Pilling = (props: Props) => {
       const dimX = (document.getElementById('xSelector') as any).value;
       const group = (document.getElementById('groupSelector') as any).value;
       changeUpadtingStatus(true);
-      actions.postNewGroups(dimX, group).then(() => changeUpadtingStatus(false));
+      actions.postNewGroups(dataset, dimX, group).then(() => changeUpadtingStatus(false));
     };
 
     document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);
@@ -148,7 +149,7 @@ const Pilling = (props: Props) => {
       thisPiling.set({
         items: props.samples.map(s => {
           const url = `${getItemURL(dataset, s.id)}&border=1`;
-          return { ...s, src: url }; // y = 0 in case dimYNum = null
+          return { ...s, src: url, id: undefined }; // y = 0 in case dimYNum = null
         })
       });
     }

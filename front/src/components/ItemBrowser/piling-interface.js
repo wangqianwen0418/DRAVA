@@ -123,7 +123,7 @@ export default async function create(element, pilingOptions) {
 
   // a set of functions to be called
   const actions = {
-    postNewGroups: (dim, arrangeBy) => {
+    postNewGroups: (dataset, dim, arrangeBy) => {
       if (IS_ONLINE_DEMO) {
         message.warning(
           'Update Concept is not supported in the online demo.\n Please download Drava and run it on your local computer.',
@@ -153,7 +153,7 @@ export default async function create(element, pilingOptions) {
           .filter(d => d.items.length > 0)
           .sort((a, b) => a.x - b.x);
 
-        return postNewGroups({ dim, groups: currentPiles }); // dim is a string, 'dim_x'
+        return postNewGroups({ dataset, dim, groups: currentPiles }); // dim is a string, 'dim_x'
       }
     },
     reArrange: dims => {
@@ -241,7 +241,9 @@ export default async function create(element, pilingOptions) {
       }
     },
     addLabel: label => {
-      if (dataset == 'IDC') {
+      if (!items[0][label]) {
+        message.warning(`data items do not have attribute ${label}`, 5);
+      } else if (dataset == 'IDC') {
         piling.set({
           pileLabel: item => item[label] || '',
           pileLabelText: true,

@@ -44,7 +44,7 @@ type PILE = {
   [key: string]: any;
 };
 
-export const postNewGroups = async (groups: PILE[]) => {
+export const postNewGroups = async (groups: { dataset: string; dim: string; groups: PILE[] }) => {
   const url = `${BASE_URL}/api/post_new_groups`;
   return axios({
     method: 'post',
