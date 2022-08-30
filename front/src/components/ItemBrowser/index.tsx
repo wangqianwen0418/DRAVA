@@ -1,6 +1,7 @@
 import { TDistribution, TResultRow, TFilter } from 'types';
 import React, { useState } from 'react';
 import { Card, Select, Button } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 import { datasetConfig } from 'config';
 
 import styles from './index.module.css';
@@ -329,6 +330,22 @@ const ItemBrowser = (props: Props) => {
       )}
 
       {config}
+
+      {isUpdating && (
+        <div
+          style={{
+            width,
+            height: height - cardHeadHeight,
+            backgroundColor: 'white',
+            opacity: 0.5,
+            position: 'absolute',
+            top: cardHeadHeight,
+            textAlign: 'center'
+          }}
+        >
+          <LoadingOutlined style={{ fontSize: '50px', lineHeight: `${height - cardHeadHeight}px` }} />
+        </div>
+      )}
     </Card>
   );
 };
