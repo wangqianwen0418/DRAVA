@@ -228,44 +228,56 @@ def post_new_groups():
     dim = int(dim.split('_')[1])
     groups = content['groups']
     
-    # # item_indices = np.array([ np.array([int(i) for i in g['items']]) for g in groups ]).flatten()
-    # item_indices = sum([ [int(i) for i in g['items']] for g in groups ], [])
-    # item_user_labels = sum( [ [l for i in groups[l]['items']] for l in range(len(groups))], [] )
-    # item_ordered_labels = list(range(len(item_indices)))
-    # for i in item_ordered_labels:
-    #     item_ordered_labels[item_indices[i]] = item_user_labels[i]
+    # item_indices = np.array([ np.array([int(i) for i in g['items']]) for g in groups ]).flatten()
+    item_indices = sum([ [int(i) for i in g['items']] for g in groups ], [])
+    item_user_labels = sum( [ [l for i in groups[l]['items']] for l in range(len(groups))], [] )
+    item_ordered_labels = list(range(len(item_indices)))
+    for i in item_ordered_labels:
+        item_ordered_labels[item_indices[i]] = item_user_labels[i]
 
-    # raw = np.load(f'./data/{dataset}_concepts.npz')
-    # y = raw['y'][:, dim]
-    # input_size = y.shape[1:]
-    
-    # model_config = {
-    #         "dataset": f"{dataset}_concepts",
-    #         "data_path": "./data",
-    #         'batch_size': 64,
-    #         'LR': 0.005,
-    #         'dim_y': dim,
-    #         'sample_index': [],
-    #         'mode': 'concept_tune'
-    #     }
-    # trainer = Trainer(gpus=0, max_epochs = 30, 
-    #         early_stop_callback = False, 
-    #         logger=False, # disable logs
-    #         checkpoint_callback=False,
-    #         show_progress_bar=False,
-    #         weights_summary=None
-    #         # reload_dataloaders_every_epoch=True # enable data loader switch between epoches
-    #         )
+    if os.path.exists(f'./data/{dataset}_concepts.npz'):
+        raw = np.load(f'./data/{dataset}_concepts.npz')
+        y = raw['y'][:, dim]
+        input_size = y.shape[1:]
+        
+        model_config = {
+                "dataset": f"{dataset}_concepts",
+                "data_path": "./data",
+                'batch_size': 64,
+                'LR': 0.005,
+                'dim_y': dim,
+                'sample_index': [],
+                'mode': 'concept_tune'
+            }
+        trainer = Trainer(gpus=0, max_epochs = 30, 
+                early_stop_callback = False, 
+                logger=False, # disable logs
+                checkpoint_callback=False,
+                show_progress_bar=False,
+                weights_summary=None
+                # reload_dataloaders_every_epoch=True # enable data loader switch between epoches
+                )
 
-    # if not adaptors[dataset]:
-    #     adaptors[dataset] = {}
-    # if not adaptors[dataset][dim]:
-    #     adaptor = ConceptAdaptor(cat_num=len(groups), input_size=input_size, params=model_config)
-    #     trainer.fit(adaptor)
-    #     results = trainer.test(adaptor)
-    #     adaptors[dataset][dim] = adaptor
+        if not adaptors[dataset]:
+            adaptors[dataset] = {}
+        if not adaptors[dataset][dim]:
+            adaptor = ConceptAdaptor(cat_num=len(groups), input_size=input_size, params=model_config)
+            trainer.fit(adaptor)
+            results = trainer.test(adaptor)
+            
+            adaptors[dataset][dim] = adaptor
 
-    return jsonify(content)
+        ordered_results = []
+        for g in groups:
+            new_g = []
+            for index in g['items']:
+                new_g.append( results[int(index)])
+            ordered_results.append(new_g)
+
+        return jsonify(ordered_results)
+
+    else:
+        return 'concept vectors are missing!', 400
 ######################
 # functions called by the API
 ######################
