@@ -1,6 +1,7 @@
 import { TDistribution, TResultRow, TFilter } from 'types';
 import React, { useState } from 'react';
 import { Card, Select, Button } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 import { datasetConfig } from 'config';
 
 import styles from './index.module.css';
@@ -81,6 +82,7 @@ const ItemBrowser = (props: Props) => {
   const [dimY, changeDimY] = useState(`none`);
   const [group, changeGroup] = useState('umap');
   const [sampleIdx, changeSampleIdx] = useState(0);
+  const [isUpdating, changeUpadtingStatus] = useState(false);
 
   const baselineOptions = [...samples]
     // .sort((a, b) => +a['recons_loss'] - +b['recons_loss'])
@@ -246,7 +248,7 @@ const ItemBrowser = (props: Props) => {
             );
           })}
         </select>
-        <Button type="primary" id="updateConcept" className={styles.updateBtn}>
+        <Button type="primary" id="updateConcept" className={styles.updateBtn} loading={isUpdating}>
           Update Concept
         </Button>
       </div>
@@ -311,6 +313,7 @@ const ItemBrowser = (props: Props) => {
           dimNames={dimNames}
           dimUserNames={dimUserNames}
           height={pilingHeight}
+          changeUpadtingStatus={changeUpadtingStatus}
         />
       </div>
       {group != 'umap' ? (
@@ -327,6 +330,22 @@ const ItemBrowser = (props: Props) => {
       )}
 
       {config}
+
+      {isUpdating && (
+        <div
+          style={{
+            width,
+            height: height - cardHeadHeight,
+            backgroundColor: 'white',
+            opacity: 0.5,
+            position: 'absolute',
+            top: cardHeadHeight,
+            textAlign: 'center'
+          }}
+        >
+          <LoadingOutlined style={{ fontSize: '50px', lineHeight: `${height - cardHeadHeight}px` }} />
+        </div>
+      )}
     </Card>
   );
 };

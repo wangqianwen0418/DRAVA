@@ -3,10 +3,6 @@ import math
 import numpy as np
 import os
 from pathlib import Path
-import pandas as pd
-import json
-import csv
-
 
 import torch
 from torch import optim, nn
@@ -18,26 +14,9 @@ from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 from torch.optim import SGD, Adam, Adagrad
 import torch.nn.functional as F
 
-from PIL import Image
-
-
 from models.types_ import *
 from utils import data_loader
-
-
-class CustomTensorDataset(Dataset):
-    def __init__(self, data_tensor, labels = None):
-        self.data_tensor = data_tensor
-        self.labels = labels
-
-    def __getitem__(self, index):
-            
-        if torch.is_tensor(self.labels):
-            return self.data_tensor[index], self.labels[index]
-        return self.data_tensor[index], 0
-
-    def __len__(self):
-        return self.data_tensor.size(0)
+from dataloaders import CustomTensorDataset
 
 
 # extend the pytorch lightning module
@@ -216,22 +195,25 @@ class ConceptAdaptor(pl.LightningModule):
         sample_index = self.params['sample_index']
 
         tensor = data['x']
-        mapper = np.vectorize(self.params['y_mapper'])
         labels = data['y'][:, self.params['dim_y']]
-        labels = mapper( labels )
+        if 'y_mapper' in self.params:
+            mapper = np.vectorize(self.params['y_mapper'])
+            labels = mapper( labels )
 
 
 
         # replace certain labels as user feedback
-        gt_mapper = np.vectorize(self.params['gt_mapper'])
-        gt = data['gt'][:, self.params['dim_gt']]
-        gt = gt_mapper( gt )
+        if 'dim_gt' in self.params:
+            gt = data['gt'][:, self.params['dim_gt']]
+        if 'gt_mapper' in self.params:
+            gt_mapper = np.vectorize(self.params['gt_mapper'])
+            gt = gt_mapper( gt )
 
         if self.params['mode'] == 'active':
             labels = gt[sample_index]
             tensor = tensor[sample_index]
             
-        else:
+        elif len(sample_index)>0:
             labels[sample_index] = gt[sample_index]
             # augment
             labels = np.concatenate((labels, np.tile(labels[sample_index],50)), axis=0)
@@ -262,10 +244,13 @@ class ConceptAdaptor(pl.LightningModule):
         data = np.load(root, encoding='bytes')
 
         tensor = torch.from_numpy(data['x'])
-
-        mapper = np.vectorize(self.params['gt_mapper'])
-        labels = data['gt'][:, self.params['dim_gt']]
-        labels = torch.from_numpy( mapper(labels))
+        if 'gt_mapper' in self.params:
+            mapper = np.vectorize(self.params['gt_mapper'])
+        if 'dim_gt' in self.params:
+            labels = data['gt'][:, self.params['dim_gt']]
+            labels = torch.from_numpy( mapper(labels))
+        else:
+            labels = data['y'][:, self.params['dim_y']]
 
 
         val_kwargs = {'data_tensor':tensor, 'labels': labels}
@@ -287,9 +272,13 @@ class ConceptAdaptor(pl.LightningModule):
         data = np.load(root, encoding='bytes')
 
         tensor = torch.from_numpy(data['x'])
-        mapper = np.vectorize(self.params['gt_mapper'])
-        labels = data['gt'][:, self.params['dim_gt']]
-        labels = torch.from_numpy( mapper(labels))
+        if 'gt_mapper' in self.params:
+            mapper = np.vectorize(self.params['gt_mapper'])
+        if 'dim_gt' in self.params:
+            labels = data['gt'][:, self.params['dim_gt']]
+            labels = torch.from_numpy( mapper(labels))
+        else:
+            labels = data['y'][:, self.params['dim_y']]
 
         test_kwargs = {'data_tensor':tensor, 'labels': labels}
         dset = CustomTensorDataset

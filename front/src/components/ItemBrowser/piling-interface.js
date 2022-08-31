@@ -50,9 +50,9 @@ export default async function create(element, pilingOptions) {
     pileItemRotation: 0,
     pileSizeBadge: pile => pile.items.length > 1,
     pileLabelSizeTransform: 'histogram',
-    depileMethod: 'hoveredOne',
-    pileOrderItems: pileState =>
-      pileState.items.sort((a, b) => items[+a - 1]['recons_loss'] || 0 - items[+b - 1]['recons_loss'] || 0)
+    depileMethod: 'hoveredOne'
+    // pileOrderItems: pileState =>
+    //   pileState.items.sort((a, b) => items[+a - 1]['recons_loss'] || 0 - items[+b - 1]['recons_loss'] || 0)
     // pileLabelStackAlign: 'vertical'
     // pileBorderColor: '#000000',
     // pileBorderSize: 1
@@ -123,19 +123,41 @@ export default async function create(element, pilingOptions) {
 
   // a set of functions to be called
   const actions = {
-    postNewGroups: () => {
+    postNewGroups: (dataset, dim, arrangeBy) => {
       if (IS_ONLINE_DEMO) {
         message.warning(
           'Update Concept is not supported in the online demo.\n Please download Drava and run it on your local computer.',
           5 //duration = 5s
         );
+        return Promise.resolve();
+      } else if (arrangeBy !== 'concept') {
+        message.warning(
+          'Please choose the Concept Arrangement',
+          5 //duration = 5s
+        );
+        return Promise.resolve();
+      } else if (!dim.startsWith('dim_')) {
+        message.warning(
+          'Please choose a latent dimension for the x axis',
+          5 //duration = 5s
+        );
+        return Promise.resolve();
+      } else if (Object.values(piling.exportState()['piles']).some(d => d.items.length == 1)) {
+        message.warning(
+          'Please group items before updating concepts',
+          5 //duration = 5s
+        );
+        return Promise.resolve();
       } else {
         const currentPiles = Object.values(piling.exportState()['piles'])
           .filter(d => d.items.length > 0)
           .sort((a, b) => a.x - b.x);
 
-        postNewGroups(currentPiles);
+        return postNewGroups({ dataset, dim, groups: currentPiles }); // dim is a string, 'dim_x'
       }
+    },
+    updateGroups: groups => {
+      piling.setPiles(groups);
     },
     reArrange: dims => {
       const [dimX, dimY] = dims;
@@ -222,7 +244,9 @@ export default async function create(element, pilingOptions) {
       }
     },
     addLabel: label => {
-      if (dataset == 'IDC') {
+      if (!items[0][label]) {
+        message.warning(`data items do not have attribute ${label}`, 5);
+      } else if (dataset == 'IDC') {
         piling.set({
           pileLabel: item => item[label] || '',
           pileLabelText: true,
