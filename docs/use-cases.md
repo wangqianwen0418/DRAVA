@@ -35,16 +35,17 @@
         </a>
     </td>
     <td>
-        <a href='/#/use-cases?id=celebrity-images'>
-            <div style="background-image: url(https://user-images.githubusercontent.com/9922882/187742534-5e1bc225-b6b8-421f-82d7-4942dc130e90.png); width:200px; height:100px; background-size: cover;"  ></div>
+        <a href='/#/use-cases?id=single-cell-masks'>
+            <div style="background-image: url(/assets/single-cell-cover.png); width:200px; height:100px; background-size: cover;"  ></div>
             <br/>
             <span>Single Cell Masks</span>
         </a>
     </td>
     <td>
         <a href = '/#/your-data'>
-              <div style="width:200px; height:100px; background-size: cover;" >
+              <div style="background-image: url(/assets/your-data-cover.png); width:200px; height:100px; background-size: cover;" >
               </div>
+              <br/>
             <span>Try Drava on your dataset</span>
         </a>
     </td>
@@ -125,9 +126,28 @@ We arrange all items using `dim_density` as the 𝑥 axis and `dim_color` as the
 #### Identify Hard Examples for IDC Identification
 Identifying regions in the whole mount slide image (i.e., items in our analysis) with IDC is an important task for pathologists to assign an aggressiveness grade to cancer. Since `dim_dense` and `dim_color` are related to the identification of cancer cells, we further analyzed how they influence the prediction of IDC in a machine learning model. We train a classification model by fine-tuning a ResNet34, as described in ([:link:](https://medium.com/swlh/breast-cancer-classification-with-pytorch-and-deep-learning-52dd62362157)), to predict whether an item contains IDC and record the model prediction and confidence score for each item. 
 
-Confident wrong predictions and false negatives are more consequential in real-world deployment ([:link:](https://ascpt.onlinelibrary.wiley.com/doi/full/10.1111/cts.12478)), as patients may fail to receive the treatment they need. Therefore, we are especially interested in false-negative prediction with high confidence scores. We filter items in the Spatial View accordingly, i.e., ground truth = positive, prediction = negative, confidence score > 0.8, as shown in Figure 4B. According to the Item Browser (Figure 4C), the filtered items are close to each other in the Item Browser, containing tissues that are not very dense and have a more purple hue. Since items with cancer cells usually contain dense tissues, this may explain why the classification model makes a very confident but wrong predictions. We further examine these items in the Spatial View (see Figure Figure 4D), where other items are faded out with a semi-transparent white mask. We find the items of interest (i.e., non-masked items) are from regions where fatty tissues are surrounded by cancer cells, as shown by the orange boxes in Figure 4D. This can explain why these items have many white spaces and only contain a small number of cancer cells.
+Confident wrong predictions and false negatives are more consequential in real-world deployment ([:link:](https://ascpt.onlinelibrary.wiley.com/doi/full/10.1111/cts.12478)), as patients may fail to receive the treatment they need. Therefore, we are especially interested in false-negative prediction with high confidence scores. We filter items in the Spatial View accordingly, i.e., ground truth = positive, prediction = negative, confidence score > 0.8, as shown in Figure 4B. According to the Item Browser (Figure 4C), the filtered items are close to each other in the Item Browser, containing tissues that are not very dense and have a more purple hue. Since items with cancer cells usually contain dense tissues, this may explain why the classification model makes a very confident but wrong predictions. We further examine these items in the Spatial View (see Figure 4D), where other items are faded out with a semi-transparent white mask. We find the items of interest (i.e., non-masked items) are from regions where fatty tissues are surrounded by cancer cells, as shown by the orange boxes in Figure 4D. This can explain why these items have many white spaces and only contain a small number o
 
 This observation is valuable for understanding and improving this IDC diagnosis model. First, it indicates when and where the IDC prediction model tends to make confident false negative predictions and a double-check from human experts is needed. Second, the training strategy can be modified accordingly (e.g., increasing the sample weight of these loose and purple tissues) to improve the model performance.
+
+### Single Cell Masks
+<center><img src="/assets/single-cell-case.png" style='max-width: 800px'/></center>
+
+*Fig. 5. (A) We apply a conventional method and layout all segmented cells in a 2D scatter plot using UMAP. It is hard to interpret the meaning of clusters. (B) We can deduce that the value of dim_10 indicates cell size, the value of dim_3 indicates orientation, and the value of dim_5 indicates position of the nucleus. (C) Segmented cells are organized based on their sizes, which are indicated by their value on dim_10. (D) Small cells (cells on the right side) tend to have less diverse orientations (more concentrated on the vertical direction) compared with large cells (cells on the left size).*
+
+#### Data and Model
+In this use case, we use a Lymph dataset from the [HuBMAP project](https://commonfund.nih.gov/hubmap). The boundaries for cells and their nuclei are identified based on the single cell images. For each segmented cell, we use DRL to learn a latent vector that encodes different visual patterns (e.g., cell size, position of the nucleus) in separated dimensions. The DRL model has three convolution blocks, each with a kernel of size 7, 5, 5, and the output of 64, 256, 512 channels, respectively. The latent vector has 20 dimensions.
+
+#### Data Exploration
+The Concept View provides an overview of the dataset by presenting latent dimensions and other metadata as separated rows. Users can rename a row (e.g., rename dim_10 as cell size), sort rows based on dimension importance, and remove less important rows. The synthesized images are generated by only changing the values of `dim_10`. Therefore, we can deduce that the value of dim_10 indicates cell size, the value of `dim_3` indicates orientation, and the value of `dim_5` indicates position of the nucleus. The histogram represents the item distribution based on their value on the specified dimension. For example, the histogram of `dim_10` indicates there are more small cells in the dataset.
+ 
+The Item Browser enables users to organize items based on certain visual patterns that are selected from the Concept View.
+In Figure 5A , we apply a conventional method and layout all segmented cells in a 2D scatter plot using t-SNE. It is hard to interpret the meaning of clusters. Meanwhile, such a project considers all visual patterns. It is impossible for users to visually explore segmented cells only based on certain visual patterns while leaving others. 
+Figure 5C employs an interactive visual piling technique to organize segmented cells based on their sizes, which are indicated by their values on the latent dimension 10. These cells have been labelled based on their total antigen expression. By labelling these piles, we observe that cells with similar sizes tend to have the same expression label, indicating a correlation between cell sizes and their expression.
+Figure 5D organize segmented cells based on their sizes (x axis, using the values of the latent `dim_10`) and orientation (y axis, using the values of latent `dim_3`). We can observe that small cells (cells on the right side) tend to have less diverse orientations (more concentrated on the vertical direction) compared with large cells (cells on the left size).
+
+
+
 
 ### Datasets Used
 - Breast Cancer: https://www.kaggle.com/paultimothymooney/breast-histopathology-images
