@@ -1,4 +1,6 @@
 # Run Drava in Development Mode
+?> This page illustrates how to run Drava in your local computer in the development mode.
+
 First, download or clone our github repo at https://github.com/wangqianwen0418/DRAVA.
 
 
