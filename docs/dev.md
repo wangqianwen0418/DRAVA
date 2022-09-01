@@ -1,5 +1,6 @@
 # Run Drava in Development Mode
-First, download or clone our github repo at https://github.com/wangqianwen0418/DRAVA.
+First, download or clone our github repo at `[hidden for the anonymous review process]`.  
+A anonymous version of the source code is available at https://anonymous.4open.science/r/DRAVA/
 
 
 ## Backend
