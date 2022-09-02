@@ -1,6 +1,6 @@
 # DRAVA: Utilizing <ins>D</ins>isentangled <ins>R</ins>epresentation Learning as <ins>A</ins> <ins>V</ins>isual <ins>A</ins>nalytics Method for Pattern-based Data Exploration
 
-Detailed instructions on installing and using Drava are available at the [documentation webpage](https://anonymous.dcfg7f17k3km1.amplifyapp.com/).
+Detailed instructions on installing and using Drava are available at the [anonymized documentation webpage](https://anonymous.dcfg7f17k3km1.amplifyapp.com/).
 
 
 ### Backend
