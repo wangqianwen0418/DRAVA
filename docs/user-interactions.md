@@ -1,4 +1,5 @@
 # Interact with Drava
+?> This page introduces the user interactions supported by Drava.
 
 <img src='../assets/interface.png' width='850px' >
 
