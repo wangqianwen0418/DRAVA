@@ -16,12 +16,14 @@ type Props = {
   dimUserNames: { [k: string]: string };
   dimNames: string[];
   height: number;
+  changeUpadtingStatus: (f: boolean) => void;
 };
 const Pilling = (props: Props) => {
-  const { samples, dimNames, dimUserNames, dataset } = props;
+  const { samples, dimNames, dimUserNames, dataset, changeUpadtingStatus } = props;
   const items = samples.map(s => {
     const url = `${getItemURL(dataset, s.id)}&border=1`;
-    return { ...s, src: url }; // y = 0 in case dimYNum = null
+    // force item id to be undefined, so that piling will use item index as id
+    return { ...s, src: url, id: undefined }; // y = 0 in case dimYNum = null
   });
   const [thisPiling, changePiling] = useState<any>('');
 
@@ -105,6 +107,18 @@ const Pilling = (props: Props) => {
       }
     };
 
+    const postNewGroups = () => {
+      const dimX = (document.getElementById('xSelector') as any).value;
+      const group = (document.getElementById('groupSelector') as any).value;
+      changeUpadtingStatus(true);
+      actions.postNewGroups(dataset, dimX, group).then(res => {
+        if (res) {
+          actions.updateGroups(res?.data);
+        }
+        changeUpadtingStatus(false);
+      });
+    };
+
     document.querySelector('#ySelector')?.addEventListener('change', reArrangeY);
     document.querySelector('#xSelector')?.addEventListener('change', reArrangeX);
     document.querySelector('#summarySelector')?.addEventListener('change', changeSummary);
@@ -116,7 +130,7 @@ const Pilling = (props: Props) => {
     document.getElementById('gridBtn')?.addEventListener('click', grid2D);
     document.getElementById('splitBtn')?.addEventListener('click', splitAll);
     document.getElementById('itemSize')?.addEventListener('change', changeSize);
-    document.getElementById('updateConcept')?.addEventListener('click', actions.postNewGroups);
+    document.getElementById('updateConcept')?.addEventListener('click', postNewGroups);
 
     return () => {
       piling.destroy();
@@ -131,7 +145,7 @@ const Pilling = (props: Props) => {
       document.getElementById('gridBtn')?.removeEventListener('click', grid2D);
       document.getElementById('splitBtn')?.removeEventListener('click', splitAll);
       document.getElementById('itemSize')?.removeEventListener('change', changeSize);
-      document.getElementById('updateConcept')?.removeEventListener('click', actions.postNewGroups);
+      document.getElementById('updateConcept')?.removeEventListener('click', postNewGroups);
     };
   }, []);
 
@@ -140,7 +154,7 @@ const Pilling = (props: Props) => {
       thisPiling.set({
         items: props.samples.map(s => {
           const url = `${getItemURL(dataset, s.id)}&border=1`;
-          return { ...s, src: url }; // y = 0 in case dimYNum = null
+          return { ...s, src: url, id: undefined }; // y = 0 in case dimYNum = null
         })
       });
     }
