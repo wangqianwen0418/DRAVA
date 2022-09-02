@@ -33,7 +33,8 @@
     "deploy": "set NODE_ENV=production && react-scripts build && rm -r ../server/flask_server/build && mv ./build ../server/flask_server/",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "eslint src/**/*.ts src/**/*.tsx --fix && prettier src/**/*.ts src/**/*.tsx src/**/*.css --write"
+    "lint": "eslint src/**/*.ts src/**/*.tsx --fix && prettier src/**/*.ts src/**/*.tsx src/**/*.css --write",
+    "doc-start": "docsify serve ../docs"
   },
   "eslintConfig": {
     "extends": [
