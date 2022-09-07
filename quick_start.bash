@@ -13,8 +13,7 @@ if [ ! -d "data/" ]
 then 
     echo "please download the data folder from 'https://drive.google.com/drive/folders/16kbJq_46-4Busrz_87vGFyKAsy15oIU3?usp=sharing', unzip it in the root folder, and rename it as data/"
 else 
-    cd server
     # generate quick_start.zip
-    zip -r ../drava_flask.zip requirements.txt dataloaders.py experiment.py utils.py flask_server/* models/__init__.py models/base.py models/beta*.py ../data/* -x "*.DS_Store" -x "__pycache__/*"
+    zip -r drava_flask.zip server/requirements.txt server/dataloaders.py server/experiment.py server/utils.py server/flask_server/* server/models/__init__.py server/models/base.py server/models/beta*.py server/models/types_.py server/ConceptAdaptor.py data/* -x *.DS_Store */__pycache__/* @
 fi
 
