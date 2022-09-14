@@ -1,8 +1,10 @@
 #%%
 from ConceptAdaptor import *
 from pytorch_lightning import Trainer
+from pytorch_lightning.callbacks import EarlyStopping
 from sklearn.metrics import accuracy_score
 import math
+import shutil
 
 # 'dsprites latents_names': (b'color', b'shape', b'scale', b'orientation', b'posX', b'posY')
 DIM_NAME = 'scale'
@@ -98,7 +100,7 @@ def initial_acc():
 
 #%%
 #  model training
-def fine_tune(sample='m'):
+def fine_tune(sample='m', mode='concept_tune'):
     raw = np.load('./data/dsprites_test_concepts.npz')
     std = raw['std'][:, dim_y]
     y_true = raw['gt'][:, dim_gt]
@@ -107,8 +109,11 @@ def fine_tune(sample='m'):
     y_pred = raw['y'][:, dim_y]
     y_pred_norm = np.vectorize(y_mapper)(y_pred)
 
-    n_feedback = 20
-    sample_index = np.argsort(std)[::-1][:n_feedback]
+    # n_feedback = int(0.01 * len(raw['gt']))
+    # n_feedback = int(0.02 * len(raw['gt']))
+    n_feedback = int(0.05 * len(raw['gt']))
+    n_first = int(0.05 * len(raw['gt']))
+    sample_index = np.argsort(std)[::-1][:n_first]
     for i in range(15):
         
         
@@ -121,44 +126,41 @@ def fine_tune(sample='m'):
                 'dim_gt': dim_gt,
                 'y_mapper': y_mapper,
                 'gt_mapper': gt_mapper,
-                'sample_index':sample_index,
-                'mode': 'active'
+                'sample_index': np.array([]) if mode=='concept_tune' and i==0 else sample_index,
+                # 'mode': 'active'
                 # 'mode': 'concept_tune'
+                'mode': mode
             }
+
 
         model = ConceptAdaptor(cat_num=3, input_size=[32, 4, 4], params=model_config)
 
-        
-
-        trainer = Trainer(gpus=0, max_epochs = 20 * (i+1), 
-            early_stop_callback = False, 
-            logger=False, # disable logs
-            checkpoint_callback=False,
+        trainer = Trainer(gpus=0, max_epochs = 100, 
+            early_stop_callback = EarlyStopping(monitor="val_loss", mode="min", patience=5, verbose=False), 
+            logger=True,
+            # the default checkpoint callback will restore the model from the last checkpoint
             show_progress_bar=False,
             weights_summary=None
-            # reload_dataloaders_every_epoch=True # enable data loader switch between epoches
             )
         trainer.fit(model)
         trainer.test(model)
 
         # based on probability score
         if sample == 'uncertain':
-            sample_index = model.get_uncertain_index(n_feedback*(i+1))
+            sample_index = model.get_uncertain_index(n_feedback*i+n_first)
         #  based on std
         elif sample == 'std':
-            sample_index = np.argsort(std)[::-1][:n_feedback*(i+1)]
+            sample_index = np.argsort(std)[::-1][:n_feedback*i+n_first]
         # based on mean value
         elif sample == 'm':
-            if model_config['mode']=='active':
-                sample_index_a = np.argsort( np.abs(y_pred - 0.4) )[:int(n_feedback*(i+1)/2)]
-                sample_index_b = np.argsort( np.abs(y_pred - (-0.9)) )[:int(n_feedback*(i+1)/2)]
-            else:
-                sample_index_a = [ i for i in np.argsort( np.abs(y_pred - 0.4) ) if y_pred_norm[i]!=y_true_norm[i]][:int(n_feedback*(i+1)/2)]
-                sample_index_b = [i for i  in np.argsort( np.abs(y_pred - (-0.9)) ) if y_pred_norm[i]!=y_true_norm[i]][:int(n_feedback*(i+1)/2)]
+            sample_index_a = [ i for i in np.argsort( np.abs(y_pred - 0.4) ) if y_pred_norm[i]!=y_true_norm[i]][:int((n_feedback*i+n_first)/2)]
+            sample_index_b = [i for i  in np.argsort( np.abs(y_pred - (-0.9)) ) if y_pred_norm[i]!=y_true_norm[i]][:int((n_feedback*i+n_first)/2)]
             sample_index = np.concatenate((sample_index_a, sample_index_b))
         # print(sample_index)
 
 #%%
 if __name__=="__main__":
-    fine_tune(sample='m')
+    if os.path.exists('lightning_logs/'):
+        shutil.rmtree('lightning_logs/', ignore_errors=True)
+    fine_tune(sample='m', mode='concept_tune')
 # %%
