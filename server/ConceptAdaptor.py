@@ -1,17 +1,12 @@
-from cProfile import label
 import math
 import numpy as np
 import os
-from pathlib import Path
 
 import torch
-from torch import optim, nn
+from torch import nn
 import pytorch_lightning as pl
-from torchvision import transforms
-import torchvision.utils as vutils
-from torchvision.datasets import CelebA
-from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
-from torch.optim import SGD, Adam, Adagrad
+from torch.utils.data import DataLoader
+from torch.optim import Adam
 import torch.nn.functional as F
 
 from models.types_ import *
@@ -201,8 +196,6 @@ class ConceptAdaptor(pl.LightningModule):
             labels = mapper( labels )
 
 
-
-        # replace certain labels as user feedback
         if 'dim_gt' in self.params:
             gt = data['gt'][:, self.params['dim_gt']]
         if 'gt_mapper' in self.params:
@@ -216,8 +209,8 @@ class ConceptAdaptor(pl.LightningModule):
         elif len(sample_index)>0:
             labels[sample_index] = gt[sample_index]
             # augment
-            labels = np.concatenate((labels, np.tile(labels[sample_index],50)), axis=0)
-            tensor = np.concatenate((tensor, np.tile(tensor[sample_index], (50,1,1,1)) ), axis=0)
+            labels = np.concatenate((labels, np.tile(labels[sample_index],10)), axis=0)
+            tensor = np.concatenate((tensor, np.tile(tensor[sample_index], (10,1,1,1)) ), axis=0)
 
 
         labels = torch.from_numpy(labels)

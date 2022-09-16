@@ -2,7 +2,8 @@
 from ConceptAdaptor import *
 from pytorch_lightning import Trainer
 from sklearn.metrics import accuracy_score
-import math
+from pytorch_lightning.callbacks import EarlyStopping
+import shutil
 
 classes = ['5_o_Clock_Shadow',
  'Arched_Eyebrows',
@@ -46,7 +47,8 @@ classes = ['5_o_Clock_Shadow',
  'Young']
 #%%
 
-dim = 'bangs'
+# dim = 'bangs'
+dim = 'smiling'
 # 
 
 if dim == 'smiling':
@@ -106,7 +108,7 @@ def initial_acc():
 
 #%%
 #  model training
-def fine_tune(sample):
+def fine_tune(sample, mode='concept_tune'):
     raw = np.load('./data/celeba_concepts.npz')
     y_true = raw['gt'][:, dim_gt]
     y_true_norm = np.vectorize(gt_mapper)(y_true)
@@ -114,8 +116,13 @@ def fine_tune(sample):
     y_pred = raw['y'][:, dim_y]
     y_pred_norm = np.vectorize(y_mapper)(y_pred)
     std = raw['std'][:, dim_y]
-    n_feedback = 40
-    sample_index = np.argsort(std)[::-1][:n_feedback]
+
+    # n_feedback = int(0.01 * len(raw['gt']))
+    n_feedback = int(0.02 * len(raw['gt']))
+    # n_feedback = int(0.05 * len(raw['gt']))
+
+    n_first = int(0.05 * len(raw['gt']))
+    sample_index = np.argsort(std)[::-1][:n_first]
     for i in range(15):
         
         model_config = {
@@ -127,22 +134,21 @@ def fine_tune(sample):
                 'dim_gt': dim_gt,
                 'y_mapper': y_mapper,
                 'gt_mapper': gt_mapper,
-                'sample_index':sample_index,
+                'sample_index': np.array([]) if mode=='concept_tune' and i==0 else sample_index,
                 # 'mode': 'active'
-                'mode': 'concept_tune'
+                'mode': mode
             }
 
         model = ConceptAdaptor(cat_num=3, input_size=[512, 2, 2], params=model_config)
 
         # 'dsprites latents_names': (b'color', b'shape', b'scale', b'orientation', b'posX', b'posY')
 
-        trainer = Trainer(gpus=0, max_epochs = 30 * (i+1), 
-            early_stop_callback = False, 
-            logger=False, # disable logs
-            checkpoint_callback=False,
+        trainer = Trainer(gpus=0, max_epochs = 100, 
+            early_stop_callback = EarlyStopping(monitor="val_loss", mode="min", patience=5, verbose=False), 
+            logger=True,
+            # the default checkpoint callback will restore the model from the last checkpoint
             show_progress_bar=False,
             weights_summary=None
-            # reload_dataloaders_every_epoch=True # enable data loader switch between epoches
             )
         trainer.fit(model)
         trainer.test(model)
@@ -160,5 +166,7 @@ def fine_tune(sample):
 
 
 if __name__=="__main__":
-    fine_tune(sample = 'm')
+    if os.path.exists('lightning_logs/'):
+        shutil.rmtree('lightning_logs/', ignore_errors=True)
+    fine_tune(sample = 'uncertain', mode='active')
 # %%

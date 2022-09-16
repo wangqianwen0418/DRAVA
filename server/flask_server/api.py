@@ -96,8 +96,8 @@ default_z = {
     'celeba': [0.35241496562957764, -1.446256399154663, 0.6035149097442627, -1.4706382751464844, -0.6200129389762878, -0.44358429312705994, -1.6820268630981445, 1.6138064861297607, -1.7537750005722046, -1.098387360572815, 0.27564120292663574, 2.4112865924835205, -0.7761713266372681, 0.500797688961029, 1.3642232418060303, 1.607535719871521, -0.0050630271434783936, 0.21523889899253845, -0.5679569244384766, -0.4611191749572754]
 }
 
-sequence_data = np.load(
-    safe_join('../data/', 'HFFc6_ATAC_chr7.npz'), encoding='bytes')['imgs']
+# sequence_data = np.load(
+#     safe_join('../data/', 'HFFc6_ATAC_chr7.npz'), encoding='bytes')['imgs']
 dsprites_data = np.load(
     safe_join('../data/', 'dsprites_test.npz'), encoding='bytes')['imgs']
 sc2_data = zarr.open(f'../data/codex/HBM622.JXWQ.554/cell_patches_2cluster.zarr', mode='r')
@@ -113,13 +113,14 @@ def test():
 @api.route('/get_item_sample', methods=['GET'])
 def get_item_sample():
     '''
-    e.g., base_url/api/get_matrix_sample?id=xx&dataset=xxx
+    e.g., base_url/api/get_item_sample?id=xx&dataset=xxx
     '''
     # id = request.args.get('id', type=str)
     # dataset = request.args.get('dataset', type=str)
 
     params = request.args.to_dict()
     dataset = params['dataset']
+    id = params['id']
 
     try:
         # call function name based on variable
@@ -338,20 +339,20 @@ def get_IDC_sample(**kwargs):
     return send_file(f'../data/IDC_regular_ps50_idx5/{id}')
 
 
-def get_sequence_sample(**kwargs):
-    id = kwargs['id']
-    img = sequence_data[int(id)]*255
-    # add a border
-    img[0, :] = 50
-    img[62, :] = 50
-    img[:, 0] = 50
-    img[:, 62] = 50
-    pil_img = Image.fromarray(img.astype(np.uint8))
+# def get_sequence_sample(**kwargs):
+#     id = kwargs['id']
+#     img = sequence_data[int(id)]*255
+#     # add a border
+#     img[0, :] = 50
+#     img[62, :] = 50
+#     img[:, 0] = 50
+#     img[:, 62] = 50
+#     pil_img = Image.fromarray(img.astype(np.uint8))
 
-    img_io = BytesIO()
-    pil_img.save(img_io, 'PNG', quality=70)
-    img_io.seek(0)
-    return send_file(img_io, mimetype='image/png')
+#     img_io = BytesIO()
+#     pil_img.save(img_io, 'PNG', quality=70)
+#     img_io.seek(0)
+#     return send_file(img_io, mimetype='image/png')
 
 
 def get_dsprites_sample(**kwargs):
