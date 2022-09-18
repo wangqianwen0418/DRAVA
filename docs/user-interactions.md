@@ -10,7 +10,7 @@ You can **remove a dimension** by clicking on the cross icon, **rename a dimensi
 
 
 <details>
-  <summary>Click to View a Demo :eyes: </summary>
+  <summary> :eyes: <b>Click to View a Demo</b> </summary>
   <div> 
 
 [context_demo](../assets/context_demo.mp4 ':include :type=iframe width=600px height=300px')
@@ -22,7 +22,7 @@ For each dimension, the histogram bars are clickable, performing as a toggle but
 Items in the *Spatial View* and the *Item Browser* will be updated accordingly. 
 
 <details>
-  <summary>Click to View a Demo :eyes: </summary>
+  <summary> :eyes: <b>Click to View a Demo</b> </summary>
   <div> 
 
 [context_demo](../assets/filter_demo.mp4 ':include :type=iframe width=600px height=500px')
@@ -37,7 +37,7 @@ All items will be arranged based on their spatial relationships.
 Users can **zoom** and **pan** to obtain an overview or inspect details.
 
 <details>
-  <summary>Click to View a Demo :eyes: </summary>
+  <summary> :eyes: <b>Click to View a Demo</b> </summary>
   <div> 
 
 [context_demo](../assets/spatial_demo.mp4 ':include :type=iframe width=600px height=350px')
@@ -50,7 +50,7 @@ Users can **zoom** and **pan** to obtain an overview or inspect details.
 The *Item Browser* provide a *Config Panel* that allows users to easily change the **Arrange**, **Groupping**, **Sizes**, **Labels**, and **Summary** of items.
 
 <details>
-  <summary>Click to View a Demo :eyes: </summary>
+  <summary> :eyes: <b>Click to View a Demo</b> </summary>
   <div> 
 
 [context_demo](../assets/config_demo.mp4 ':include :type=iframe width=600px height=500px')
@@ -62,7 +62,7 @@ The *Item Browser* provide a *Config Panel* that allows users to easily change t
 Click on an item group. Mouse over an item preview to browse it in place.
 
 <details>
-  <summary>Click to View a Demo :eyes: </summary>
+  <summary> :eyes: <b>Click to View a Demo</b> </summary>
   <div> 
 
 [context_demo](../assets/inplace_demo.mp4 ':include :type=iframe width=600px height=500px')
@@ -80,7 +80,7 @@ Then, in the new layer, use a freeform lasso to select the subgroup for splittin
 Finally, right click on the subgroup and select "Extract This Pile" in the Context Menu.
 
 <details>
-  <summary>Click to View a Demo :eyes: </summary>
+  <summary> :eyes: <b>Click to View a Demo</b> </summary>
   <div> 
 
 [context_demo](../assets/split_demo.mp4 ':include :type=iframe width=600px height=500px')
@@ -103,7 +103,7 @@ First, activate the in-place browse for the item you want to extract.
 Then, right click to show the *context menu* and select "Extract This Item".
 
 <details>
-  <summary>Click to View a Demo :eyes: </summary>
+  <summary> :eyes: <b>Click to View a Demo</b> </summary>
   <div> 
 
 [context_demo](../assets/extract_demo.mp4 ':include :type=iframe width=600px height=500px')
