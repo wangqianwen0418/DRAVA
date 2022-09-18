@@ -3,6 +3,7 @@ server/data/**
 data/**
 !server/data/*.py
 *.zip
+drava_flask/
 
 !server/data/tad_data_generator/
 server/data/tad_data_generator/*

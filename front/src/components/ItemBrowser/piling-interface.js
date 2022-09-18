@@ -164,9 +164,9 @@ export default async function create(element, pilingOptions) {
 
       if (dimY == 'std') {
         const dimNum = parseInt(dimX.split('_')[1]);
-        piling.arrangeBy('data', [item => item[dimX], item => -1 * item['std'][dimNum]]);
+        piling.arrangeBy('data', [item => item[dimX], item => -1 * item['std'].split(',')[dimNum]]);
       } else {
-        piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
+        piling.arrangeBy('data', [item => item[dimX], item => -1 * item[dimY]]);
       }
     },
     stackX: dim => {
