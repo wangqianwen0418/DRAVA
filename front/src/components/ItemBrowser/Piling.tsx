@@ -61,12 +61,6 @@ const Pilling = (props: Props) => {
       actions.stackX(dimX);
     };
 
-    const splitAll = () => {
-      const dimX = (document.getElementById('xSelector') as any).value;
-      const dimY = (document.getElementById('ySelector') as any).value;
-      actions.splitAll([dimX, dimY]);
-    };
-
     const gridGroup = () => {
       const dimX = (document.getElementById('xSelector') as any).value;
       const dimY = (document.getElementById('ySelector') as any).value;
@@ -128,7 +122,7 @@ const Pilling = (props: Props) => {
     document.getElementById('XGroupBtn')?.addEventListener('click', stackX);
     document.getElementById('groupBtn')?.addEventListener('click', gridGroup);
     document.getElementById('gridBtn')?.addEventListener('click', grid2D);
-    document.getElementById('splitBtn')?.addEventListener('click', splitAll);
+    document.getElementById('splitBtn')?.addEventListener('click', actions.splitAll);
     document.getElementById('itemSize')?.addEventListener('change', changeSize);
     document.getElementById('updateConcept')?.addEventListener('click', postNewGroups);
 
@@ -143,7 +137,7 @@ const Pilling = (props: Props) => {
       document.getElementById('XGroupBtn')?.removeEventListener('click', stackX);
       document.getElementById('groupBtn')?.removeEventListener('click', gridGroup);
       document.getElementById('gridBtn')?.removeEventListener('click', grid2D);
-      document.getElementById('splitBtn')?.removeEventListener('click', splitAll);
+      document.getElementById('splitBtn')?.removeEventListener('click', actions.splitAll);
       document.getElementById('itemSize')?.removeEventListener('change', changeSize);
       document.getElementById('updateConcept')?.removeEventListener('click', postNewGroups);
     };

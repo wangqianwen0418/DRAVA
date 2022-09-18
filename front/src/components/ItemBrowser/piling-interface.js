@@ -187,9 +187,8 @@ export default async function create(element, pilingOptions) {
       });
       // piling.groupBy('category', [item => item['assignments'][dims[0]], item => -1 * item['assignments'][dims[1]]]);
     },
-    splitAll: dims => {
-      piling.splitAll();
-      // piling.arrangeBy('data', [item => item[dims[0]], item => -1 * item[dims[1]]]);
+    splitAll: () => {
+      piling.splitBy('category', 'index');
     },
     UMAP: () => {
       if (dataset == 'dsprites') {
