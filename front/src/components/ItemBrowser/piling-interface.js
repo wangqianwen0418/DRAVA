@@ -243,11 +243,15 @@ export default async function create(element, pilingOptions) {
       }
     },
     addLabel: label => {
-      if (!items[0][label]) {
+      if (label == 'none') {
+        piling.set({
+          pileLabel: _ => ''
+        });
+      } else if (!items[0][label]) {
         message.warning(`data items do not have attribute ${label}`, 5);
       } else if (dataset == 'IDC') {
         piling.set({
-          pileLabel: item => item[label] || '',
+          pileLabel: item => item[label],
           pileLabelText: true,
           pileLabelColor: ['#3295a8', '#e0722b'],
           pileLabelFontSize: 10,
@@ -256,7 +260,7 @@ export default async function create(element, pilingOptions) {
         });
       } else {
         piling.set({
-          pileLabel: item => item[label] || '',
+          pileLabel: item => item[label],
           pileLabelText: true,
           pileLabelFontSize: 14,
           pileLabelHeight: 10,
