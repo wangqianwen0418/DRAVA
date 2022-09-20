@@ -205,9 +205,9 @@ const ItemBrowser = (props: Props) => {
         <br />
         <label>y</label>
         {dimYSelector}
-        <Button type="default" id="gridBtn" size="small">
+        {/* <Button type="default" id="gridBtn" size="small">
           Arrange in 2D Grid
-        </Button>
+        </Button> */}
         {/* --------Group------------- */}
         <hr className={styles.configHr} />
         <h5>Group</h5>

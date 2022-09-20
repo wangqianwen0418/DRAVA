@@ -153,7 +153,14 @@ export default async function create(element, pilingOptions) {
           .filter(d => d.items.length > 0)
           .sort((a, b) => a.x - b.x);
 
-        return postNewGroups({ dataset, dim, groups: currentPiles }); // dim is a string, 'dim_x'
+        const allItems = piling.exportState()['items'];
+        // convert item id to item index
+        const groups = currentPiles.map(d => ({
+          ...d,
+          items: d['items'].map(id => allItems[id]['index'])
+        }));
+
+        return postNewGroups({ dataset, dim, groups }); // dim is a string, 'dim_x'
       }
     },
     updateGroups: groups => {
@@ -173,22 +180,34 @@ export default async function create(element, pilingOptions) {
       piling.groupBy('category', item => item['assignments'][dim] || 0);
     },
     gridGroup: dims => {
-      // piling.groupBy('category', [
-      //   item => Math.floor(item['assignments'][dims[0]] / 2),
-      //   item => -1 * Math.floor(item['assignments'][dims[1]] / 2)
-      // ]);
-      piling.groupBy('category', [item => item['assignments'][dims[0]], item => -1 * item['assignments'][dims[1]]]);
-      // piling.groupBy('grid');
-      // piling.arrangeBy('data', [item => item['assignments'][dims[0]], item => -1 * item['assignments'][dims[1]]]);
-      // piling.groupBy('grid', { columns: 21, cellAspectRatio: 1 });
-      piling.set({
-        pileItemRotation: 0,
-        pileItemOffset: [0, 0]
-      });
-      // piling.groupBy('category', [item => item['assignments'][dims[0]], item => -1 * item['assignments'][dims[1]]]);
+      const [dimX, dimY] = dims;
+
+      if (dimY == 'std') {
+        const dimNum = parseInt(dimX.split('_')[1]);
+        piling
+          .arrangeBy('data', [item => item['assignments'][dimX], item => -1 * item['std'].split(',')[dimNum]])
+          .then(() => piling.groupBy('grid'));
+      } else {
+        piling
+          .arrangeBy('data', [item => item['assignments'][dimX], item => -1 * item['assignments'][dimY]])
+          .then(() =>
+            piling.groupBy('category', [item => item['assignments'][dimX], item => -1 * item['assignments'][dimY]])
+          );
+      }
     },
-    splitAll: () => {
-      piling.splitBy('category', 'index');
+    splitAll: dims => {
+      const [dimX, dimY] = dims;
+
+      if (dimY == 'std') {
+        const dimNum = parseInt(dimX.split('_')[1]);
+        piling.splitBy('category', 'id').then(() => {
+          return piling.arrangeBy('data', [item => item[dimX], item => -1 * item['std'].split(',')[dimNum]]);
+        });
+      } else {
+        piling.splitBy('category', 'id').then(() => {
+          piling.arrangeBy('data', [item => item[dimX], item => -1 * item[dimY]]);
+        });
+      }
     },
     UMAP: () => {
       if (dataset == 'dsprites') {
@@ -200,9 +219,9 @@ export default async function create(element, pilingOptions) {
     grid: dim => {
       piling.arrangeBy('data', dim);
     },
-    grid2D: dims => {
-      piling.arrangeBy('data', [item => item['assignments'][dims[0]], item => -1 * item['assignments'][dims[1]]]);
-    },
+    // grid2D: dims => {
+    //   piling.arrangeBy('data', [item => item['assignments'][dims[0]], item => -1 * item['assignments'][dims[1]]]);
+    // },
     changeSize: size => {
       piling.set({
         itemSize: size,

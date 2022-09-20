@@ -446,6 +446,6 @@ def get_IDC_results():
 
     df = df.drop(columns=['id'])
     df = df.rename(columns={'acc': 'prediction', 'img_path': 'id'})
-    df['prediction'] = df['prediction'].apply(lambda x: 'pos' if x else 'neg')
+    df['prediction'] = df['prediction'].apply(lambda x: 'right' if x else 'wrong')
     df['label'] = df['label'].apply(lambda x: 'pos' if x==1 else 'neg')
     return return_results( df )
