@@ -2,8 +2,9 @@
 
 <!-- TODO: add a gif here -->
 
-> **Note**   
-> An online demo of Drava is available at https://bit.ly/anonymous-drava
+> **Online Demo Available**   
+> An online demo of Drava is available at https://bit.ly/anonymous-drava  
+> It is recommended to open the Demo using the Chrome web browser. 
  
 **DRAVA** is an tool that utilizes <ins>**D**</ins>isentangled <ins>**R**</ins>epresentation Learning as <ins>**A**</ins> <ins>**V**</ins>isual <ins>**A**</ins>nalytics Method for Pattern-based Data Exploration of small multiples.
 While latent vectors extracted by machine learning models are widely used to organize and explore data (e.g., layout data items based on their latent vectors in a 2D space using t-SNE), they usually suffer from a lack of interpretability. 
