@@ -25,14 +25,14 @@ def is_small(z):
 def is_large(z):
     return int(z.str.split(',')[dims['size']]) > 1
 # %%
-small_cells = new_cells[new_cells[dims['size']].astype(float) < -2]
-large_cells = new_cells[new_cells[dims['size']].astype(float) > 1.2]
+large_cells = new_cells[new_cells[dims['size']].astype(float) < -2]
+small_cells = new_cells[new_cells[dims['size']].astype(float) > 1.2]
 
 fig, ax = plt.subplots()
-x = [small_cells['y'].to_list(), large_cells['y'].to_list()]
-y = [small_cells['x'].to_list(), large_cells['x'].to_list()]
+x = [large_cells['y'].to_list(), small_cells['y'].to_list()]
+y = [large_cells['x'].to_list(), small_cells['x'].to_list()]
 color = ['pink', 'steelblue']
-labels = ['S', 'L']
+labels = ['L', 'S']
 for i, c in enumerate(color):
     ax.scatter(x[i], [-1*y for y in y[i]], c=color[i], s=10, label=labels[i],
                alpha=0.7, edgecolors='none')
@@ -56,4 +56,10 @@ ax.legend()
 plt.show()
 plt.close()
 
+# %%
+a = new_cells[[dims['size'], dims['orientation']]]
+b = a.dropna(how='any')
+plt.hist2d(b[dims['size']].astype(float), b[dims['orientation']].astype(float), bins=100)
+plt.show()
+plt.close()
 # %%
