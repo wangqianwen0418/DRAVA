@@ -66,7 +66,7 @@ for i,c in enumerate(selected_channels):
     clip_grids = np.clip(cell_grids[:, i, :, :], v_min, v_max)
     norm_cell_grids[:, i, :, :] = (clip_grids- v_min) / (v_max - v_min)
 
-zarr.save(f'{foldername}/cell_grids_level{zoom_level}_s{shift_step}.zarr', norm_cell_grids)
+zarr.save(f'{foldername}/cell_grids_level{zoom_level}_step{shift_step}.zarr', norm_cell_grids)
 
 #%% for each item, save them cell boundaries
 tif_mask = imread(f'{foldername}/reg1_stitched_mask.ome.tif', level=zoom_level)
@@ -81,16 +81,16 @@ for shift in range(0, min(w, h), shift_step):
     cell_boundries_grids_shift = split_2d(cell_boundries_shift, (grid_h-1, grid_w-1))
     cell_boundries_grids = np.concatenate( (cell_boundries_grids, cell_boundries_grids_shift), axis=0)
 
-zarr.save(f'{foldername}/cell_masks_level{zoom_level}_s{shift_step}.zarr', cell_boundries_grids)
+zarr.save(f'{foldername}/cell_masks_level{zoom_level}_step{shift_step}.zarr', cell_boundries_grids)
 # %%
 # visualize
 
 
 def visualize(item_id: int):
-    z = zarr.open(f'{foldername}/cell_grids_level{zoom_level}_s{shift_step}.zarr', mode='r')
+    z = zarr.open(f'{foldername}/cell_grids_level{zoom_level}_step{shift_step}.zarr', mode='r')
     a = z[item_id]
 
-    masks = zarr.open(f'{foldername}/cell_masks_level{zoom_level}_s{shift_step}.zarr', mode='r')
+    masks = zarr.open(f'{foldername}/cell_masks_level{zoom_level}_step{shift_step}.zarr', mode='r')
     mask = masks[item_id]
 
     plt.figure(figsize=(10, 10))
