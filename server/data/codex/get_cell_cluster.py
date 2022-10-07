@@ -18,7 +18,7 @@ from PIL import Image
 # %%
 foldername = 'HBM622.JXWQ.554'
 selected_channels = {'CD15': [55,27851], 'CD31':[45,2186], 'ECAD': [59,12306]} # channel names and the data domains
-down_sampling = 2
+zoom_level = 1 # 0 indicates the most detailed view
 w = h = 64
 shift_step = 20
 
@@ -34,10 +34,7 @@ def split_2d(array, splits):
 # numpy array, shape (29, 7491, 12664)
 # 29 indicates 29 antigens
 # must use level=0 to indicate the finest level
-tif = imread(f'{foldername}/reg1_stitched_expressions.ome.tif', level=0)
-
-# down sampling
-tif = tif[:, ::down_sampling, ::down_sampling]
+tif = imread(f'{foldername}/reg1_stitched_expressions.ome.tif', level=zoom_level)
 
 # get channel names
 tags = TiffFile(f'{foldername}/reg1_stitched_expressions.ome.tif').pages[0].tags
@@ -69,13 +66,12 @@ for i,c in enumerate(selected_channels):
     clip_grids = np.clip(cell_grids[:, i, :, :], v_min, v_max)
     norm_cell_grids[:, i, :, :] = (clip_grids- v_min) / (v_max - v_min)
 
-zarr.save(f'{foldername}/cell_grids_d{down_sampling}_s{shift_step}.zarr', norm_cell_grids)
+zarr.save(f'{foldername}/cell_grids_level{zoom_level}_s{shift_step}.zarr', norm_cell_grids)
 
 #%% for each item, save them cell boundaries
-tif_mask = imread(f'{foldername}/reg1_stitched_mask.ome.tif')
+tif_mask = imread(f'{foldername}/reg1_stitched_mask.ome.tif', level=zoom_level)
 # 4 indicates cell mask, nuclei masks, cell boundaries, and nucleus boundaries
 cell_boundries = tif_mask[2:3]
-cell_boundries = cell_boundries[:, ::down_sampling, ::down_sampling]
 
 cell_boundries = cell_boundries[:, :grid_h*h, :grid_w*w]
 
@@ -85,16 +81,16 @@ for shift in range(0, min(w, h), shift_step):
     cell_boundries_grids_shift = split_2d(cell_boundries_shift, (grid_h-1, grid_w-1))
     cell_boundries_grids = np.concatenate( (cell_boundries_grids, cell_boundries_grids_shift), axis=0)
 
-zarr.save(f'{foldername}/cell_masks_d{down_sampling}_s{shift_step}.zarr', cell_boundries_grids)
+zarr.save(f'{foldername}/cell_masks_level{zoom_level}_s{shift_step}.zarr', cell_boundries_grids)
 # %%
 # visualize
 
 
 def visualize(item_id: int):
-    z = zarr.open(f'{foldername}/cell_grids_d{down_sampling}_s{shift_step}.zarr', mode='r')
+    z = zarr.open(f'{foldername}/cell_grids_level{zoom_level}_s{shift_step}.zarr', mode='r')
     a = z[item_id]
 
-    masks = zarr.open(f'{foldername}/cell_masks_d{down_sampling}_s{shift_step}.zarr', mode='r')
+    masks = zarr.open(f'{foldername}/cell_masks_level{zoom_level}_s{shift_step}.zarr', mode='r')
     mask = masks[item_id]
 
     plt.figure(figsize=(10, 10))
