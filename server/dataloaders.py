@@ -15,7 +15,7 @@ class CustomTensorDataset(Dataset):
 
         if torch.is_tensor(self.labels):
             return self.data_tensor[index], self.labels[index]
-        return self.data_tensor[index], 0
+        return self.data_tensor[index], 0 # 0 as a dummy label
 
     def __len__(self):
         return self.data_tensor.size(0)
@@ -53,6 +53,28 @@ class CodeX_Dataset(Dataset):
         cell_id = self.img_names.iloc[idx, 0]
         image = np.array(self.cell_patches[cell_id])
         label = torch.tensor(self.img_names.iloc[idx, 1:])
+        if self.transform:
+            image = self.transform(image)
+        return image, label
+
+class CodeX_Grid_Dataset(Dataset):
+    def __init__(self, root, transform=None, split='train', item_number=0):
+
+        self.cell_grids = zarr.open(f'{root}.zarr', mode='r')
+        if item_number != 0:
+            self.cell_grids = self.cell_grids[:item_number]
+        elif split != 'train':
+            # use the first 1000 rows for validating and testing
+            self.cell_grids = self.cell_grids[:1000]
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.cell_grids)
+
+    def __getitem__(self, idx):
+       
+        image = np.array(self.cell_grids[idx])
+        label = 0 # 0 as a dumpy label [TODO: get labels for cells in this grid]
         if self.transform:
             image = self.transform(image)
         return image, label
