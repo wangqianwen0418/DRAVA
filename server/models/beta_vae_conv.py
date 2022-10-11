@@ -2,7 +2,7 @@ import torch
 from models import BaseVAE
 from torch import nn
 from torch.nn import functional as F
-from .types_ import *
+from models.types_ import *
 
 import math
 import numpy as np
@@ -222,7 +222,7 @@ class BetaVAE_CONV(BaseVAE):
 
         # reduction ='none' will return the mse loss for each sample
         if self.distribution == 'bernoulli':
-            recons_loss = F.binary_cross_entropy_with_logits(recons, reduction='none') 
+            recons_loss = F.binary_cross_entropy_with_logits(recons, input, reduction='none') 
         elif self.distribution == 'gaussian':
             recons_loss =F.mse_loss(recons * self.mask, input * self.mask, reduction='none') 
         elif self.distribution == 'multi_class':

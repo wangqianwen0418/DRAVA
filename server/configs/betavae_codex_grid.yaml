@@ -21,6 +21,7 @@ exp_params:
   optimizer: "adam"
   batch_size: 196 
   LR: 0.0005
+  eps: 1e-7
   weight_decay: 0.0
   weighted_sampler: True
   # scheduler_gamma: 0.95
@@ -28,7 +29,7 @@ exp_params:
 trainer_params:
   gpus: 1
   max_nb_epochs: 100
-  max_epochs: 40
+  max_epochs: 20
 
 logging_params:
   save_dir: "logs"
