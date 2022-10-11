@@ -13,14 +13,13 @@ import torchvision.utils as vutils
 from torchvision.datasets import CelebA
 from torch.utils.data import DataLoader, WeightedRandomSampler, Subset
 from torch.optim import SGD, Adam, Adagrad
-import torch.nn.functional as F
 
 from PIL import Image
 
 from models import BaseVAE
 from models.types_ import *
 from utils import data_loader, drawMasks
-from dataloaders import CustomTensorDataset, CodeX_Dataset, CodeX_Landmark_Dataset, HiC_Dataset, IDC_Dataset
+from dataloaders import CodeX_Grid_Dataset, CustomTensorDataset, CodeX_Dataset, CodeX_Landmark_Dataset, HiC_Dataset, IDC_Dataset
 
 
 # extend the pytorch lightning module
@@ -526,24 +525,21 @@ class VAEModule(pl.LightningModule):
                               shuffle=True,
                               drop_last=True)
 
-        elif 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
-            root = os.path.join(
-                self.params['data_path'], self.params['dataset'])
-            dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=self.params['cell_number'])
-            self.num_train_imgs = len(dataset)
-            return DataLoader(dataset,
-                              batch_size=self.params['batch_size'],
-                              shuffle=True,
-                              drop_last=True)
         elif 'codex' in self.params['dataset']:
-            root = os.path.join(
-                self.params['data_path'], self.params['dataset'])
-            dataset = CodeX_Dataset(root, self.data_transforms(), norm_method= self.params['norm_method'], in_channels=self.params['in_channels'], item_number=self.params['cell_number'])
+            root = os.path.join(self.params['data_path'], self.params['dataset'])
+            if 'num_cluster' in self.params:
+                dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=self.params['cell_number'])
+            elif 'grids' in self.params['dataset']:
+                dataset = CodeX_Grid_Dataset(root, self.data_transforms())
+            else:
+                dataset = CodeX_Dataset(root, self.data_transforms(), norm_method= self.params['norm_method'], in_channels=self.params['in_channels'], item_number=self.params['cell_number'])
+
             self.num_train_imgs = len(dataset)
             return DataLoader(dataset,
                               batch_size=self.params['batch_size'],
                               shuffle=True,
                               drop_last=True)
+        
 
         elif self.is_IDC_dataset(self.params['dataset']):
             root = os.path.join(
@@ -637,10 +633,15 @@ class VAEModule(pl.LightningModule):
             self.num_val_imgs = len(self.sample_dataloader)
             return self.sample_dataloader
 
-        elif 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
-            root = os.path.join(
-                self.params['data_path'], self.params['dataset'])
-            dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=self.params['cell_number'])
+        elif 'codex' in self.params['dataset']:
+            root = os.path.join(self.params['data_path'], self.params['dataset'])
+            if 'num_cluster' in self.params['dataset']:
+                dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=self.params['cell_number'])
+            elif 'grid' in self.params['dataset']:
+                dataset = CodeX_Grid_Dataset(root, self.data_transforms(), split='val')
+            else:
+                dataset = CodeX_Dataset(root, self.data_transforms(), norm_method= self.params['norm_method'], in_channels=self.params['in_channels'], item_number=self.params['cell_number'])
+            
             self.num_val_imgs = len(dataset)
             self.sample_dataloader = DataLoader(dataset,
                                                 batch_size=self.params['batch_size'],
@@ -648,16 +649,6 @@ class VAEModule(pl.LightningModule):
                                                 drop_last=True)
             return self.sample_dataloader
 
-        elif 'codex' in self.params['dataset']:
-            root = os.path.join(
-                self.params['data_path'], self.params['dataset'])
-            dataset = CodeX_Dataset(root, self.data_transforms(), norm_method= self.params['norm_method'], in_channels=self.params['in_channels'], item_number=self.params['cell_number'])
-            self.num_val_imgs = len(dataset)
-            self.sample_dataloader = DataLoader(dataset,
-                                                batch_size=self.params['batch_size'],
-                                                shuffle=True,
-                                                drop_last=True)
-            return self.sample_dataloader
 
         elif self.is_hic_dataset(self.params['dataset']) or self.is_tensor_dataset(self.params['dataset']) or self.is_IDC_dataset(self.params['dataset']):
             print('start val data loading')
@@ -686,25 +677,21 @@ class VAEModule(pl.LightningModule):
             return self.test_sample_dataloader
 
         
-        elif 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
-            root = os.path.join(
-                self.params['data_path'], self.params['dataset'])
-            dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=1000)
-            self.num_test_imgs = len(dataset)
-            return DataLoader(dataset,
-                              batch_size=self.params['batch_size'],
-                              shuffle=False,
-                              drop_last=False)
-
         elif 'codex' in self.params['dataset']:
-            root = os.path.join(
-                self.params['data_path'], self.params['dataset'])
-            dataset = CodeX_Dataset(root, self.data_transforms(), norm_method= self.params['norm_method'], in_channels=self.params['in_channels'], item_number=self.params['cell_number'])
+            root = os.path.join(self.params['data_path'], self.params['dataset'])
+            if 'num_cluster' in self.params['dataset']:
+                dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=self.params['cell_number'])
+            elif 'grid' in self.params['dataset']:
+                dataset = CodeX_Grid_Dataset(root, self.data_transforms(), split='test')
+            else:
+                dataset = CodeX_Dataset(root, self.data_transforms(), norm_method= self.params['norm_method'], in_channels=self.params['in_channels'], item_number=self.params['cell_number'])
+            
             self.num_test_imgs = len(dataset)
-            return DataLoader(dataset,
-                              batch_size=self.params['batch_size'],
-                              shuffle=True,
-                              drop_last=True)
+            self.sample_dataloader = DataLoader(dataset,
+                                                batch_size=self.params['batch_size'],
+                                                shuffle=False,
+                                                drop_last=False)
+            return self.sample_dataloader
 
         elif self.is_hic_dataset(self.params['dataset']):
 
