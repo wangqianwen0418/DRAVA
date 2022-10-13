@@ -4,16 +4,12 @@ dataset HBM622.JXWQ.554 downloaded from https://portal.hubmapconsortium.org/brow
 """
 
 # %%
-from unittest.mock import patch
 from matplotlib import pyplot as plt
-import pandas as pd
-from tqdm import tqdm
-from tifffile import TiffFile, imread, imwrite
+from tifffile import TiffFile, imread
 import numpy as np
 import math
 import zarr
 import xml.etree.ElementTree as ET
-from PIL import Image
 
 # %%
 foldername = 'HBM622.JXWQ.554'
@@ -30,7 +26,6 @@ def split_2d(array, splits):
     return c
 
 # %%
-
 # numpy array, shape (29, 7491, 12664)
 # 29 indicates 29 antigens
 # must use level=0 to indicate the finest level
@@ -82,16 +77,31 @@ for shift in range(0, min(w, h), shift_step):
     cell_boundries_grids = np.concatenate( (cell_boundries_grids, cell_boundries_grids_shift), axis=0)
 
 zarr.save(f'{foldername}/cell_masks_level{zoom_level}_step{shift_step}.zarr', cell_boundries_grids)
+#%%
+# # filter out black item
+v_mask = np.amax(norm_cell_grids, axis=(1,2,3))>0.5
+# filter out non-cell grids
+c_mask = np.amax(cell_boundries_grids, axis=(1,2,3))>0
+mask = v_mask & c_mask
+filter_cell_grids = cell_grids[mask]
+patch_size = (filter_cell_grids.shape[0], len(selected_channel_index), h, w)
+
+norm_filter_cell_grids = zarr.zeros(patch_size, chunks=(
+    1000, None, None, None), dtype='float32')
+for i,c in enumerate(selected_channels):
+    v_min, v_max = selected_channels[c]
+    clip_grids = np.clip(filter_cell_grids[:, i, :, :], v_min, v_max)
+    norm_filter_cell_grids[:, i, :, :] = (clip_grids- v_min) / (v_max - v_min)
+
+zarr.save(f'{foldername}/cell_grids_level{zoom_level}_step{shift_step}_filter.zarr', norm_filter_cell_grids)
+zarr.save(f'{foldername}/cell_masks_level{zoom_level}_step{shift_step}_filter.zarr', cell_boundries_grids[mask])
+
 # %%
 # visualize
 
 
-def visualize(item_id: int):
-    z = zarr.open(f'{foldername}/cell_grids_level{zoom_level}_step{shift_step}.zarr', mode='r')
-    a = z[item_id]
+def visualize(a, mask):
 
-    masks = zarr.open(f'{foldername}/cell_masks_level{zoom_level}_step{shift_step}.zarr', mode='r')
-    mask = masks[item_id]
 
     plt.figure(figsize=(10, 10))
     
@@ -117,7 +127,20 @@ def visualize(item_id: int):
     plt.tight_layout()
 
 # %%
-visualize(4000)
-visualize(5000)
+grid_filename = f'{foldername}/cell_grids_level{zoom_level}_step{shift_step}'
+mask_filename = f'{foldername}/cell_masks_level{zoom_level}_step{shift_step}'
+filter = True
+
+if filter:
+    z = zarr.open(f'{grid_filename}_filter.zarr', mode='r')
+    masks = zarr.open(f'{mask_filename}_filter.zarr', mode='r')
+else:
+    z = zarr.open(f'{grid_filename}.zarr', mode='r')
+    masks = zarr.open(f'{mask_filename}.zarr', mode='r')
+
+item_id =1000
+a = z[item_id]
+mask = masks[item_id]
+visualize(a, mask)
 
 # %%
