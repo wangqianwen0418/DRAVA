@@ -26,12 +26,12 @@ class BetaVAE_CONV(BaseVAE):
                  in_channels: int,
                  latent_dim: int,
                  hidden_dims: List = None,
-                 beta: int = 4,
-                 gamma:float = 1000.,
-                 loss_type:str = 'B',
                  img_size:int = 64,
-                 max_capacity: int = 25, # works similar to the beta in original beta vae
-                 Capacity_max_iter: int = 1e5,
+                 loss_type:str = 'B',
+                 beta: int = 4, # for loss type H
+                 gamma:float = 1000.,# for loss type B, works similar to the beta in original beta vae
+                 max_capacity: int = 25, # for loss type B, works similar to the beta in original beta vae. gradually increase based on the capacity_max_iter
+                 Capacity_max_iter: int = 1e5, 
                  **kwargs) -> None:
         super(BetaVAE_CONV, self).__init__()
 
