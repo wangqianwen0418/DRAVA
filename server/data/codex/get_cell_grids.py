@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 # mask_filename = 'reg1_stitched_mask.ome.tif'
 
 foldername = 'HBM443.FDHZ.888'
-selected_channels = {'CD20': [125,9012], 'CD21':[10246,65239], 'DAPI-02': [930,3153]} 
+selected_channels = {'DAPI-02': [930,3153], 'CD20': [125,9012], 'CD21':[10246,65239]} 
 exp_filename = 'reg001_expr.ome.tif'
 mask_filename = 'reg001_mask.ome.tif'
 
@@ -112,26 +112,33 @@ def visualize(a, mask):
 
 
     plt.figure(figsize=(10, 10))
-    
+    color_palatte = [ [0, 1, 0], [1, 0, 1], [1, 1, 0] ] # green, magenet, yellow
     # a subfigure for each antigen chanel
+    rgb_imgs = np.zeros(a.transpose(1, 2, 0).shape)
     for i in range(a.shape[0]):
         ax = plt.subplot(5, 6, i + 1)
         ax.axis("off")
         rgb_img = np.zeros(a.transpose(1, 2, 0).shape)
         rgb_img[:,:, i] = a[i,:,:]
+        rgb_img = rgb_img[:,:,i:i+1] * np.array(color_palatte[i]).reshape(1,3)
+
+        rgb_imgs += rgb_img
 
         ax.imshow(rgb_img)
     
     # a subfigure for three channels
     ax = plt.subplot(5, 6, a.shape[0]+1)
     ax.axis("off")
-    ax.imshow(a.transpose(1, 2, 0))
+    # ax.imshow(a.transpose(1, 2, 0))
+    ax.imshow(rgb_imgs)
 
     # a subfigure for cell bounders
     ax = plt.subplot(5, 6, a.shape[0]+2)
     ax.axis("off")
-    a[:, mask[0]>0] = 1
-    ax.imshow(a.transpose(1, 2, 0))
+    # a[:, mask[0]>0] = 1
+    # ax.imshow(a.transpose(1, 2, 0))
+    rgb_imgs[mask[0]>0, :] = 1
+    ax.imshow(rgb_imgs)
     plt.tight_layout()
 
 # %%
