@@ -12,8 +12,16 @@ import zarr
 import xml.etree.ElementTree as ET
 
 # %%
-foldername = 'HBM622.JXWQ.554'
-selected_channels = {'CD15': [55,27851], 'CD31':[45,2186], 'ECAD': [59,12306]} # channel names and the data domains
+# foldername = 'HBM622.JXWQ.554'
+# selected_channels = {'CD15': [55,27851], 'CD31':[45,2186], 'ECAD': [59,12306]} # channel names and the data domains
+# exp_filename = 'reg1_stitched_expressions.ome.tif'
+# mask_filename = 'reg1_stitched_mask.ome.tif'
+
+foldername = 'HBM443.FDHZ.888'
+selected_channels = {'CD20': [125,9012], 'CD21':[10246,65239], 'DAPI-02': [930,3153]} 
+exp_filename = 'reg001_expr.ome.tif'
+mask_filename = 'reg001_mask.ome.tif'
+
 zoom_level = 1 # 0 indicates the most detailed view
 w = h = 64
 shift_step = 20
@@ -29,10 +37,10 @@ def split_2d(array, splits):
 # numpy array, shape (29, 7491, 12664)
 # 29 indicates 29 antigens
 # must use level=0 to indicate the finest level
-tif = imread(f'{foldername}/reg1_stitched_expressions.ome.tif', level=zoom_level)
+tif = imread(f'{foldername}/{exp_filename}', level=zoom_level)
 
 # get channel names
-tags = TiffFile(f'{foldername}/reg1_stitched_expressions.ome.tif').pages[0].tags
+tags = TiffFile(f'{foldername}/{exp_filename}').pages[0].tags
 xml_description = [t.value for t in tags if t.name == 'ImageDescription'][0]
 xml_root = ET.fromstring(xml_description)
 channels = [child.attrib['Name'] for child in xml_root[0][1] if 'Name' in child.attrib ]
@@ -64,7 +72,7 @@ for i,c in enumerate(selected_channels):
 zarr.save(f'{foldername}/cell_grids_level{zoom_level}_step{shift_step}.zarr', norm_cell_grids)
 
 #%% for each item, save them cell boundaries
-tif_mask = imread(f'{foldername}/reg1_stitched_mask.ome.tif', level=zoom_level)
+tif_mask = imread(f'{foldername}/{mask_filename}', level=zoom_level)
 # 4 indicates cell mask, nuclei masks, cell boundaries, and nucleus boundaries
 cell_boundries = tif_mask[2:3]
 
