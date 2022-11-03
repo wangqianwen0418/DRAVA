@@ -94,7 +94,7 @@ class CodeX_Landmark_Dataset(Dataset):
 
         
         self.cell_patches = zarr.open(os.path.join(
-            root, f'cell_patches_{num_cluster}cluster.zarr'), mode='r')
+            root, f'cell_patches_{num_cluster}cluster.zarr'), mode='r')[:len(df)+1]
 
         self.num_cluster = num_cluster
         self.transform = transform
