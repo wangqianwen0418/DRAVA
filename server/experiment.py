@@ -325,7 +325,7 @@ class VAEModule(pl.LightningModule):
             recons_imgs = recons.cpu().data
 
         if 'codex' in self.params['dataset'] and 'num_cluster' not in self.params:
-        # [TODO what is the best way to show multiplex images here?]
+        # [TODO: what is the best way to show multiplex images here?]
             recons_imgs = recons_imgs[:, 0:3, :, :]
 
         if is_test:
@@ -437,7 +437,7 @@ class VAEModule(pl.LightningModule):
         if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
             drawMasks(test_input.cpu().detach().numpy(), figsize = 60, nrows = 12, save_path=input_save_path)        
         else:
-            vutils.save_image(test_input.data[:, 0:3, :, :],  # [TODO what is the best way to show multiplex images here?]
+            vutils.save_image(test_input.data[:, 0:3, :, :],  # [TODO: what is the best way to show multiplex images here?]
                             input_save_path,
                             normalize=True,
                             nrow=12)
@@ -447,7 +447,7 @@ class VAEModule(pl.LightningModule):
         if 'codex' in self.params['dataset'] and 'num_cluster' in self.params:
             drawMasks(recons_imgs.cpu().detach().numpy(), figsize = 60, nrows = 12, save_path=recons_save_path)        
         else:
-            vutils.save_image(recons_imgs[:, 0:3, :, :],  # [TODO what is the best way to show multiplex images here?]
+            vutils.save_image(recons_imgs[:, 0:3, :, :],  # [TODO: what is the best way to show multiplex images here?]
                             recons_save_path,
                             normalize=True,
                             nrow=12)
@@ -530,7 +530,7 @@ class VAEModule(pl.LightningModule):
             if 'num_cluster' in self.params:
                 dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=self.params['cell_number'])
             elif 'grids' in self.params['dataset']:
-                dataset = CodeX_Grid_Dataset(root, self.data_transforms())
+                dataset = CodeX_Grid_Dataset(root, self.data_transforms(), item_number=self.params['cell_number'])
             else:
                 dataset = CodeX_Dataset(root, self.data_transforms(), norm_method= self.params['norm_method'], in_channels=self.params['in_channels'], item_number=self.params['cell_number'])
 
@@ -635,7 +635,7 @@ class VAEModule(pl.LightningModule):
 
         elif 'codex' in self.params['dataset']:
             root = os.path.join(self.params['data_path'], self.params['dataset'])
-            if 'num_cluster' in self.params['dataset']:
+            if 'num_cluster' in self.params:
                 dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=self.params['cell_number'])
             elif 'grid' in self.params['dataset']:
                 dataset = CodeX_Grid_Dataset(root, self.data_transforms(), split='val')
@@ -679,7 +679,7 @@ class VAEModule(pl.LightningModule):
         
         elif 'codex' in self.params['dataset']:
             root = os.path.join(self.params['data_path'], self.params['dataset'])
-            if 'num_cluster' in self.params['dataset']:
+            if 'num_cluster' in self.params:
                 dataset = CodeX_Landmark_Dataset(root, self.data_transforms(), num_cluster = self.params['num_cluster'], item_number=self.params['cell_number'])
             elif 'grid' in self.params['dataset']:
                 dataset = CodeX_Grid_Dataset(root, self.data_transforms(), split='test')
