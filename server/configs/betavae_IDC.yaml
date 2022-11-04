@@ -16,10 +16,12 @@ exp_params:
   data_path: "./data/"
   img_size: 64
   optimizer: "adam"
-  batch_size: 196 
+  item_number: 1000
+  batch_size: 25
   LR: 0.0005
   weight_decay: 0.0
   weighted_sampler: True
+  eps: 1e-7
   # scheduler_gamma: 0.95
 
 trainer_params:

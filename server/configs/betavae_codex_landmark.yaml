@@ -18,7 +18,7 @@ model_params:
 exp_params:
   dataset: codex/HBM622.JXWQ.554
   num_cluster: 9
-  cell_number: 0 # 0 incidate using all cells
+  item_number: 0 # 0 incidate using all cells
   data_path: "./data/"
   img_size: 64
   optimizer: "adam"
