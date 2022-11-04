@@ -222,10 +222,18 @@ class BetaVAE_CONV(BaseVAE):
             recons_softmax = F.softmax(recons, dim=1)
             input_ = torch.argmax(input, dim=1)
             recons_loss = F.cross_entropy(recons_softmax, input_, reduction='none') 
+        elif self.distribution == 'multi_class_prob':
+            recons_softmax = F.softmax(recons, dim=1)
+            input_ = torch.argmax(input, dim=1)
+            recons_loss = F.cross_entropy(recons_softmax, input_, reduction='none') 
+
+            # use the highest probability as the weight
+            recons_loss = torch.mul(recons_loss, torch.max(input, dim=1)[0])
+
         else:
             raise ValueError(f'distribution {self.distribution} not implemented')
 
-        recons_loss= recons_loss *  self.mask
+        recons_loss= torch.mul(recons_loss, self.mask) # element wise multiply on the last two dimensions
 
         recons_loss = recons_loss.view(recons_loss.size(0), -1).mean(1) # average except along dim 0
         return recons_loss
