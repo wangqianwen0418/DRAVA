@@ -36,14 +36,14 @@
     </td>
     <td>
         <a href='./#/use-cases?id=single-cell-masks'>
-            <div style="background-image: url(/assets/single-cell-cover.png); width:200px; height:100px; background-size: cover;"  ></div>
+            <div style="background-image: url(https://raw.githubusercontent.com/wangqianwen0418/DRAVA/main/docs/assets/single-cell-cover.png); width:200px; height:100px; background-size: cover;"  ></div>
             <br/>
             <span>Single Cell Masks</span>
         </a>
     </td>
     <td>
         <a href = '/#/your-data'>
-              <div style="background-image: url(/assets/your-data-cover.png); width:200px; height:100px; background-size: cover;" >
+              <div style="background-image: url(https://raw.githubusercontent.com/wangqianwen0418/DRAVA/main/docs/assets/your-data-cover.png); width:200px; height:100px; background-size: cover;" >
               </div>
               <br/>
             <span>Try Drava on your dataset</span>
@@ -131,7 +131,7 @@ Confident wrong predictions and false negatives are more consequential in real-w
 This observation is valuable for understanding and improving this IDC diagnosis model. First, it indicates when and where the IDC prediction model tends to make confident false negative predictions and a double-check from human experts is needed. Second, the training strategy can be modified accordingly (e.g., increasing the sample weight of these loose and purple tissues) to improve the model performance.
 
 ### Single Cell Masks
-<center><img src="/assets/single-cell-case.png" style='max-width: 800px'/></center>
+<center><img src="./assets/single-cell-case.png" style='max-width: 800px'/></center>
 
 *Fig. 5. (A) We apply a conventional method and layout all segmented cells in a 2D scatter plot using UMAP. It is hard to interpret the meaning of clusters. (B) We can deduce that the value of dim_10 indicates cell size, the value of dim_3 indicates orientation, and the value of dim_5 indicates position of the nucleus. (C) Segmented cells are organized based on their sizes, which are indicated by their value on dim_10. (D) Small cells (cells on the right side) tend to have less diverse orientations (more concentrated on the vertical direction) compared with large cells (cells on the left size).*
 
