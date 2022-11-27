@@ -5,21 +5,21 @@
 <table>
   <tr>
     <td> 
-        <a href='/#/use-cases?id=simple-shapes'>
+        <a href='./#/use-cases?id=simple-shapes'>
             <div style="background-image: url(https://user-images.githubusercontent.com/9922882/187742539-cc664158-c581-411a-8257-cc61afc4768a.png); width:200px; height:100px; background-size: cover;"  ></div>
             <br/>
             <span>Simple Shapes (dsprites dataset)</span>
         </a>
     </td>
     <td>
-        <a href='/#/use-cases?id=celebrity-images'>
+        <a href='./#/use-cases?id=celebrity-images'>
             <div style="background-image: url(https://user-images.githubusercontent.com/9922882/187742536-402af1a2-04ec-42a3-b682-ebb4c406fee5.png); width:200px; height:100px; background-size: cover;"  ></div>
             <br/>
             <span>Celebrity Images (celeba dataset)</span>
         </a>
     </td>
      <td>
-        <a href='/#/use-cases?id=genomic-interaction-matrix'>
+        <a href='./#/use-cases?id=genomic-interaction-matrix'>
             <div style="background-image: url(https://user-images.githubusercontent.com/9922882/187742534-5e1bc225-b6b8-421f-82d7-4942dc130e90.png); width:200px; height:100px; background-size: cover;"  ></div>
             <br/>
             <span>Genomic Interaction Matrices</span>
@@ -28,14 +28,14 @@
    </tr> 
    <tr>
     <td>
-        <a href='/#/use-cases?id=breast-cancer-specimen'>
+        <a href='./#/use-cases?id=breast-cancer-specimen'>
             <div style="background-image: url(https://user-images.githubusercontent.com/9922882/187742532-e6034506-0ca0-4233-af0e-0f52f02ae18c.png); width:200px; height:100px; background-size: cover;"  ></div>
             <br/>
             <span>Breast Cancer Specimen</span>
         </a>
     </td>
     <td>
-        <a href='/#/use-cases?id=single-cell-masks'>
+        <a href='./#/use-cases?id=single-cell-masks'>
             <div style="background-image: url(/assets/single-cell-cover.png); width:200px; height:100px; background-size: cover;"  ></div>
             <br/>
             <span>Single Cell Masks</span>
