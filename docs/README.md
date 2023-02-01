@@ -11,7 +11,7 @@ We support this three-step workflow by providing a set of interactions based on 
 Interactive visual piles enable users to effectively organize, summarize, and compare groups of items based on human-readable concepts. 
 The concept adaptor assists users in modifying potential imperfect semantic vectors and better facilitates concept-driven exploration.
 
-For more information, please check out our [OSF reprint](https://osf.io/gzu27/) and [BioVis Presentation Video](https://drive.google.com/file/d/1-_5kkyez79Y2OvzOUrLeYJp0C-mv0XM6/view?usp=sharing)
+For more information, please check out our [OSF reprint](https://osf.io/gzu27/), [Flask Talk at BioVis ISMB](https://drive.google.com/file/d/1-_5kkyez79Y2OvzOUrLeYJp0C-mv0XM6/view?usp=sharing), and [Supplementary Video](https://drive.google.com/file/d/1EYxDCZ1mR786koqS-0jrbOusirkrrBKV/view?usp=sharing)
 
 <figure>
     <img src="./assets/teaser.jpg" width=800>
