@@ -17,6 +17,8 @@ server/data/seq_generator/*
 server/data/codex/*
 !server/data/codex/*.py
 
+drava_flask/
+
 .vscode/
 
 logs/
