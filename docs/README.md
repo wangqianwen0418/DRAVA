@@ -11,7 +11,10 @@ We support this three-step workflow by providing a set of interactions based on 
 Interactive visual piles enable users to effectively organize, summarize, and compare groups of items based on human-readable concepts. 
 The concept adaptor assists users in modifying potential imperfect semantic vectors and better facilitates concept-driven exploration.
 
-For more information, please check out our [OSF reprint](https://osf.io/gzu27/), [Flask Talk at BioVis ISMB](https://drive.google.com/file/d/1-_5kkyez79Y2OvzOUrLeYJp0C-mv0XM6/view?usp=sharing), and [Supplementary Video](https://drive.google.com/file/d/1EYxDCZ1mR786koqS-0jrbOusirkrrBKV/view?usp=sharing)
+DRAVA is published at ACM CHI 2023. 
+For more information, please check out our [OSF reprint](https://osf.io/gzu27/), [Flask Talk at BioVis ISMB](https://drive.google.com/file/d/1-_5kkyez79Y2OvzOUrLeYJp0C-mv0XM6/view?usp=sharing), 
+and [CHI 2023 Supplementary Video](https://www.youtube.com/watch?v=egvKLEnTnA4).
+<!-- and [CHI 2023 Supplementary Video](https://drive.google.com/file/d/1EYxDCZ1mR786koqS-0jrbOusirkrrBKV/view?usp=sharing) -->
 
 <figure>
     <img src="./assets/teaser.jpg" width=800>
@@ -20,4 +23,5 @@ projection of image patches of breast cancer specimens. (B) All image patches ar
 (C) All image patches are grouped into a grid layout according to the tissue density and the tissue color. The two visual concepts reveal
 a strong association of the presentation of invasive ductal carcinomas (IDC), i.e., the orange label. (D-E) More examples. </figcaption>
 </figure>
+
 
