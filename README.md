@@ -1,6 +1,6 @@
 # DRAVA: Utilizing <ins>D</ins>isentangled <ins>R</ins>epresentation Learning as <ins>A</ins> <ins>V</ins>isual <ins>A</ins>nalytics Method for Pattern-based Data Exploration
 
-Check out our preprint at https://osf.io/gzu27/
+This is the source code for our CHI 2023 paper, [DRAVA: Aligning Human Concepts with Machine Learning Latent Dimensions for the Visual Exploration of Small Multiples](https://dl.acm.org/doi/full/10.1145/3544548.3581127)
 
 This repository has two main components: a frontend interface and a back-end server.
 
