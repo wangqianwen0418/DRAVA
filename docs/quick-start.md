@@ -1,6 +1,6 @@
 # Quick Start
 
-The easiest way to run Drava on your computer is to download the [zip file from Google Drive](https://drive.google.com/file/d/10I4cf2TMXX76f33UEz6GTI9te9UQKcHR/view?usp=sharing) and run it using Python.
+The easiest way to run Drava on your computer is to download the [zip file from Google Drive](https://drive.google.com/file/d/17-upCMUS_a8eC3VB_2RZFNqsl9rnvzpB/view?usp=sharing) and run it using Python.
 
 1. Download and unzip the file to your local computer
 1. Start a virtual environment and install dependency packages
